@@ -30,6 +30,8 @@ class BaseOptions(ImgAug):
         # -------------------------------Input Images------------------------------------
         self.parser.add_argument("--path", type=str, required=True,
                                  help="the path of dataset")
+        self.parser.add_argument("--extensions", type=list, required=False,
+                                 default = ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"])
         
         # ------------------------------Miscellaneous----------------------------------
         self.parser.add_argument("--log_dir", type=str, help="log location")

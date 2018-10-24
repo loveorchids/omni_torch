@@ -2,19 +2,30 @@ import os, glob, random
 import data.misc as misc
 
 class Arbitrary:
-    def __init__(self, args, root, sources, modes, load_funcs,
+    def __init__(self, args, sources, modes, load_funcs,
                  dig_level=None, **options):
+        """
+        A generalized data initialization method, inherited by other data class, e.g. ilsvrc, img2img, etc.
+        Arbitrary is a parent class of all other data class.
+
+        :param args: options from terminal
+        :param sources: a list of input and output source folder or file(e.g. csv, mat, xml, etc.)
+        :param modes: a list of how researchers wanted to load infomation from :param sources
+        :param load_funcs: infomation loaded from :param source is not guaranteed to be able to feed
+                                            the neural network, thus they need to be loaded as a inputable form.
+                                            e.g. paths should be loaded as image tensors
+        :param dig_level: when loading path from a folder, it might contains subfolders, dig_level enables
+                                        you to load as deep as you want to.
+        :param options: For Future upgrade.
+        """
         self.args = args
-        self.root = root
         self.sources = sources
         self.modes = modes
         self.load_funcs = load_funcs
         self.dig_level = dig_level
-        if "extensions" in options:
-            self.extensions = options["extensions"]
         if "verbose" in options:
             self.verbose = options["verbose"]
-        self.dataset = self.arbitrary_dataset()
+        self.dataset = self.load_dataset()
         
     def __getitem__(self, index):
         assert type(index) is int, "Arbitrary Dataset index should be int."
@@ -34,16 +45,16 @@ class Arbitrary:
                 raise NotImplementedError
         return result
 
-    def arbitrary_dataset(self):
+    def load_dataset(self):
         """
         :param path: dataset's root folder
         :param sources: all the sub-folders or files you want to read(correspond to data_load_funcs)
         :param data_load_funcs: the way you treat your sub-folders and files(correspond to folder_names)
         :param dig_level: how deep you want to find the sub-folders
-        :return: a dataset in the form of dict {'A':[...], 'B':[...], ...}
+        :return: a dataset in the form of a list and each element is an input output pair
         """
         data = {}
-        path = os.path.expanduser(self.root)
+        path = os.path.expanduser(self.args.root)
         assert len(self.sources) is len(self.modes), "sources and modes should be same dimensions."
         input_types = len(self.modes)
         for i in range(input_types):
@@ -64,30 +75,3 @@ class Arbitrary:
             dataset.append([_[i] for _ in data.values()])
         return dataset
 
-    def load_path_from_folder(self, len, paths, dig_level=0):
-        """
-        'paths' is a list or tuple, which means you want all the sub paths within 'dig_level' levels.
-        'dig_level' represent how deep you want to get paths from.
-        """
-        output = []
-        if type(paths) is str:
-            paths = [paths]
-        for path in paths:
-            current_folders = [path]
-            # Do not delete the following line, we need this when dig_level is 0.
-            sub_folders = []
-            while dig_level > 0:
-                sub_folders = []
-                for sub_path in current_folders:
-                    sub_folders += glob.glob(sub_path + "/*")
-                current_folders = sub_folders
-                dig_level -= 1
-            sub_folders = []
-            for _ in current_folders:
-                sub_folders += glob.glob(_ + "/*")
-            output += sub_folders
-        if self.extensions:
-            output = [_ for _ in output if misc.extension_check(_, self.extensions)]
-        # 1->A, 2->B, 3->C, ..., 26->Z
-        key = misc.number_to_char(len)
-        return {key: output}

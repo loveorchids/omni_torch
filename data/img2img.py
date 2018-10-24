@@ -1,7 +1,9 @@
 import os
 import data.misc as misc
+from data.arbitrary import Arbitrary
 
 class Img2Img:
+    super(ILSVRC, self).__init__()
     def __init__(self, root, A_B_folder=None, one_to_one=True,
                  extensions=None, verbose=False):
         """
