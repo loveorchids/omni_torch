@@ -28,9 +28,8 @@ class BaseOptions(ImgAug):
                                  help="input data queue capacity")
         
         # -------------------------------Input Images------------------------------------
-        self.parser.add_argument("--path", type=str, required=True,
-                                 help="the path of dataset")
-        self.parser.add_argument("--extensions", type=list, required=False,
+        self.parser.add_argument("--path", type=str, help="the path of dataset")
+        self.parser.add_argument("--extensions", type=list,
                                  default = ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"])
         
         # ------------------------------Miscellaneous----------------------------------

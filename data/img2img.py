@@ -2,58 +2,30 @@ import os
 import data.misc as misc
 from data.arbitrary import Arbitrary
 
-class Img2Img:
-    super(ILSVRC, self).__init__()
-    def __init__(self, root, A_B_folder=None, one_to_one=True,
-                 extensions=None, verbose=False):
-        """
-        :param root: path of the dataset root
-        :param A_B_folder: name of input and output folder
-        :param one_to_one: if the A & B folder is one-to-one correspondence
-        :param extensions: extentions that you treat them as the images.
-        :param verbose: display the detail of the process
-        """
-        self.root = root
-        if A_B_folder:
-            self.A_B_folder = A_B_folder
-        else:
-            self.A_B_folder = ("trainA", "trainB")
+class Img2Img(Arbitrary):
+    def __init__(self, args, sources, modes, load_funcs, dig_level,
+                 one_to_one=True, **options):
+        assert len(sources) is 2, "In img2img dataset only two sources are allowed."
+        assert len(modes) is 2, "In img2img dataset only two sources are allowed."
+        assert len(load_funcs) is 2, "In img2img dataset only two sources are allowed."
+        super().__init__(args, sources, modes, load_funcs, dig_level, options)
         self.one_to_one = one_to_one
-        if extensions:
-            self.extensions = extensions
-        else:
-            self.extensions = ("jpg", "jpeg", "JPG", "png", "PNG", "bmp", "BMP")
-        self.verbose = verbose
-        self.dataset = self.img2img_dataset()
+        
+    def prepare(self):
+        self.dataset = self.load_dataset()
 
-    def __getitem__(self, item):
-        assert type(item) is int, "Img2Img Dataset index should be int."
-        return self.dataset[item]
-
-    def __len__(self):
-        return len(self.dataset)
-
-    def load_item(self, item, mode):
-        assert len(item) is len(mode), "length of item and mode should be same."
-        result = []
-        for i in range(len(item)):
-            if callable(mode):
-                result.append(mode[i](item[i]))
-            else:
-                raise NotImplementedError
-        return result
-
-    def img2img_dataset(self):
+    def load_dataset(self):
+        A_B_folder = self.sources
         dataset = []
-        path = os.path.expanduser(self.root)
-        assert len(self.A_B_folder) == 2, "A_B_folder should be the name of source and target folder."
-        source = os.path.join(path, self.A_B_folder[0])
-        target = os.path.join(path, self.A_B_folder[1])
+        path = os.path.expanduser(self.args.path)
+        assert len(A_B_folder) == 2, "A_B_folder should be the name of source and target folder."
+        source = os.path.join(path, A_B_folder[0])
+        target = os.path.join(path, A_B_folder[1])
         assert os.path.isdir(source) and os.path.isdir(target), "one of the folder does not exist."
-        source_imgs = [os.path.join(path, self.A_B_folder[0], _) for _ in os.listdir(source)
-                       if misc.extension_check(_, self.extensions)]
-        target_imgs = [os.path.join(path, self.A_B_folder[1], _) for _ in os.listdir(target)
-                       if misc.extension_check(_, self.extensions)]
+        source_imgs = [os.path.join(path, A_B_folder[0], _) for _ in os.listdir(source)
+                       if misc.extension_check(_, self.args.extensions)]
+        target_imgs = [os.path.join(path, A_B_folder[1], _) for _ in os.listdir(target)
+                       if misc.extension_check(_, self.args.extensions)]
         if self.one_to_one:
             assert len(source_imgs) == len(target_imgs)
             if self.verbose: print("Sorting files...")

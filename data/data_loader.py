@@ -41,37 +41,3 @@ def transform(args):
     ], random_order=True)
     return seq
 
-def load_path_from_csv(args, len, paths, dig_level=0):
-    if type(paths) is str:
-        paths = [paths]
-    for path in paths:
-        with open(path, "r") as csv_file:
-            pass
-
-def load_path_from_folder(args, len, paths, dig_level=0):
-    """
-    'paths' is a list or tuple, which means you want all the sub paths within 'dig_level' levels.
-    'dig_level' represent how deep you want to get paths from.
-    """
-    output = []
-    if type(paths) is str:
-        paths = [paths]
-    for path in paths:
-        current_folders = [path]
-        # Do not delete the following line, we need this when dig_level is 0.
-        sub_folders = []
-        while dig_level > 0:
-            sub_folders = []
-            for sub_path in current_folders:
-                sub_folders += glob.glob(sub_path + "/*")
-            current_folders = sub_folders
-            dig_level -= 1
-        sub_folders = []
-        for _ in current_folders:
-            sub_folders += glob.glob(_ + "/*")
-        output += sub_folders
-    if self.extensions:
-        output = [_ for _ in output if misc.extension_check(_, self.extensions)]
-    # 1->A, 2->B, 3->C, ..., 26->Z
-    key = misc.number_to_char(len)
-    return {key: output}
