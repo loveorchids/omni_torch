@@ -35,7 +35,7 @@ class Arbitrary:
         self.dataset = self.load_dataset()
         
     def __getitem__(self, index):
-        assert type(index) is int, "Arbitrary Dataset index should be int."
+        #assert type(index) is int, "Arbitrary Dataset index should be int."
         return self.load_item(self.dataset[index])
     
     def __len__(self):

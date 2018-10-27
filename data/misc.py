@@ -28,6 +28,10 @@ def compliment_dim(input, dim):
         elif type(input) is np.ndarray:
             input = np.concatenate((np.tile(input, repeat), input[:dim - len(input) * repeat]))
         return input
+    
+    
+def str2bytes(str):
+    return str.encode("ASCII")
 
 if __name__ == "__main__":
     pass

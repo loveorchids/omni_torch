@@ -4,6 +4,7 @@ import imgaug
 from imgaug import augmenters
 import numpy as np
 import cv2
+import torch
 import torchvision.transforms as T
 
 def read_image(args, path, seed):
@@ -41,3 +42,6 @@ def transform(args):
     ], random_order=True)
     return seq
 
+def one_hot(label_num, index):
+    assert type(label_num) is int and type(index) is int, "Parameters Error"
+    return torch.eye(label_num)[index]
