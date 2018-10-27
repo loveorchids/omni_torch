@@ -1,4 +1,4 @@
-import os, pickle, time
+import os, pickle, time, random
 import numpy as np
 import torch, cv2
 import torchvision.transforms as T
@@ -31,7 +31,6 @@ class Cifar10:
         self.std = (0.2023, 0.1994, 0.2010)
         
     def prepare(self):
-        
         data = []
         for _ in self.load_batch:
             start = time.time()
@@ -46,24 +45,17 @@ class Cifar10:
                                 dict[misc.str2bytes("labels")][i]])
             print("--- cost {:.5} second to load DB {:2d}".format(time.time()-start, _))
         self.dataset = data
+        
+    def __len__(self):
+        return len(self.dataset)
     
     def __getitem__(self, index):
-        if type(index) is list:
-            assert len(index) < len(self.dataset)
-            image_batch = []
-            label_batch = []
-            for i in index:
-                image, label = self.read_data(i)
-                image_batch
-        
-    
-    def read_data(self, index):
         image, label = self.dataset[index]
         image = reshape(image)
         image = loader.transform(self.args).augment_image(image)
         image = T.ToTensor()(image)
         image = T.Normalize(self.mean, self.std)(image)
-        return image, self.labels[index]
+        return image, self.labels[label]
     
 def reshape(img):
     img_R = img[0:1024].reshape((32, 32))
@@ -82,7 +74,12 @@ if __name__ is "__main__":
     args = BaseOptions().initialize()
     CF10 = Cifar10(args, "~/Downloads/cifar-10")
     CF10.prepare()
-    for i in range(len(CF10.dataset)):
-        image, label = CF10[i]
-        pass
+    batch_list = random.sample(range(len(CF10.dataset)), 32)
+    images = []
+    labels = []
+    for i in batch_list:
+        images.append(CF10[i][0])
+        labels.append(CF10[i][1])
+    img_batch = torch.stack(images)
+    label_batch = torch.stack(labels)
     pass
