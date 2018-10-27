@@ -33,6 +33,9 @@ class Arbitrary:
         
     def prepare(self):
         self.dataset = self.load_dataset()
+
+    def fetch_batch(self):
+        
         
     def __getitem__(self, index):
         #assert type(index) is int, "Arbitrary Dataset index should be int."
