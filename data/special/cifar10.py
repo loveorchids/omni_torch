@@ -5,8 +5,9 @@ import torchvision.transforms as T
 import data.misc as misc
 import data.data_loader as loader
 
-class Cifar10:
-    def __init__(self, args, path, load_batch=(1, 2, 3, 4, 5), verbose=True):
+class Cifar10Data:
+    def __init__(self, args, path, phase="train", load_batch=(1, 2, 3, 4, 5),
+                 verbose=True):
         """
         Download at:
             http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
@@ -20,7 +21,11 @@ class Cifar10:
             raise FileExistsError("Please Download cifar-10 at: "
                                   "http://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
                                   "It will start downloading automatically :) ")
-        self.load_batch = load_batch
+        self.phase = phase
+        if self.phase is "train":
+            self.load_batch = load_batch
+        elif self.phase is "test":
+            self.load_batch = [1]
         self.verbose = verbose
         # Images in cifar-10 dataset has shape of (32, 32, 3)
         self.shape = (32, 32, 3)
@@ -34,7 +39,10 @@ class Cifar10:
         data = []
         for _ in self.load_batch:
             start = time.time()
-            name = "data_batch_" + str(_)
+            if self.phase == "train":
+                name = "data_batch_" + str(_)
+            else:
+                name = "test_batch"
             with open(os.path.join(self.path, name), "rb") as db:
                 dict = pickle.load(db, encoding="bytes")
                 dim = max([len(dict[_]) for _ in dict.keys()])
@@ -57,6 +65,17 @@ class Cifar10:
         image = T.Normalize(self.mean, self.std)(image)
         return image, self.labels[label]
     
+    def get_batch(self, batch_size):
+        batch_list = random.sample(range(len(self)), batch_size)
+        images = []
+        labels = []
+        for i in batch_list:
+            images.append(self[i][0])
+            labels.append(CF10[i][1])
+        img_batch = torch.stack(images)
+        label_batch = torch.stack(labels)
+        return img_batch, label_batch
+    
 def reshape(img):
     img_R = img[0:1024].reshape((32, 32))
     img_G = img[1024:2048].reshape((32, 32))
@@ -72,14 +91,7 @@ def examine_image(img):
 if __name__ is "__main__":
     from options.base_options import BaseOptions
     args = BaseOptions().initialize()
-    CF10 = Cifar10(args, "~/Downloads/cifar-10")
+    CF10 = Cifar10Data(args, "~/Downloads/cifar-10")
     CF10.prepare()
-    batch_list = random.sample(range(len(CF10.dataset)), 32)
-    images = []
-    labels = []
-    for i in batch_list:
-        images.append(CF10[i][0])
-        labels.append(CF10[i][1])
-    img_batch = torch.stack(images)
-    label_batch = torch.stack(labels)
+    img_batch, label_batch = CF10.get_batch(16)
     pass

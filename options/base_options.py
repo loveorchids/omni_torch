@@ -21,11 +21,7 @@ class BaseOptions(ImgAug):
         self.parser.add_argument("--learning_rate", type=float, default=0.0005)
         
         # ------------------------------Input Queue-----------------------------------
-        self.parser.add_argument("--threads", type=int, default=4,
-                                 help="Input data queue loading threads")
         self.parser.add_argument("--batch_size", type=int, default=8)
-        self.parser.add_argument("--capacity", type=int, default=10000,
-                                 help="input data queue capacity")
         
         # -------------------------------Input Images------------------------------------
         self.parser.add_argument("--path", type=str, help="the path of dataset")
