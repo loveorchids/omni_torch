@@ -41,9 +41,6 @@ class Arbitrary:
         #assert type(index) is int, "Arbitrary Dataset index should be int."
         return self.load_item(self.dataset[index])
     
-    def __len__(self):
-        return len(self.dataset)
-    
     def load_item(self, item):
         assert len(item) is len(self.load_funcs), "length of item and mode should be same."
         result = []
