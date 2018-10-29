@@ -29,8 +29,6 @@ class Cifar10Data:
         self.verbose = verbose
         # Images in cifar-10 dataset has shape of (32, 32, 3)
         self.shape = (32, 32, 3)
-        # In cifar-10 dataset images can be classified into 10 labels
-        self.labels = torch.eye(10)
         # Mean and Std of cifar-10
         self.mean = (0.4914, 0.4822, 0.4465)
         self.std = (0.2023, 0.1994, 0.2010)
@@ -63,7 +61,7 @@ class Cifar10Data:
         image = loader.transform(self.args).augment_image(image)
         image = T.ToTensor()(image)
         image = T.Normalize(self.mean, self.std)(image)
-        return image, self.labels[label]
+        return image, label
     
     def get_batch(self, batch_size):
         batch_list = random.sample(range(len(self)), batch_size)
@@ -71,9 +69,9 @@ class Cifar10Data:
         labels = []
         for i in batch_list:
             images.append(self[i][0])
-            labels.append(CF10[i][1])
+            labels.append(self[i][1])
         img_batch = torch.stack(images)
-        label_batch = torch.stack(labels)
+        label_batch = torch.tensor(labels)
         return img_batch, label_batch
     
 def reshape(img):

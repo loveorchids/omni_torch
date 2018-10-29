@@ -22,7 +22,7 @@ class CifarNet(nn.Module):
             img_batch, label_batch = CF10.get_batch(self.args.batch_size)
             self.optimizer.zero_grad()
             
-            prediction = self.resnet_18(img_batch)
+            prediction = self.forward(img_batch)
             loss = self.criterion(prediction, label_batch)
             loss.backward()
             self.optimizer.step()
@@ -50,7 +50,7 @@ class CifarNet(nn.Module):
         self.conv_block4 = block.conv_block(input=256, filters=[512, 512], repeat=2)
         self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1)
 
-        self.fc_layer = block.fc_layer(input=512, layer_size=[10], activation=None, batch_norm=False)
+        self.fc_layer = block.fc_layer(input=3072, layer_size=[10], activation=None, batch_norm=False)
 
     
     def forward(self, input):
