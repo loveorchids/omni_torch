@@ -4,8 +4,9 @@ import argparse
 class ImgAug:
     def initialize(self):
         self.parser = argparse.ArgumentParser()
-        
-        self.parser.add_argument("--img_size", type=int, default=512,
+        self.parser.add_argument("--crop_size", type=tuple, default=(1200, 1200),
+                                 help="size of input images")
+        self.parser.add_argument("--img_size", type=tuple, default=(500, 500),
                                  help="size of input images")
         self.parser.add_argument("--img_channel", type=int, default=3,
                                  help="3 stand for color image while 1 for greyscale and n for multilayers")

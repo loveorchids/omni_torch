@@ -1,7 +1,9 @@
 import os, glob, random
 import data.misc as misc
+import data.data_loader as loader
+from torch.utils import data
 
-class Arbitrary:
+class Arbitrary(data.Dataset):
     def __init__(self, args, sources, modes, load_funcs, dig_level, **options):
         """
         A generalized data initialization method, inherited by other data class, e.g. ilsvrc, img2img, etc.
@@ -17,9 +19,9 @@ class Arbitrary:
         you to load as deep as you want to.
         :param options: For Future upgrade.
         """
-        assert max([len(sources), len(modes), len(load_funcs), len(dig_level)]) is\
-            min([len(sources), len(modes), len(load_funcs), len(dig_level)]), \
-            "Length of 'sources', 'modes', 'load_funcs', 'dig_level' must be same."
+        assert max([len(sources), len(modes), len(dig_level)]) is\
+            min([len(sources), len(modes), len(dig_level)]), \
+            "Length of 'sources', 'modes', 'dig_level' must be same."
         self.args = args
         self.sources = sources
         self.modes = modes
@@ -30,6 +32,12 @@ class Arbitrary:
             self.verbose = options["verbose"]
         else:
             self.verbose = False
+        if "sizes" in options:
+            assert type(options["sizes"]) is list
+            assert len(options["sizes"]) is len(load_funcs)
+            self.sizes = options["sizes"]
+        else:
+            self.sizes = None
         
     def prepare(self):
         self.dataset = self.load_dataset()
@@ -44,9 +52,16 @@ class Arbitrary:
     def load_item(self, item):
         assert len(item) is len(self.load_funcs), "length of item and mode should be same."
         result = []
+        # seed is used to keep same image augmentation manner when load things from one item
         seed = random.randint(0, 100000)
         for i in range(len(item)):
-            if callable(self.load_funcs[i]):
+            if self.load_funcs[i] is "image":
+                if self.sizes:
+                    size = self.sizes[i]
+                else:
+                    size = self.args.img_size
+                result.append(loader.read_image(self.args, item[i], seed, size))
+            elif callable(self.load_funcs[i]):
                 result.append(self.load_funcs[i](self.args, item[i], seed))
             else:
                 raise NotImplementedError
@@ -65,13 +80,23 @@ class Arbitrary:
         assert len(self.sources) is len(self.modes), "sources and modes should be same dimensions."
         input_types = len(self.modes)
         for i in range(input_types):
-            sub_paths = [os.path.join(path, _) for _ in self.sources]
+            sub_paths = []
+            for source in self.sources:
+                if type(source) is str:
+                    sub_paths.append(os.path.join(path, source))
+                elif type(source) is tuple or type(source) is list:
+                    # In this case, there are multiple inputs in one source,
+                    # but we want it to be considered as one file
+                    sub_paths.append([os.path.join(path, _) for _ in source])
+                else:
+                    raise TypeError
             if self.modes[i] is "path":
-                data.update(self.load_path_from_folder(len(data), sub_paths[i], self.dig_level[i]))
+                data.update(self.load_path_from_folder(self.args, len(data), sub_paths[i],
+                                                       self.dig_level[i]))
             # We can add other modes if we want
             elif callable(self.modes[i]):
                 # mode[i] is a function
-                data.update(self.modes[i](len(data), sub_paths[i], self.dig_level[i]))
+                data.update(self.modes[i](self.args, len(data), sub_paths[i], self.dig_level[i]))
             else:
                 raise NotImplementedError
         dataset = []
@@ -79,6 +104,7 @@ class Arbitrary:
         for key in data.keys():
             data[key] = misc.compliment_dim(data[key], data_pieces)
         for i in range(data_pieces):
+            for j in range(len(data)):
             dataset.append([_[i] for _ in data.values()])
         return dataset
     

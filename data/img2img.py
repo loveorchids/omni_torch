@@ -8,7 +8,7 @@ class Img2Img(Arbitrary):
         assert len(sources) is 2, "In img2img dataset only two sources are allowed."
         assert len(modes) is 2, "In img2img dataset only two sources are allowed."
         assert len(load_funcs) is 2, "In img2img dataset only two sources are allowed."
-        super().__init__(args, sources, modes, load_funcs, dig_level, options)
+        super().__init__(args, sources, modes, load_funcs, dig_level, **options)
         self.one_to_one = one_to_one
         
     def prepare(self):
