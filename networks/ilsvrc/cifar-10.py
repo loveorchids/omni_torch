@@ -1,31 +1,44 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as tf
-from networks.blocks import ConvBlock
 import networks.blocks as block
-from data.special.cifar10 import Cifar10Data
+from data.arbitrary import Arbitrary
+import data.data_loader as loader
+import data.mode as mode
+
 
 class CifarNet(nn.Module):
-    def __init__(self, args, data):
+    def __init__(self, args):
         super(CifarNet, self).__init__()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.args = args
-        self.data = data
         self.create_blocks()
+        self.to(self.device)
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.parameters(), lr=args.learning_rate)
     
     def fit(self):
         running_loss = 0.0
-        CF10 = self.data(self.args, "~/Downloads/cifar-10")
-        CF10.prepare()
+        print("loading Dataset...")
+        data = Arbitrary(args=args, load_funcs=[loader.to_tensor, self.just_return_it],
+                         sources=[("data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4")],
+                         modes=[mode.load_pickle_from_cifar], dig_level=[0])
+        data.prepare()
+        print("loading Completed!")
+        
+        kwargs = {'num_workers': 2, 'pin_memory': True} if torch.cuda.is_available() else {}
+        train_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
+                                                   shuffle=True, **kwargs)
+        
         for epoch in range(self.args.epoch_num):
-            img_batch, label_batch = CF10.get_batch(self.args.batch_size)
-            self.optimizer.zero_grad()
+            for batch_idx, (img_batch, label_batch) in enumerate(train_loader):
+                img_batch, label_batch = img_batch.to(self.device), label_batch.to(self.device)
             
-            prediction = self.forward(img_batch)
-            loss = self.criterion(prediction, label_batch)
-            loss.backward()
-            self.optimizer.step()
+                prediction = self.forward(img_batch)
+                loss = self.criterion(prediction, label_batch)
+                print("--- loss: %s at batch %d---" % (loss, batch_idx))
+                loss.backward()
+                self.optimizer.step()
 
             running_loss += loss.item()
             if epoch % 10 == 0:  # print every 2000 mini-batches
@@ -52,7 +65,6 @@ class CifarNet(nn.Module):
 
         self.fc_layer = block.fc_layer(input=3072, layer_size=[10], activation=None, batch_norm=False)
 
-    
     def forward(self, input):
         res = self.shortcut1(input)
         out = self.conv_block1(input)
@@ -78,15 +90,23 @@ class CifarNet(nn.Module):
         out = self.fc_layer(out)
         return out
     
+    @staticmethod
+    def just_return_it(args, data, seed=None, size=None):
+        """
+        Because the label in cifar dataset is int
+        So here it will be transfered to a torch tensor
+        """
+        return torch.tensor(data)
 
 def test(args):
-    net = CifarNet(args, Cifar10Data)
+    net = CifarNet(args)
     y = net(torch.randn(8,3,32,32))
     print(y.size())
     
 if __name__ is "__main__":
     from options.base_options import BaseOptions
     args = BaseOptions().initialize()
+    args.path = "~/Downloads/cifar-10"
     #test(args)
-    cifarNet = CifarNet(args, Cifar10Data)
+    cifarNet = CifarNet(args)
     cifarNet.fit()
