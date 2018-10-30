@@ -45,9 +45,6 @@ def to_tensor(args, image, seed=None, size=None):
         image = T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(image)
     return image
 
-def just_return_it(args, data, seed=None, size=None):
-    return torch.tensor(data)
-
 def transform(args):
     aug_list = [augmenters.Sometimes(0.2, augmenters.AverageBlur(k=5)),
                 augmenters.Sometimes(0.2, augmenters.GaussianBlur(sigma=(0, 0.1))),

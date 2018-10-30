@@ -1,5 +1,6 @@
 import os, glob, random
 import data.misc as misc
+import data.mode as mode
 import data.data_loader as loader
 from torch.utils import data
 
@@ -75,7 +76,7 @@ class Arbitrary(data.Dataset):
         :param dig_level: how deep you want to find the sub-folders
         :return: a dataset in the form of a list and each element is an input output pair
         """
-        data = {}
+        data = []
         path = os.path.expanduser(self.args.path)
         assert len(self.sources) is len(self.modes), "sources and modes should be same dimensions."
         input_types = len(self.modes)
@@ -91,57 +92,18 @@ class Arbitrary(data.Dataset):
                 else:
                     raise TypeError
             if self.modes[i] is "path":
-                data.update(self.load_path_from_folder(self.args, len(data), sub_paths[i],
-                                                       self.dig_level[i]))
+                data += mode.load_path_from_folder(self.args, len(data), sub_paths[i],
+                                                       self.dig_level[i])
             # We can add other modes if we want
             elif callable(self.modes[i]):
                 # mode[i] is a function
-                data.update(self.modes[i](self.args, len(data), sub_paths[i], self.dig_level[i]))
+                data += self.modes[i](self.args, len(data), sub_paths[i], self.dig_level[i])
             else:
                 raise NotImplementedError
         dataset = []
-        data_pieces = max([len(_) for _ in data.values()])
-        for key in data.keys():
+        data_pieces = max([len(_) for _ in data])
+        for key in range(len(data)):
             data[key] = misc.compliment_dim(data[key], data_pieces)
         for i in range(data_pieces):
-            for j in range(len(data)):
-            dataset.append([_[i] for _ in data.values()])
+            dataset.append([_[i] for _ in data])
         return dataset
-    
-    @staticmethod
-    def load_path_from_csv(args, len, paths, dig_level=0):
-        if type(paths) is str:
-            paths = [paths]
-        for path in paths:
-            with open(path, "r") as csv_file:
-                pass
-    
-    @staticmethod
-    def load_path_from_folder(args, len, paths, dig_level=0):
-        """
-        'paths' is a list or tuple, which means you want all the sub paths within 'dig_level' levels.
-        'dig_level' represent how deep you want to get paths from.
-        """
-        output = []
-        if type(paths) is str:
-            paths = [paths]
-        for path in paths:
-            current_folders = [path]
-            # Do not delete the following line, we need this when dig_level is 0.
-            sub_folders = []
-            while dig_level > 0:
-                sub_folders = []
-                for sub_path in current_folders:
-                    sub_folders += glob.glob(sub_path + "/*")
-                current_folders = sub_folders
-                dig_level -= 1
-            sub_folders = []
-            for _ in current_folders:
-                sub_folders += glob.glob(_ + "/*")
-            output += sub_folders
-        if args.extensions:
-            output = [_ for _ in output if misc.extension_check(_, args.extensions)]
-        # 1->A, 2->B, 3->C, ..., 26->Z
-        key = misc.number_to_char(len)
-        return {key: output}
-
