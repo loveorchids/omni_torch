@@ -7,14 +7,6 @@ import data.data_loader as loader
 from options.base_options import BaseOptions
 
 
-train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('../data', train=True, download=True,
-                       transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=args.batch_size, shuffle=True, **kwargs)
-
 def test_Arbitrary(args):
     data = Arbitrary(args=args, root=args.path, sources=["trainA", "trainB", "testA", "testB"],
                      modes=["path"] * 4, load_funcs=[loader.read_image] * 4, dig_level=[0] * 4)
