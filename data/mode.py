@@ -36,7 +36,7 @@ def load_path_from_folder(args, length, paths, dig_level=0):
         output = [_ for _ in output if misc.extension_check(_, args.extensions)]
     return [output]
 
-def load_pickle_from_cifar(args, length, names, dig_level=0):
+def load_cifar_from_pickle(args, length, names, dig_level=0):
     """
     Cifar Dataset Structure
         |
@@ -59,6 +59,8 @@ def load_pickle_from_cifar(args, length, names, dig_level=0):
     
     data = []
     label = []
+    if type(names) is str:
+        names = [names]
     for name in names:
         with open(name, "rb") as db:
             dict = pickle.load(db, encoding="bytes")

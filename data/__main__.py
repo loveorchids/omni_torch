@@ -68,7 +68,7 @@ def test_cifar(args):
     args.batch_size = 128
     data = Arbitrary(args=args, load_funcs=[loader.to_tensor, just_return_it],
                      sources=[("data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4")],
-                     modes=[mode.load_pickle_from_cifar], dig_level=[0])
+                     modes=[mode.load_cifar_from_pickle], dig_level=[0])
     data.prepare()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

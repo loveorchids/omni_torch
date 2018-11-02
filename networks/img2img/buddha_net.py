@@ -1,16 +1,15 @@
-import os, time
+import time
 import torch
 import torch.nn as nn
-import torch.nn.functional as tf
 import networks.blocks as block
 from data.arbitrary import Arbitrary
 import data.data_loader as loader
 import data.mode as mode
 
 
-class CifarNet(nn.Module):
+class BuddhaNet(nn.Module):
     def __init__(self):
-        super(CifarNet, self).__init__()
+        super(BuddhaNet, self).__init__()
 
         self.shortcut1 = block.resnet_shortcut(input=3, output=64)
         self.conv_block1 = block.conv_block(input=3, filters=[64, 64], repeat=2)
@@ -60,16 +59,15 @@ class CifarNet(nn.Module):
         out = self.fc_layer(out)
         return out
 
-def fit(net, args, train_set, val_set, device, optimizer, criterion, finetune=False,
+
+def fit(net, args, data_loader, device, optimizer, criterion, finetune=False,
         do_validation=True, validate_every_n_epoch=5):
     net.train()
     if finetune:
-        model_path = os.path.expanduser(args.model)
-        net.load_state_dict(torch.load(model_path))
+        net = torch.load(args.model)
     accu_list = []
-    highest_accu = 0.0
     for epoch in range(args.epoch_num):
-        for batch_idx, (img_batch, label_batch) in enumerate(train_set):
+        for batch_idx, (img_batch, label_batch) in enumerate(data_loader):
             start_time = time.time()
             img_batch, label_batch = img_batch.to(device), label_batch.to(device)
             optimizer.zero_grad()
@@ -78,17 +76,19 @@ def fit(net, args, train_set, val_set, device, optimizer, criterion, finetune=Fa
             accu = int(torch.sum(torch.eq(pred_label, label_batch))) / img_batch.size(0) * 100
             accu_list.append(accu)
             loss = criterion(prediction, label_batch)
-            print("--- loss: %8f at batch %04d / %04d, cost %03f seconds, accuracy: %03f ---" %
+            print("--- loss: %8f at batch %04d / %04d, cost %3f seconds, accuracy: %3f ---" %
                   (float(loss.data), batch_idx, epoch, time.time() - start_time, accu))
             loss.backward()
             optimizer.step()
-        if do_validation and epoch % validate_every_n_epoch == 0:
-            test(net, test_set, highest_accu)
-    return accu_list
 
-def test(net, test_set, ):
+        if do_validation and epoch % validate_every_n_epoch == 0:
+            pass
+            # test(net, args, data_loader, device)
+
+
+def test(net, args, data_loader):
     net.eval()
-    for data, target in test_set:
+    for data, target in data_loader:
         data, target = data.to(device), target.to(device)
         output = net(data)
 
@@ -109,14 +109,24 @@ def fetch_data(args, source):
     print("loading Completed!")
     kwargs = {'num_workers': mpi.cpu_count(), 'pin_memory': True} if torch.cuda.is_available() else {}
     data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
-                                               shuffle=True, **kwargs)
+                                              shuffle=True, **kwargs)
     return data_loader
+
+
+def test_fetch_data(args, sources):
+    data_loader = fetch_data(args, sources)
+    print("Test 5 data batches...")
+    for batch_idx, (img_batch, label_batch) in enumerate(data_loader):
+        if batch_idx >= 5:
+            break
+    print("Test completed successfully!")
+
 
 if __name__ is "__main__":
     from options.base_options import BaseOptions
+
     args = BaseOptions().initialize()
     args.path = "~/Downloads/cifar-10"
-    args.model = "~/Documents/cifar10"
     args.batch_size = 256
 
     device = torch.device("cuda:1")
@@ -128,7 +138,7 @@ if __name__ is "__main__":
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(cifar.parameters(), lr=args.learning_rate)
 
-    fit(cifar, args, train_set, test_set, device, optimizer, criterion, finetune=True)
+    fit(cifar, args, train_set, device, optimizer, criterion)
 
 
 
