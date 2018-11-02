@@ -85,9 +85,11 @@ class CifarNet(nn.Module):
         out = self.fc_layer(out)
         return out
 
-    def fit(self, device):
+    def fit(self, device, finetune=True):
         self.train()
         running_loss = 0.0
+        if finetune:
+            self = torch.load(self.args.model)
         for epoch in range(args.epoch_num):
             for batch_idx, (img_batch, label_batch) in enumerate(self.train_loader):
                 start_time = time.time()
@@ -95,7 +97,7 @@ class CifarNet(nn.Module):
                 self.optimizer.zero_grad()
                 prediction = self.forward(img_batch)
                 loss = self.criterion(prediction, label_batch)
-                print("--- loss: %s at batch %d, cost %s seconds---" % (float(loss.data), batch_idx, time.time() - start_time))
+                print("--- loss: %s at batch %d / %d, cost %s seconds---" % (float(loss.data), batch_idx, epoch, time.time() - start_time))
                 loss.backward()
                 self.optimizer.step()
 
@@ -133,7 +135,7 @@ def fetch_data(args, source):
                      sources=source, modes=[mode.load_pickle_from_cifar], dig_level=[0])
     data.prepare()
     print("loading Completed!")
-    kwargs = {'num_workers': 2, 'pin_memory': True} if torch.cuda.is_available() else {}
+    kwargs = {'num_workers': 6, 'pin_memory': True} if torch.cuda.is_available() else {}
     train_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
                                                shuffle=True, **kwargs)
     return train_loader

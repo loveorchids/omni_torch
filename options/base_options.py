@@ -25,6 +25,7 @@ class BaseOptions(ImgAug):
         
         # -------------------------------Input Images------------------------------------
         self.parser.add_argument("--path", type=str, help="the path of dataset")
+        self.parser.add_argument("--model", type=str, help="the path where you save the model")
         self.parser.add_argument("--extensions", type=list,
                                  default = ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"])
         
