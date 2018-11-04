@@ -1,7 +1,8 @@
-import os, time
+import sys, os, time
 import torch
 import torch.nn as nn
 import torch.nn.functional as tf
+sys.path.append(os.path.expanduser("~/Documents/omni_torch"))
 import networks.blocks as block
 from data.arbitrary import Arbitrary
 import data.data_loader as loader
@@ -37,37 +38,43 @@ class CifarNet(nn.Module):
         res = self.shortcut1(input)
         out = self.conv_block1(input)
         out += res
+        out = tf.relu(out)
         out = self.pool1(out)
 
         res = self.shortcut2(out)
         out = self.conv_block2(out)
         out += res
+        out = tf.relu(out)
         out = self.pool2(out)
 
         res = self.shortcut3(out)
         out = self.conv_block3(out)
         out += res
+        out = tf.relu(out)
         out = self.pool3(out)
 
         res = self.shortcut4(out)
         out = self.conv_block4(out)
         out += res
+        out = tf.relu(out)
         out = self.pool4(out)
 
         out = self.conv_block5(out)
+        out = tf.relu(out)
 
         out = out.view(out.size(0), -1)
         out = self.fc_layer(out)
         return out
 
+
 def fit(net, args, train_set, val_set, device, optimizer, criterion, finetune=False,
         do_validation=True, validate_every_n_epoch=5):
+    high_accu = 0
+    accu_list = []
     net.train()
     if finetune:
         model_path = os.path.expanduser(args.model)
         net.load_state_dict(torch.load(model_path))
-    accu_list = []
-    highest_accu = 0.0
     for epoch in range(args.epoch_num):
         for batch_idx, (img_batch, label_batch) in enumerate(train_set):
             start_time = time.time()
@@ -82,15 +89,22 @@ def fit(net, args, train_set, val_set, device, optimizer, criterion, finetune=Fa
                   (float(loss.data), batch_idx, epoch, time.time() - start_time, accu))
             loss.backward()
             optimizer.step()
-        if do_validation and epoch % validate_every_n_epoch == 0:
-            test(net, test_set, highest_accu)
+        if do_validation:# and epoch % validate_every_n_epoch == 0:
+            print("Validating...")
+            start_time = time.time()
+            val_accu = []
+            for batch_idx, (img_batch, label_batch) in enumerate(val_set):
+                img_batch, label_batch = img_batch.to(device), label_batch.to(device)
+                prediction = net(img_batch)
+                pred_label = torch.max(prediction, 1)[1]
+                val_accu.append(int(torch.sum(torch.eq(pred_label, label_batch))) /
+                                img_batch.size(0) * 100)
+            avg_val_accu = sum(val_accu)/len(val_accu)
+            if avg_val_accu > high_accu:
+                torch.save(net.state_dict(), args.model)
+            print("--- cost %03f seconds, validation accuracy: %03f ---" %
+                  (time.time() - start_time, avg_val_accu))
     return accu_list
-
-def test(net, test_set, ):
-    net.eval()
-    for data, target in test_set:
-        data, target = data.to(device), target.to(device)
-        output = net(data)
 
 
 def fetch_data(args, source):
@@ -101,19 +115,22 @@ def fetch_data(args, source):
         So here it will be transfered to a torch tensor
         """
         return torch.tensor(data)
-
     print("loading Dataset...")
     data = Arbitrary(args=args, load_funcs=[loader.to_tensor, just_return_it],
                      sources=source, modes=[mode.load_cifar_from_pickle], dig_level=[0])
     data.prepare()
     print("loading Completed!")
-    kwargs = {'num_workers': mpi.cpu_count(), 'pin_memory': True} if torch.cuda.is_available() else {}
+    kwargs = {'num_workers': mpi.cpu_count(), 'pin_memory': True} \
+        if torch.cuda.is_available() else {}
     data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
                                                shuffle=True, **kwargs)
     return data_loader
 
-if __name__ is "__main__":
+if __name__ == "__main__":
+    print("start0")
     from options.base_options import BaseOptions
+    import matplotlib as plt
+    print("start")
     args = BaseOptions().initialize()
     args.path = "~/Downloads/cifar-10"
     args.model = "~/Documents/cifar10"
@@ -128,7 +145,16 @@ if __name__ is "__main__":
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(cifar.parameters(), lr=args.learning_rate)
 
-    fit(cifar, args, train_set, test_set, device, optimizer, criterion, finetune=True)
+    trace = fit(cifar, args, train_set, test_set, device, optimizer, criterion, finetune=True)
+    
+    fig = plt.figure()
+    ax = plt.axes()
+    
+    ax.plot(trace)
+    
+    plt.show()
+    
+    
 
 
 

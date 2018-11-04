@@ -44,11 +44,18 @@ def random_crop(image, crop_size, seed=None):
             np.random.seed(seed)
         w = np.random.randint(0, image.shape[0] - crop_size[0] + 1)
         h = np.random.randint(0, image.shape[1] - crop_size[1] + 1)
-        return image[w:w + crop_size[0], h:h + crop_size[1], :]
+        if len(image.shape) == 2:
+            # Grayscale Image
+            return image[w:w + crop_size[0], h:h + crop_size[1]]
+        elif len(image.shape) == 3:
+            # RGB Image
+            return image[w:w + crop_size[0], h:h + crop_size[1], :]
+        else:
+            raise TypeError("The input is not an image.")
         
 
 if __name__ == "__main__":
-    img = np.random.randint(0, 1, size=[20, 20, 3])
+    img = np.random.randint(0, 1, size=[20, 20])
     crop = random_crop(img, (18, 18))
     crop = random_crop(img, (15, 21))
     crop = random_crop(img, (20, 1))

@@ -10,15 +10,12 @@ class BaseOptions(ImgAug):
         ImgAug.initialize(self)
         self.parser.add_argument("--gpu_id", type=str, default="0",
                                  help="if None, then use CPU mode.")
-        self.parser.add_argument("--gpu_memory_fraction", type=float, default=0.9,
-                                 help="GPU memory usage.")
         
-        self.parser.add_argument("--epoch_num", type=int, default=100,
+        self.parser.add_argument("--epoch_num", type=int, default=5000,
                                  help="Total training epoch")
         
         # -------------------------------Optimizer------------------------------------
-        self.parser.add_argument("--optimizer", type=str, default="Adam")
-        self.parser.add_argument("--learning_rate", type=float, default=0.0005)
+        self.parser.add_argument("--learning_rate", type=float, default=0.001)
         
         # ------------------------------Input Queue-----------------------------------
         self.parser.add_argument("--batch_size", type=int, default=8)
@@ -26,6 +23,7 @@ class BaseOptions(ImgAug):
         # -------------------------------Input Images------------------------------------
         self.parser.add_argument("--path", type=str, help="the path of dataset")
         self.parser.add_argument("--model", type=str, help="the path where you save the model")
+        self.parser.add_argument("--log", type=str, help="the path want to save your log")
         self.parser.add_argument("--extensions", type=list,
                                  default = ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"])
         
