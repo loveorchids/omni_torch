@@ -1,7 +1,9 @@
 import glob, pickle
 import data.misc as misc
 import numpy as np
+import data
 
+ALLOW_WARNING = data.ALLOW_WARNING
 
 def load_path_from_csv(args, length, paths, dig_level=0):
     if type(paths) is str:

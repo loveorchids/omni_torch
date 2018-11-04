@@ -5,6 +5,9 @@ import torch
 import torchvision.transforms as T
 import numpy as np
 import data.misc as misc
+import data
+
+ALLOW_WARNING = data.ALLOW_WARNING
 
 def read_image(args, path, seed=None, size=None):
     if args.img_channel is 1:

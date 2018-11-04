@@ -1,10 +1,13 @@
 import os, glob, random
+import data
 import data.misc as misc
 import data.mode as mode
 import data.data_loader as loader
-from torch.utils import data
+from torch.utils import data as tud
 
-class Arbitrary(data.Dataset):
+ALLOW_WARNING = data.ALLOW_WARNING
+
+class Arbitrary(tud.Dataset):
     def __init__(self, args, sources, modes, load_funcs, dig_level, **options):
         """
         A generalized data initialization method, inherited by other data class, e.g. ilsvrc, img2img, etc.

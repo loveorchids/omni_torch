@@ -1,6 +1,9 @@
 import os
 import data.misc as misc
 from data.arbitrary import Arbitrary
+import data
+
+ALLOW_WARNING = data.ALLOW_WARNING
 
 class ILSVRC(Arbitrary):
     def __init__(self, args, sources, modes, load_funcs, dig_level, **options):
