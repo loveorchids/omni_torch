@@ -23,13 +23,13 @@ def read_image(args, path, seed=None, size=None, ops=None):
     else:
         assert len(size) is 2
     image = cv2.resize(image, tuple(size))
-    if args.img_channel is 1:
-        image = np.expand_dims(image, axis=-1)
     if args.do_imgaug:
         if seed:
             assert type(seed) is int, "random seed should be int."
             imgaug.seed(seed)
         image = transform(args).augment_image(image)
+    if args.img_channel is 1:
+        image = np.expand_dims(image, axis=-1)
     if args.perform_ops and ops:
         image = ops(image, args, path, seed, size)
     else:

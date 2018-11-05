@@ -4,9 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as tf
 sys.path.append(os.path.expanduser("~/Documents/omni_torch"))
 import networks.blocks as block
-from data.arbitrary import Arbitrary
+from data.set_arbitrary import Arbitrary_Dataset
 import data.data_loader as loader
-import data.mode as mode
+import data.path_loader as mode
 
 
 class CifarNet(nn.Module):
@@ -116,8 +116,8 @@ def fetch_data(args, source):
         """
         return torch.tensor(data)
     print("loading Dataset...")
-    data = Arbitrary(args=args, load_funcs=[loader.to_tensor, just_return_it],
-                     sources=source, modes=[mode.load_cifar_from_pickle], dig_level=[0])
+    data = Arbitrary_Dataset(args=args, load_funcs=[loader.to_tensor, just_return_it],
+                             sources=source, modes=[mode.load_cifar_from_pickle], dig_level=[0])
     data.prepare()
     print("loading Completed!")
     kwargs = {'num_workers': mpi.cpu_count(), 'pin_memory': True} \

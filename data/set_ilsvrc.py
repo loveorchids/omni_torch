@@ -1,13 +1,13 @@
 import os
 import data.misc as misc
-from data.arbitrary import Arbitrary
+from data.set_arbitrary import Arbitrary_Dataset
 import data
 
 ALLOW_WARNING = data.ALLOW_WARNING
 
 # Todo: Not Tested Yet
 
-class ILSVRC(Arbitrary):
+class ILSVRC_Dataset(Arbitrary_Dataset):
     def __init__(self, args, sources, modes, load_funcs, dig_level, loader_ops=None, **options):
         super().__init__(args, sources, modes, load_funcs, dig_level, loader_ops, options)
         

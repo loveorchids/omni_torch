@@ -2,18 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a7c06bec-ea05-47d9-964f-379b66919876" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/data/data_loader_ops.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/omni_torch.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/omni_torch.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/__main__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/arbitrary.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/arbitrary.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/arbitrary.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/set_arbitrary.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/data_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/data_loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/ilsvrc.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/ilsvrc.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/img2img.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/img2img.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mode.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/mode.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/data_loader_ops.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/data_loader_ops.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/ilsvrc.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/set_ilsvrc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/img2img.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/set_img2img.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mode.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/path_loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/template.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/cifar-10.py" beforeDir="false" afterPath="$PROJECT_DIR$/networks/ilsvrc/cifar-10.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/networks/img2img/buddha_net.py" beforeDir="false" afterPath="$PROJECT_DIR$/networks/img2img/buddha_net.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/options/base_options.py" beforeDir="false" afterPath="$PROJECT_DIR$/options/base_options.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/options/imgaug_options.py" beforeDir="false" afterPath="$PROJECT_DIR$/options/imgaug_options.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -22,8 +21,8 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/omni_torch$__main__.coverage" NAME="__main__ Coverage Results" MODIFIED="1541413303027" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data" />
-    <SUITE FILE_PATH="coverage/omni_torch$buddha_net.coverage" NAME="buddha_net Coverage Results" MODIFIED="1541396203012" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/networks/img2img" />
+    <SUITE FILE_PATH="coverage/omni_torch$__main__.coverage" NAME="__main__ Coverage Results" MODIFIED="1541413895258" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/data" />
+    <SUITE FILE_PATH="coverage/omni_torch$buddha_net.coverage" NAME="buddha_net Coverage Results" MODIFIED="1541414425120" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/networks/img2img" />
     <SUITE FILE_PATH="coverage/omni_torch$cifar_10.coverage" NAME="cifar-10 Coverage Results" MODIFIED="1541150459773" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/networks/ilsvrc" />
   </component>
   <component name="FUSProjectUsageTrigger">
@@ -41,7 +40,7 @@
       <usages-collector id="statistics.file.extensions.open">
         <counts>
           <entry key="_bootstrap&gt;" value="4" />
-          <entry key="py" value="32" />
+          <entry key="py" value="34" />
           <entry key="txt" value="1" />
         </counts>
       </usages-collector>
@@ -49,46 +48,47 @@
         <counts>
           <entry key="PLAIN_TEXT" value="1" />
           <entry key="PyRemoteDebug" value="4" />
-          <entry key="Python" value="32" />
+          <entry key="Python" value="34" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="Python Console" value="1007" />
-          <entry key="dummy" value="16" />
-          <entry key="py" value="6725" />
+          <entry key="Python Console" value="1032" />
+          <entry key="dummy" value="59" />
+          <entry key="py" value="6788" />
           <entry key="txt" value="30" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="PLAIN_TEXT" value="46" />
-          <entry key="Python" value="7732" />
+          <entry key="PLAIN_TEXT" value="89" />
+          <entry key="Python" value="7820" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/data/__main__.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="339">
-              <caret line="83" column="25" lean-forward="true" selection-start-line="83" selection-start-column="25" selection-end-line="83" selection-end-column="25" />
+            <state relative-caret-position="691">
+              <caret line="129" column="5" selection-start-line="129" selection-start-column="5" selection-end-line="129" selection-end-column="5" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
-                <marker date="1541413458990" expanded="true" signature="1519:1524" ph="..." />
+                <marker date="1541413894867" expanded="true" signature="1566:1571" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/data/mode.py">
+        <entry file="file://$PROJECT_DIR$/data/path_loader.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
+            <state relative-caret-position="-924">
               <caret line="3" column="11" lean-forward="true" selection-start-line="3" selection-start-column="11" selection-end-line="3" selection-end-column="11" />
               <folding>
+                <element signature="e#0#19#0" expanded="true" />
                 <marker date="1541401349498" expanded="true" signature="342:906" ph="..." />
               </folding>
             </state>
@@ -96,24 +96,24 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/data/arbitrary.py">
+        <entry file="file://$PROJECT_DIR$/data/set_arbitrary.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="369">
-              <caret line="76" selection-start-line="76" selection-end-line="76" />
+            <state relative-caret-position="88">
+              <caret line="9" column="9" lean-forward="true" selection-start-line="9" selection-start-column="9" selection-end-line="9" selection-end-column="9" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2767">
-              <caret line="152" column="35" lean-forward="true" selection-start-line="152" selection-start-column="35" selection-end-line="152" selection-end-column="35" />
+            <state relative-caret-position="479">
+              <caret line="201" column="5" selection-start-line="201" selection-start-column="5" selection-end-line="201" selection-end-column="5" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
-                <marker date="1541412505628" expanded="true" signature="970:1453" ph="..." />
-                <marker date="1541412505628" expanded="true" signature="6508:6639" ph="..." />
-                <marker date="1541412505628" expanded="true" signature="7780:7783" ph="..." />
+                <marker date="1541414423293" expanded="true" signature="994:1477" ph="..." />
+                <marker date="1541414423293" expanded="true" signature="6552:6683" ph="..." />
+                <marker date="1541414423293" expanded="true" signature="7872:7875" ph="..." />
               </folding>
             </state>
           </provider>
@@ -122,8 +122,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/data/data_loader.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="462">
-              <caret line="45" column="52" lean-forward="true" selection-start-line="45" selection-start-column="52" selection-end-line="45" selection-end-column="52" />
+            <state relative-caret-position="726">
+              <caret line="33" selection-start-line="33" selection-end-line="33" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -134,21 +134,30 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/data/data_loader_ops.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="669">
-              <caret line="51" column="31" lean-forward="true" selection-start-line="51" selection-start-column="31" selection-end-line="51" selection-end-column="31" />
+            <state relative-caret-position="647">
+              <caret line="52" column="8" selection-start-line="52" selection-start-column="8" selection-end-line="52" selection-end-column="8" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
-                <marker date="1541411973845" expanded="true" signature="2125:2185" ph="..." />
+                <marker date="1541414394350" expanded="true" signature="2202:2262" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/data/ilsvrc.py">
+        <entry file="file://$USER_HOME$/.PyCharm2018.2/system/remote_sources/-1835257923/2045391537/torch/nn/modules/module.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="220">
-              <caret line="10" column="83" selection-start-line="10" selection-start-column="83" selection-end-line="10" selection-end-column="83" />
+            <state relative-caret-position="-2923">
+              <caret line="517" selection-start-line="517" selection-end-line="517" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/data/set_ilsvrc.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="198">
+              <caret line="9" column="10" selection-start-line="9" selection-start-column="10" selection-end-line="9" selection-end-column="10" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -166,22 +175,13 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/data/img2img.py">
+        <entry file="file://$PROJECT_DIR$/data/set_img2img.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="286">
-              <caret line="13" column="92" lean-forward="true" selection-start-line="13" selection-start-column="92" selection-end-line="13" selection-end-column="92" />
+            <state relative-caret-position="374">
+              <caret line="17" column="42" lean-forward="true" selection-start-line="17" selection-start-column="42" selection-end-line="17" selection-end-column="42" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/options/imgaug_options.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="418">
-              <caret line="19" column="70" lean-forward="true" selection-start-line="19" selection-start-column="70" selection-end-line="19" selection-end-column="70" />
             </state>
           </provider>
         </entry>
@@ -217,13 +217,16 @@
         <option value="$PROJECT_DIR$/data/mode.py" />
         <option value="$PROJECT_DIR$/options/imgaug_options.py" />
         <option value="$PROJECT_DIR$/data/ops.py" />
-        <option value="$PROJECT_DIR$/data/data_loader_ops.py" />
         <option value="$PROJECT_DIR$/data/img2img.py" />
         <option value="$PROJECT_DIR$/data/ilsvrc.py" />
-        <option value="$PROJECT_DIR$/networks/img2img/buddha_net.py" />
         <option value="$PROJECT_DIR$/data/arbitrary.py" />
-        <option value="$PROJECT_DIR$/data/data_loader.py" />
         <option value="$PROJECT_DIR$/data/__main__.py" />
+        <option value="$PROJECT_DIR$/data/set_arbitrary.py" />
+        <option value="$PROJECT_DIR$/data/set_ilsvrc.py" />
+        <option value="$PROJECT_DIR$/data/set_img2img.py" />
+        <option value="$PROJECT_DIR$/data/data_loader.py" />
+        <option value="$PROJECT_DIR$/data/data_loader_ops.py" />
+        <option value="$PROJECT_DIR$/networks/img2img/buddha_net.py" />
       </list>
     </option>
   </component>
@@ -233,7 +236,7 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="337" />
     <option name="y" value="93" />
     <option name="width" value="654" />
@@ -440,7 +443,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.__main__">
+  <component name="RunManager" selected="Python.buddha_net">
     <configuration name="__main__" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="omni_torch" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -514,8 +517,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.__main__" />
         <item itemvalue="Python.buddha_net" />
+        <item itemvalue="Python.__main__" />
         <item itemvalue="Python.cifar-10" />
       </list>
     </recent_temporary>
@@ -551,8 +554,8 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" x="-1722" y="215" width="856" height="556" id="Run" order="2" type="WINDOWED" weight="0.3298647" />
-      <window_info active="true" anchor="bottom" x="-1351" y="64" width="1280" height="961" id="Debug" order="3" type="WINDOWED" visible="true" weight="0.3995657" />
+      <window_info active="true" anchor="bottom" x="-1722" y="215" width="856" height="556" id="Run" order="2" type="WINDOWED" visible="true" weight="0.3298647" />
+      <window_info anchor="bottom" x="-1351" y="64" width="1280" height="961" id="Debug" order="3" type="WINDOWED" visible="true" weight="0.3995657" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32899022" />
@@ -580,19 +583,9 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/networks/img2img/buddha_net.py</url>
-          <line>95</line>
-          <option name="timeStamp" value="9" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data/arbitrary.py</url>
-          <line>73</line>
-          <option name="timeStamp" value="47" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data/arbitrary.py</url>
-          <line>84</line>
-          <option name="timeStamp" value="48" />
+          <url>file://$PROJECT_DIR$/data/data_loader.py</url>
+          <line>30</line>
+          <option name="timeStamp" value="52" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -666,37 +659,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/data/data_loader_ops.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="669">
-          <caret line="51" column="31" lean-forward="true" selection-start-line="51" selection-start-column="31" selection-end-line="51" selection-end-column="31" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-            <marker date="1541411973845" expanded="true" signature="2125:2185" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/data/img2img.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
-          <caret line="13" column="92" lean-forward="true" selection-start-line="13" selection-start-column="92" selection-end-line="13" selection-end-column="92" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/data/ilsvrc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="220">
-          <caret line="10" column="83" selection-start-line="10" selection-start-column="83" selection-end-line="10" selection-end-column="83" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.PyCharm2018.2/system/remote_sources/-1835257923/-1171821208/apport_python_hook.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="22">
@@ -704,11 +666,78 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/data/mode.py">
+    <entry file="file://$PROJECT_DIR$/data/set_img2img.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
+        <state relative-caret-position="374">
+          <caret line="17" column="42" lean-forward="true" selection-start-line="17" selection-start-column="42" selection-end-line="17" selection-end-column="42" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data/set_arbitrary.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="88">
+          <caret line="9" column="9" lean-forward="true" selection-start-line="9" selection-start-column="9" selection-end-line="9" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data/set_ilsvrc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="198">
+          <caret line="9" column="10" selection-start-line="9" selection-start-column="10" selection-end-line="9" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data/data_loader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="726">
+          <caret line="33" selection-start-line="33" selection-end-line="33" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data/data_loader_ops.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="647">
+          <caret line="52" column="8" selection-start-line="52" selection-start-column="8" selection-end-line="52" selection-end-column="8" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+            <marker date="1541414394350" expanded="true" signature="2202:2262" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2018.2/system/remote_sources/-1835257923/2045391537/torch/nn/modules/module.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2923">
+          <caret line="517" selection-start-line="517" selection-end-line="517" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data/__main__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="691">
+          <caret line="129" column="5" selection-start-line="129" selection-start-column="5" selection-end-line="129" selection-end-column="5" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+            <marker date="1541413894867" expanded="true" signature="1566:1571" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data/path_loader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-924">
           <caret line="3" column="11" lean-forward="true" selection-start-line="3" selection-start-column="11" selection-end-line="3" selection-end-column="11" />
           <folding>
+            <element signature="e#0#19#0" expanded="true" />
             <marker date="1541401349498" expanded="true" signature="342:906" ph="..." />
           </folding>
         </state>
@@ -716,41 +745,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2767">
-          <caret line="152" column="35" lean-forward="true" selection-start-line="152" selection-start-column="35" selection-end-line="152" selection-end-column="35" />
+        <state relative-caret-position="479">
+          <caret line="201" column="5" selection-start-line="201" selection-start-column="5" selection-end-line="201" selection-end-column="5" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
-            <marker date="1541412505628" expanded="true" signature="970:1453" ph="..." />
-            <marker date="1541412505628" expanded="true" signature="6508:6639" ph="..." />
-            <marker date="1541412505628" expanded="true" signature="7780:7783" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/data/data_loader.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="462">
-          <caret line="45" column="52" lean-forward="true" selection-start-line="45" selection-start-column="52" selection-end-line="45" selection-end-column="52" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/data/arbitrary.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="369">
-          <caret line="76" selection-start-line="76" selection-end-line="76" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/data/__main__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="339">
-          <caret line="83" column="25" lean-forward="true" selection-start-line="83" selection-start-column="25" selection-end-line="83" selection-end-column="25" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-            <marker date="1541413458990" expanded="true" signature="1519:1524" ph="..." />
+            <marker date="1541414423293" expanded="true" signature="994:1477" ph="..." />
+            <marker date="1541414423293" expanded="true" signature="6552:6683" ph="..." />
+            <marker date="1541414423293" expanded="true" signature="7872:7875" ph="..." />
           </folding>
         </state>
       </provider>

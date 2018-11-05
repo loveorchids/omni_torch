@@ -49,6 +49,8 @@ def segment_image(image, args, path, seed, size):
 
 def inverse_image(image, args, path, seed, size):
     image = cv2.bitwise_not(image)
+    if len(image.shape) == 2:
+        image = np.expand_dims(image, axis=-1)
     image = T.ToTensor()(image)
     return image
 

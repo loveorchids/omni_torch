@@ -1,11 +1,11 @@
 import os
 import data.misc as misc
-from data.arbitrary import Arbitrary
+from data.set_arbitrary import Arbitrary_Dataset
 import data
 
 ALLOW_WARNING = data.ALLOW_WARNING
 
-class Img2Img(Arbitrary):
+class Img2Img_Dataset(Arbitrary_Dataset):
     def __init__(self, args, sources, modes, load_funcs, dig_level, loader_ops=None,
                  one_to_one=True, **options):
         assert len(sources) is 2, "In img2img dataset only two sources are allowed."

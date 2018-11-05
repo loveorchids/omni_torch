@@ -7,8 +7,8 @@ from torch.autograd import Variable
 from torchvision.models import resnet18, vgg16_bn
 import numpy as np
 import networks.blocks as block
-from data.img2img import Img2Img
-from data.arbitrary import  Arbitrary
+from data.set_img2img import Img2Img_Dataset
+from data.set_arbitrary import  Arbitrary_Dataset
 import data.data_loader as loader
 import data.data_loader_ops as dop
 import visualize.basic as vb
@@ -139,12 +139,12 @@ def save_tensor_to_img(tensora_list, idx):
 
 def fetch_data(args, sources):
     import multiprocessing as mpi
-    data = Img2Img(args=args, sources=sources, modes=["path"] * 2,
-                   load_funcs=[loader.read_image] * 2, dig_level=[0] * 2,
-                   loader_ops=[dop.inverse_image] * 2)
+    data = Img2Img_Dataset(args=args, sources=sources, modes=["path"] * 2,
+                           load_funcs=[loader.read_image] * 2, dig_level=[0] * 2,
+                           loader_ops=[dop.inverse_image] * 2)
     data.prepare()
     works = mpi.cpu_count() - 2
-    kwargs = {'num_workers': works, 'pin_memory': True} \
+    kwargs = {'num_workers': 0, 'pin_memory': True} \
         if torch.cuda.is_available() else {}
     data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
                                               shuffle=True, **kwargs)
@@ -156,9 +156,9 @@ def fetch_new_data(args, sources,):
         for path in paths:
             imgs .append(loader.read_image(args, path, seed, size, ops))
         return torch.cat(imgs)
-    data = Arbitrary(args=args, sources=sources, modes=["sep_path", "path"],
-                     load_funcs=[combine_multi_image, loader.read_image],
-                     dig_level=[0] * 2, loader_ops=[dop.inverse_image] * 2)
+    data = Arbitrary_Dataset(args=args, sources=sources, modes=["sep_path", "path"],
+                             load_funcs=[combine_multi_image, loader.read_image],
+                             dig_level=[0] * 2, loader_ops=[dop.inverse_image] * 2)
     data.prepare()
     works = mpi.cpu_count() - 2
     kwargs = {'num_workers': 0, 'pin_memory': True} \
@@ -168,9 +168,9 @@ def fetch_new_data(args, sources,):
     return data_loader
 
 def fetch_val_data(args, sources):
-    data = Arbitrary(args=args, sources=sources, modes=["sep_path", "path"],
-                     load_funcs=[loader.read_image, loader.read_image],
-                     dig_level=[0] * 2, loader_ops =[dop.segment_and_inverse] * 2)
+    data = Arbitrary_Dataset(args=args, sources=sources, modes=["sep_path", "path"],
+                             load_funcs=[loader.read_image, loader.read_image],
+                             dig_level=[0] * 2, loader_ops =[dop.segment_and_inverse] * 2)
     data.prepare()
     works = mpi.cpu_count() - 2
     kwargs = {'num_workers': 0, 'pin_memory': True} \
@@ -198,8 +198,8 @@ if __name__ == "__main__":
     buddhanet = BuddhaNet()
     buddhanet.to(device)
     
-    #evaluator = ResNet18()
-    evaluator = Vgg16BN()
+    evaluator = ResNet18()
+    #evaluator = Vgg16BN()
     evaluator.to("cuda:0")
     
     train_set = fetch_data(args, ["groupa", "groupb"])
