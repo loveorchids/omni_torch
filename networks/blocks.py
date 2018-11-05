@@ -42,6 +42,8 @@ def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
         ops.add_module(name + "_shortcut_BN", nn.BatchNorm2d(output))
     return ops
 
+def stn_block():
+    pass
 
 def fc_layer(input, layer_size, name=None, activation = nn.ReLU, batch_norm = True):
     ops = nn.Sequential()

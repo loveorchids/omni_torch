@@ -128,7 +128,7 @@ def test_multilayer_input(args):
 if __name__ == "__main__":
     args = BaseOptions().initialize()
     #test_cifar(args)
-    test_img2img(args)
+    #test_img2img(args)
     test_img2img_advanced(args)
     test_super_reso(args)
     test_multilayer_input(args)
