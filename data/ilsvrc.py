@@ -5,9 +5,11 @@ import data
 
 ALLOW_WARNING = data.ALLOW_WARNING
 
+# Todo: Not Tested Yet
+
 class ILSVRC(Arbitrary):
-    def __init__(self, args, sources, modes, load_funcs, dig_level, **options):
-        super().__init__(args, sources, modes, load_funcs, dig_level, options)
+    def __init__(self, args, sources, modes, load_funcs, dig_level, loader_ops=None, **options):
+        super().__init__(args, sources, modes, load_funcs, dig_level, loader_ops, options)
         
     def prepare(self):
         self.dataset = self.load_dataset()

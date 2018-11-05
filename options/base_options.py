@@ -26,6 +26,9 @@ class BaseOptions(ImgAug):
         self.parser.add_argument("--log", type=str, help="the path want to save your log")
         self.parser.add_argument("--extensions", type=list,
                                  default = ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"])
+
+        self.parser.add_argument("--random_order_load", type=bool, default=False,
+                                 help="perform randomly select input source from dataset")
         
         # ------------------------------Miscellaneous----------------------------------
         self.parser.add_argument("--log_dir", type=str, help="log location")

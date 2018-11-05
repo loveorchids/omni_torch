@@ -6,12 +6,12 @@ import data
 ALLOW_WARNING = data.ALLOW_WARNING
 
 class Img2Img(Arbitrary):
-    def __init__(self, args, sources, modes, load_funcs, dig_level,
+    def __init__(self, args, sources, modes, load_funcs, dig_level, loader_ops=None,
                  one_to_one=True, **options):
         assert len(sources) is 2, "In img2img dataset only two sources are allowed."
         assert len(modes) is 2, "In img2img dataset only two sources are allowed."
         assert len(load_funcs) is 2, "In img2img dataset only two sources are allowed."
-        super().__init__(args, sources, modes, load_funcs, dig_level, **options)
+        super().__init__(args, sources, modes, load_funcs, dig_level, loader_ops, **options)
         self.one_to_one = one_to_one
         
     def prepare(self):

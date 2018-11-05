@@ -4,17 +4,23 @@ import argparse
 class ImgAug:
     def initialize(self):
         self.parser = argparse.ArgumentParser()
+        # Todo: the role of random_crop and crop_size is still unclear
         self.parser.add_argument("--random_crop", type=bool, default=True,
                                  help="randomly crop an image")
-        self.parser.add_argument("--crop_size", type=tuple, default=(320, 320),
+        self.parser.add_argument("--crop_size", type=tuple, default=(512, 512),
                                  help="size of input images")
-        
+
+        self.parser.add_argument("--segments", type=tuple,
+                                 help="sliced in W and H dimension of an image")
+        self.parser.add_argument("--patch_size", type=tuple, default=(320, 320),
+                                 help="the size of segmented patches from origin image")
+
         self.parser.add_argument("--img_size", type=tuple, default=(320, 320),
                                  help="size of input images")
         self.parser.add_argument("--img_channel", type=int, default=3,
                                  help="3 stand for color image while 1 for greyscale")
 
-        self.parser.add_argument("--inverse_img", type=bool, default=True,
+        self.parser.add_argument("--perform_ops", type=bool, default=True,
                                  help="inverse the image bitwise")
         self.parser.add_argument("--do_imgaug", type=bool, default=True,
                                  help="do image augmentation on image or not")

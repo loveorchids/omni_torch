@@ -1,12 +1,16 @@
 import os, time
+import multiprocessing as mpi
 import torch, cv2
 import torch.nn as nn
 import torch.nn.functional as tf
 from torch.autograd import Variable
-from torchvision.models import resnet18
+from torchvision.models import resnet18, vgg16_bn
+import numpy as np
 import networks.blocks as block
 from data.img2img import Img2Img
+from data.arbitrary import  Arbitrary
 import data.data_loader as loader
+import data.data_loader_ops as dop
 import visualize.basic as vb
 
 
@@ -20,11 +24,27 @@ class ResNet18(nn.Module):
             p.requires_grad = False
     
     def forward(self, x):
+        # In this scenario, input x is a grayscale image
         x = x.repeat(1, 3, 1, 1)
         for i, layer in enumerate(self.resnet):
             x = layer(x)
         return x
 
+class Vgg16BN(nn.Module):
+    def __init__(self):
+        super(Vgg16BN, self).__init__()
+        vgg16 = vgg16_bn(pretrained=True)
+        modules = list(vgg16.children())[:6]
+        self.vgg16 = nn.Sequential(*modules)
+        for p in self.vgg16.parameters():
+            p.requires_grad = False
+
+    def forward(self, x):
+        # In this scenario, input x is a grayscale image
+        x = x.repeat(1, 3, 1, 1)
+        for i, layer in enumerate(self.resnet):
+            x = layer(x)
+        return x
 
 class BuddhaNet(nn.Module):
     def __init__(self):
@@ -58,7 +78,7 @@ class BuddhaNet(nn.Module):
         out = self.up_conv2(out)
         out = self.up_conv3(out)
         return out
-    
+
     def semantic(self, input):
         out = self.down_conv1(input)
         out = self.down_conv2(out)
@@ -108,18 +128,52 @@ def fit(net, evaluator, args, data_loader, device, optimizer, criterion, finetun
             torch.save(net.state_dict(), model_path + "_" + str(epoch))
 
 
-def save_tensor_to_img(tensor, idx):
-    img = tensor[idx].data.to("cpu").numpy().squeeze() * 255
+def save_tensor_to_img(tensora_list, idx):
+    # -------------------- FOR DEBUG USE ONLY --------------------
+    imgs = []
+    for tensor in tensora_list:
+        imgs.append(tensor[idx].data.to("cpu").numpy().squeeze() * 255)
+    img = np.concatenate(imgs, axis=1)
     cv2.imwrite(os.path.expanduser("~/Pictures/tmp.jpg"), img)
 
 
 def fetch_data(args, sources):
     import multiprocessing as mpi
     data = Img2Img(args=args, sources=sources, modes=["path"] * 2,
-                   load_funcs=[loader.read_image] * 2, dig_level=[0] * 2)
+                   load_funcs=[loader.read_image] * 2, dig_level=[0] * 2,
+                   loader_ops=[dop.inverse_image] * 2)
     data.prepare()
     works = mpi.cpu_count() - 2
     kwargs = {'num_workers': works, 'pin_memory': True} \
+        if torch.cuda.is_available() else {}
+    data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
+                                              shuffle=True, **kwargs)
+    return data_loader
+
+def fetch_new_data(args, sources,):
+    def combine_multi_image(args, paths, seed, size, ops):
+        imgs = []
+        for path in paths:
+            imgs .append(loader.read_image(args, path, seed, size, ops))
+        return torch.cat(imgs)
+    data = Arbitrary(args=args, sources=sources, modes=["sep_path", "path"],
+                     load_funcs=[combine_multi_image, loader.read_image],
+                     dig_level=[0] * 2, loader_ops=[dop.inverse_image] * 2)
+    data.prepare()
+    works = mpi.cpu_count() - 2
+    kwargs = {'num_workers': 0, 'pin_memory': True} \
+        if torch.cuda.is_available() else {}
+    data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
+                                              shuffle=True, **kwargs)
+    return data_loader
+
+def fetch_val_data(args, sources):
+    data = Arbitrary(args=args, sources=sources, modes=["sep_path", "path"],
+                     load_funcs=[loader.read_image, loader.read_image],
+                     dig_level=[0] * 2, loader_ops =[dop.segment_and_inverse] * 2)
+    data.prepare()
+    works = mpi.cpu_count() - 2
+    kwargs = {'num_workers': 0, 'pin_memory': True} \
         if torch.cuda.is_available() else {}
     data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
                                               shuffle=True, **kwargs)
@@ -144,13 +198,17 @@ if __name__ == "__main__":
     buddhanet = BuddhaNet()
     buddhanet.to(device)
     
-    resnet18 = ResNet18()
-    resnet18.to("cuda:0")
+    #evaluator = ResNet18()
+    evaluator = Vgg16BN()
+    evaluator.to("cuda:0")
     
     train_set = fetch_data(args, ["groupa", "groupb"])
+    #train_set = fetch_new_data(args, [("groupa", "groupb"), "groupb"])
+    val_set = fetch_data(args, ["trainA", "trainB"])
+
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(buddhanet.parameters(), lr=args.learning_rate, weight_decay=1e-5)
     
-    fit(buddhanet, resnet18, args, train_set, device, optimizer, criterion, finetune=False)
+    fit(buddhanet, evaluator, args, train_set, device, optimizer, criterion, finetune=False)
 
 

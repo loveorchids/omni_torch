@@ -12,6 +12,23 @@ def load_path_from_csv(args, length, paths, dig_level=0):
         with open(path, "r") as csv_file:
             pass
 
+def load_path(args, path, dig_level):
+    current_folders = [path]
+    # Do not delete the following line, we need this when dig_level is 0.
+    sub_folders = []
+    while dig_level > 0:
+        sub_folders = []
+        for sub_path in current_folders:
+            sub_folders += glob.glob(sub_path + "/*")
+        current_folders = sub_folders
+        dig_level -= 1
+    sub_folders = []
+    for _ in current_folders:
+        sub_folders += glob.glob(_ + "/*")
+    if args.extensions:
+        sub_folders = [_ for _ in sub_folders if misc.extension_check(_, args.extensions)]
+    return sub_folders
+
 def load_path_from_folder(args, length, paths, dig_level=0):
     """
     'paths' is a list or tuple, which means you want all the sub paths within 'dig_level' levels.
@@ -21,22 +38,36 @@ def load_path_from_folder(args, length, paths, dig_level=0):
     if type(paths) is str:
         paths = [paths]
     for path in paths:
-        current_folders = [path]
-        # Do not delete the following line, we need this when dig_level is 0.
-        sub_folders = []
-        while dig_level > 0:
-            sub_folders = []
-            for sub_path in current_folders:
-                sub_folders += glob.glob(sub_path + "/*")
-            current_folders = sub_folders
-            dig_level -= 1
-        sub_folders = []
-        for _ in current_folders:
-            sub_folders += glob.glob(_ + "/*")
+        sub_folders = load_path(args, path, dig_level)
         output += sub_folders
-    if args.extensions:
-        output = [_ for _ in output if misc.extension_check(_, args.extensions)]
+    output.sort()
     return [output]
+
+def load_path_from_folder_sep(args, length, paths, dig_level=0):
+    """
+    The only difference from its sibling "load_path_from_folder"
+    is that the sibling function merge all sub_folders into one list,
+    while this function load them separately.
+    :param args:
+    :param length:
+    :param paths: a list or tuple, which means you want all the sub paths within 'dig_level' levels.
+    :param dig_level: represent how deep you want to get paths from.
+    :return:
+                [[source_1_0, source_2_0, ..., source_n_0],
+                 [source_1_1, source_2_1, ..., source_n_1],
+                ... ,
+                 [source_1_m, source_2_m, ..., source_n_m]]
+    """
+    output = []
+    if type(paths) is str:
+        paths = [paths]
+    for path in paths:
+        sub_folders = load_path(args, path, dig_level)
+        sub_folders.sort()
+        output.append(sub_folders)
+    # Make sure all the sub_folders contains same number of path
+    assert max([len(_) for _ in output]) == min([len(_) for _ in output])
+    return [list(zip(*output))]
 
 def load_cifar_from_pickle(args, length, names, dig_level=0):
     """

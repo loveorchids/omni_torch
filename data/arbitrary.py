@@ -8,7 +8,7 @@ from torch.utils import data as tud
 ALLOW_WARNING = data.ALLOW_WARNING
 
 class Arbitrary(tud.Dataset):
-    def __init__(self, args, sources, modes, load_funcs, dig_level, **options):
+    def __init__(self, args, sources, modes, load_funcs, dig_level, loader_ops=None, **options):
         """
         A generalized data initialization method, inherited by other data class, e.g. ilsvrc, img2img, etc.
         Arbitrary is a parent class of all other data class.
@@ -31,6 +31,16 @@ class Arbitrary(tud.Dataset):
         self.modes = modes
         self.load_funcs = load_funcs
         self.dig_level = dig_level
+
+        # data_types represent the number of input source and output labels
+        data_types = len(load_funcs)
+
+        if loader_ops:
+            assert len(loader_ops) is data_types
+            self.loader_ops = loader_ops
+        else:
+            self.loader_ops = [None] * data_types
+
         if "verbose" in options:
             assert type(options["verbose"]) is bool
             self.verbose = options["verbose"]
@@ -38,10 +48,11 @@ class Arbitrary(tud.Dataset):
             self.verbose = False
         if "sizes" in options:
             assert type(options["sizes"]) is list
-            assert len(options["sizes"]) is len(load_funcs)
+            assert len(options["sizes"]) is data_types
             self.sizes = options["sizes"]
         else:
-            self.sizes = None
+            self.sizes = [None] * data_types
+
         
     def prepare(self):
         self.dataset = self.load_dataset()
@@ -51,7 +62,16 @@ class Arbitrary(tud.Dataset):
         
     def __getitem__(self, index):
         #assert type(index) is int, "Arbitrary Dataset index should be int."
-        return self.load_item(self.dataset[index])
+        if self.args.random_order_load:
+            items = []
+            item_num = len(self.dataset[0])
+            up_range = len(self.dataset)
+            for i in range(item_num):
+                j = random.randint(0, up_range-1)
+                items.append(self.dataset[j][i])
+            return self.load_item(items)
+        else:
+            return self.load_item(self.dataset[index])
     
     def load_item(self, item):
         assert len(item) is len(self.load_funcs), "length of item and mode should be same."
@@ -60,15 +80,11 @@ class Arbitrary(tud.Dataset):
         seed = random.randint(0, 100000)
         for i in range(len(item)):
             if self.load_funcs[i] is "image":
-                if self.sizes:
-                    size = self.sizes[i]
-                else:
-                    size = self.args.img_size
-                result.append(loader.read_image(self.args, item[i], seed, size))
+                result.append(loader.read_image(self.args, item[i], seed, self.sizes[i], self.loader_ops[i]))
             elif callable(self.load_funcs[i]):
-                result.append(self.load_funcs[i](self.args, item[i], seed))
+                result.append(self.load_funcs[i](self.args, item[i], seed, self.sizes[i], self.loader_ops[i]))
             else:
-                raise NotImplementedError
+                raise TypeError
         return result
 
     def load_dataset(self):
@@ -94,9 +110,12 @@ class Arbitrary(tud.Dataset):
                     sub_paths.append([os.path.join(path, _) for _ in source])
                 else:
                     raise TypeError
-            if self.modes[i] is "path":
+            if self.modes[i] == "path":
                 data += mode.load_path_from_folder(self.args, len(data), sub_paths[i],
                                                        self.dig_level[i])
+            elif self.modes[i] == "sep_path":
+                data += mode.load_path_from_folder_sep(self.args, len(data), sub_paths[i],
+                                                   self.dig_level[i])
             # We can add other modes if we want
             elif callable(self.modes[i]):
                 # mode[i] is a function
