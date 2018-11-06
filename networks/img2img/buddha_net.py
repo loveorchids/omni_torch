@@ -1,18 +1,17 @@
 import os, time
-import multiprocessing as mpi
 import torch, cv2
 import torch.nn as nn
 import torch.nn.functional as tf
 from torch.autograd import Variable
 from torchvision.models import resnet18, vgg16_bn
 import numpy as np
+import pandas as pd
+import scipy.io as sio
+import matplotlib.pyplot as plt
 import networks.blocks as block
-from data.set_img2img import Img2Img_Dataset
-from data.set_arbitrary import  Arbitrary_Dataset
-import data.data_loader as loader
-import data.data_loader_ops as dop
-import visualize.basic as vb
+import networks.img2img.buddha_net_misc as bd_misc
 
+import visualize.basic as vb
 
 class ResNet18(nn.Module):
     def __init__(self):
@@ -41,31 +40,20 @@ class Vgg16BN(nn.Module):
         self.conv_block2.required_grad = False
         self.conv_block3 = nn.Sequential(*net[6:9])
         self.conv_block3.required_grad = False
-
-        self.localization1 = nn.Sequential(
-            nn.Conv2d(3, 8, kernel_size=7),
-            nn.MaxPool2d(2, stride=2),
-            nn.ReLU(True),
-            nn.Conv2d(8, 10, kernel_size=5),
-            nn.MaxPool2d(2, stride=2),
-            nn.ReLU(True)
-        )
-
-        self.fc_loc = nn.Sequential(
-            nn.Linear(10 * 3 * 3, 32),
-            nn.ReLU(True),
-            nn.Linear(32, 3 * 2)
-        )
-
-        # Initialize the weights/bias with identity transformation
-        self.fc_loc[2].weight.data.zero_()
-        self.fc_loc[2].bias.data.copy_(torch.tensor([1, 0, 0, 0, 1, 0], dtype=torch.float))
-        
+        #self.conv_block4 = nn.Sequential(*net[9:12])
+        #self.conv_block4.required_grad = False
+        #self.conv_block5 = nn.Sequential(*net[12:15])
+        #self.conv_block5.required_grad = False
+    
+    
     def forward(self, x):
         # In this scenario, input x is a grayscale image
+        x = x.repeat(1, 3, 1, 1)
         out1 = self.conv_block1(x)
-        out2 = self.conv_block2(x)
-        out3 = self.conv_block3(x)
+        out2 = self.conv_block2(out1)
+        out3 = self.conv_block3(out2)
+        #out4 = self.conv_block4(out3)
+        #out5 = self.conv_block5(out4)
         
         return out1, out2, out3
 
@@ -102,60 +90,98 @@ class BuddhaNet(nn.Module):
         out = self.up_conv3(out)
         return out
 
-    def semantic(self, input):
-        out = self.down_conv1(input)
-        out = self.down_conv2(out)
-        out = self.down_conv3(out)
-        out = tf.max_pool2d(out, 2, 2)
-        return out
 
-
-def fit(net, evaluator, args, data_loader, val_loader, device, optimizer, criterion, finetune=False,
+def fit(net, evaluator, args, data_loader, val_loader, device, e_device, optimizer, criterion, finetune=False,
         do_validation=True, validate_every_n_epoch=1):
     net.train()
     model_path = os.path.expanduser(args.latest_model)
     if finetune and os.path.exists(model_path):
         net.load_state_dict(torch.load(model_path))
     name = ""
+    P_MSE = []
+    S_MSE_1 = []
+    S_MSE_2 = []
+    S_MSE_3 = []
+    loss_weight = dict(zip(["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
+                              [0.65, 0.20, 0.1, 0.05]))
     for epoch in range(args.epoch_num):
         L = []
         start_time = time.time()
-        args.do_imgaug = True
-        args.random_crop = True
         for batch_idx, (img_batch, label_batch) in enumerate(data_loader):
             img_batch, label_batch = img_batch.to(device), label_batch.to(device)
             optimizer.zero_grad()
             prediction = net(img_batch)
-            pred_sementic = evaluator(prediction.to("cuda:1"))
-            label_sementic = evaluator(label_batch.to("cuda:1"))
+            ps1, ps2, ps3 = evaluator(prediction.to(e_device))
+            ls1, ls2, ls3 = evaluator(label_batch.to(e_device))
             if batch_idx % 100 == 0:
                 vb.vis_image(args, [img_batch, prediction, label_batch],
                              epoch, batch_idx, idx=0)
-            mse_loss = criterion(prediction, label_batch)
-            loss = criterion(pred_sementic, label_sementic)*0.1
-            
-            mse_loss.backward(retain_graph=True)
-            loss.backward(retain_graph=True)
+            p_mse = criterion(prediction, label_batch) * loss_weight["p_mse"]
+            #del prediction, label_batch
+            s_mse_1 = criterion(ps1, ls1)/ps1.nelement() * loss_weight["s_mse_1"]
+            #del ps1, ls1
+            s_mse_2 = criterion(ps2, ls2)/ps2.nelement() * loss_weight["s_mse_2"]
+            #del ps2, ls2
+            s_mse_3 = criterion(ps3, ls3)/ps3.nelement() * loss_weight["s_mse_3"]
+            #del ps3, ls3
+
+            p_mse.backward(retain_graph=True)
+            s_mse_1.backward(retain_graph=True)
+            s_mse_2.backward(retain_graph=True)
+            s_mse_3.backward(retain_graph=True)
             
             optimizer.step()
-            L.append(float((mse_loss).data) + float((loss).data))
+            P_MSE.append(float((p_mse).data) / loss_weight["p_mse"])
+            S_MSE_1.append(float((s_mse_1).data) / loss_weight["s_mse_1"])
+            S_MSE_2.append(float((s_mse_2).data) / loss_weight["s_mse_2"])
+            S_MSE_3.append(float((s_mse_3).data) / loss_weight["s_mse_3"])
+            L.append(float((p_mse).data) + float((s_mse_1).data)
+                     + float((s_mse_2).data) + float((s_mse_3).data))
             #L.append(float((mse_loss).data))
         # os.system("nvidia-smi")
-        print("--- loss: %8f at epoch %04d, cost %3f seconds ---" %
-              (sum(L) / len(L), epoch, time.time() - start_time))
+        print("--- loss: %8f at epoch %04d/%04d, cost %3f seconds ---" %
+              (sum(L) / len(L), epoch, args.epoch_num, time.time() - start_time))
         if do_validation and epoch % validate_every_n_epoch == 0:
-            validation(args, net, val_loader, device, criterion, epoch)
+            pass
+            #validation(args, net, val_loader, device, criterion, epoch)
             # test(net, args, data_loader, device)
+        if epoch is not 0 and epoch % 10 == 0:
+            loss_dis = [np.asarray(P_MSE), np.asarray(S_MSE_1),
+                        np.asarray(S_MSE_2), np.asarray(S_MSE_3)]
+            loss_weight = update_loss_weight(loss_dis,["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
+                                             loss_weight, args.loss_weight_momentum)
+            plot_loss_distribution(loss_dis, ["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
+                                   os.path.join(os.path.expanduser(args.path), "loss"),
+                                   "loss_at_", epoch, loss_weight)
+            
+            print(loss_weight)
+            P_MSE = []
+            S_MSE_1 = []
+            S_MSE_2 = []
+            S_MSE_3 = []
         if epoch % 100 == 0:
             model_path = os.path.expanduser(args.model)
             torch.save(net.state_dict(), model_path + "_" + str(epoch))
+    return
+
+def update_loss_weight(losses, keys, pre, momentum=0.8):
+    assert len(losses) == len(keys)
+    assert momentum > 0.0 and momentum < 0.9999
+    avg = [np.mean(loss) for loss in losses]
+    l = sum(avg)
+    weight = [a/l for a in avg]
+    current = dict(zip(keys, weight))
+    
+    for key in keys:
+        current[key] = pre[key] * momentum + current[key] * (1 - momentum)
+        
+    return current
+    
             
 def validation(args, net, val_loader, device, criterion, epoch):
     #model_path = os.path.expanduser(args.latest_model)
     #if os.path.exists(model_path):
         #net.load_state_dict(torch.load(model_path))
-    args.do_imgaug = False
-    args.random_crop = False
     for batch_idx, (img_batch, label_batch) in enumerate(val_loader):
         img_batch = img_batch.to(device).squeeze(0)
         label_batch = label_batch.to(device).squeeze(0)
@@ -181,54 +207,29 @@ def save_tensor_to_img(args, tensora_list, epoch):
     img = np.concatenate(imgs, axis=1)
     cv2.imwrite(os.path.join(os.path.expanduser(args.log), str(epoch)+".jpg"), img)
 
+def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight):
+    names = []
+    for key in keyname:
+        names.append(key.ljust(8) + ": " + str(weight[key])[:5])
+    x_axis = range(len(losses[0]))
+    losses.append(np.asarray(list(x_axis)))
+    names.append("x")
+    plot_data = dict(zip(names, losses))
 
-def fetch_data(args, sources):
-    import multiprocessing as mpi
-    data = Img2Img_Dataset(args=args, sources=sources, modes=["path"] * 2,
-                           load_funcs=[loader.read_image] * 2, dig_level=[0] * 2,
-                           loader_ops=[dop.inverse_image] * 2)
-    data.prepare()
-    works = mpi.cpu_count() - 2
-    kwargs = {'num_workers': 0, 'pin_memory': True} \
-        if torch.cuda.is_available() else {}
-    data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
-                                              shuffle=True, **kwargs)
-    return data_loader
-
-def fetch_new_data(args, sources,):
-    def combine_multi_image(args, paths, seed, size, ops):
-        imgs = []
-        for path in paths:
-            imgs .append(loader.read_image(args, path, seed, size, ops))
-        return torch.cat(imgs)
-    data = Arbitrary_Dataset(args=args, sources=sources, modes=["sep_path", "path"],
-                             load_funcs=[combine_multi_image, loader.read_image],
-                             loader_ops=[dop.inverse_image] * 2, dig_level=[0] * 2)
-    data.prepare()
-    works = mpi.cpu_count() - 2
-    kwargs = {'num_workers': 0, 'pin_memory': True} \
-        if torch.cuda.is_available() else {}
-    data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
-                                              shuffle=True, **kwargs)
-    return data_loader
-
-def fetch_val_data(args, sources):
-    args.segments = [5, 5]
-    # Uncomment if you want load images in random order
-    # args.random_order_load = True
-    options = {"sizes": [(1600, 1600), (1600, 1600)]}
-    data = Img2Img_Dataset(args=args, sources=sources, modes=["path"] * 2,
-                           load_funcs=[loader.read_image] * 2, dig_level=[0] * 2,
-                           loader_ops=[dop.segment_image] * 2, **options)
-    data.prepare()
+    # sio.savemat(os.path.expanduser(args.path)+"loss_info.mat", plot_data)
+    df = pd.DataFrame(plot_data)
     
-    works = mpi.cpu_count() - 2
-    kwargs = {'num_workers': 0, 'pin_memory': True} \
-        if torch.cuda.is_available() else {}
-    data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
-                                              shuffle=True, **kwargs)
+    fig, axis = plt.subplots(figsize=(18, 6))
     
-    return data_loader
+    plt.plot("x", names[0], data=df, marker="o", markersize=1, linewidth=1)
+    plt.plot("x", names[1], data=df, marker=".", markersize=2, linewidth=1)
+    plt.plot("x", names[2], data=df, marker="^", markersize=3, linewidth=1)
+    plt.plot("x", names[3], data=df, marker="2", markersize=4, linewidth=1)
+    
+    plt.legend(loc='upper right')
+    img_name = name + str(epoch).zfill(4) + ".jpg"
+    plt.savefig(os.path.join(save_path, img_name))
+    #plt.show()
 
 
 if __name__ == "__main__":
@@ -237,34 +238,42 @@ if __name__ == "__main__":
     args = BaseOptions().initialize()
     args.path = "~/Pictures/dataset/buddha"
     args.model = "~/Pictures/dataset/buddha/models/train_model"
-    args.latest_model = "~/Pictures/dataset/buddha/models/train_model_batch10"
+    args.latest_model = "~/Pictures/dataset/buddha/models/train_model_resnet_1st_layer"
     args.log = "~/Pictures/dataset/buddha/logs"
     args.img_channel = 1
     args.batch_size = 1
+    args.do_imgaug = False
     
     import data
     
     data.ALLOW_WARNING = False
     
-    device = torch.device("cuda:0")
-    device2 = torch.device("cuda:1")
+    device = torch.device("cuda:1")
+    e_device = torch.device("cuda:1")
     buddhanet = BuddhaNet()
     buddhanet.to(device)
     
-    evaluator = ResNet18()
-    #evaluator = Vgg16BN()
-    evaluator.to(device2)
+    #evaluator = ResNet18()
+    evaluator = Vgg16BN()
+    evaluator.to(e_device)
     
-    train_set = fetch_data(args, ["groupa", "groupb"])
+    train_set = bd_misc.fetch_data(args, ["groupa", "groupb"])
     #train_set = fetch_new_data(args, [("groupa", "groupb"), "groupb"])
-    val_set = fetch_val_data(args, ["testA", "testB"])
+    val_set = bd_misc.fetch_val_data(args, ["testA", "testB"])
     for batch_idx, (img_batch, label_batch) in enumerate(val_set):
         img_batch = img_batch.to(device).squeeze(0)
         label_batch = label_batch.to(device).squeeze(0)
 
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(buddhanet.parameters(), lr=args.learning_rate, weight_decay=1e-5)
+    optimizer = torch.optim.Adam(buddhanet.parameters(), lr=args.learning_rate,
+                                 weight_decay=1e-5)
     
-    fit(buddhanet, evaluator, args, train_set, val_set, device, optimizer, criterion, finetune=False)
+    fit(buddhanet, evaluator, args, train_set, val_set,device, e_device,
+        optimizer, criterion, finetune=False)
+    
+    
+    
+    
+    
 
 

@@ -16,6 +16,7 @@ class BaseOptions(ImgAug):
         
         # -------------------------------Optimizer------------------------------------
         self.parser.add_argument("--learning_rate", type=float, default=0.001)
+        self.parser.add_argument("--loss_weight_momentum", type=float, default=0.9)
         
         # ------------------------------Input Queue-----------------------------------
         self.parser.add_argument("--batch_size", type=int, default=8)
