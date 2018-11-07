@@ -61,18 +61,20 @@ def just_return_it(args, data, seed=None, size=None, ops=None):
     return torch.tensor(data)
 
 def transform(args):
-    if args.do
-    aug_list = [augmenters.Affine(scale={"x": args.scale, "y": args.scale},
-                                  translate_percent={"x": args.translation, "y": args.translation},
-                                  rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color)]
+    if args.affine_trans:
+        aug_list = [augmenters.Affine(scale={"x": args.scale, "y": args.scale},
+                                      translate_percent={"x": args.translation, "y": args.translation},
+                                      rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color)]
+    else:
+        aug_list = []
     if args.random_flip:
         aug_list.append(augmenters.Fliplr(0.5))
         aug_list.append(augmenters.Flipud(0.5))
     if args.random_brightness:
-        aug_list.append(augmenters.Sometimes(0.2, augmenters.GaussianBlur(sigma=(0, 0.1))))
         aug_list.append(augmenters.ContrastNormalization((0.75, 1.5)))
         aug_list.append(augmenters.Multiply((0.9, 1.1), per_channel=0.2))
     if args.random_noise:
+        aug_list.append(augmenters.Sometimes(0.2, augmenters.GaussianBlur(sigma=(0, 0.1))))
         aug_list.append(augmenters.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05 * 255),
                                                          per_channel=0.5))
     seq = augmenters.Sequential(aug_list, random_order=True)

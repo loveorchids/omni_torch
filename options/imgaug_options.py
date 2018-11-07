@@ -33,14 +33,15 @@ class ImgAug:
                                  help="adjust brightness on image")
         self.parser.add_argument("--random_noise", type=bool, default=False,
                                  help="apply random gaussian noise on image")
-        
-        self.parser.add_argument("--translation", type=tuple, default=(0.00, 0.00),
+        self.parser.add_argument("--affine_trans", type=bool, default=True,
+                                 help="do affine transformation on image or not")
+        self.parser.add_argument("--translation", type=tuple, default=(0.3, 0.3),
                                  help="a list of two elements indicate translation on x and y axis")
-        self.parser.add_argument("--scale", type=tuple, default=(1, 1),
+        self.parser.add_argument("--scale", type=tuple, default=(0.8, 1.2),
                                  help="a list of two elements indicate scale on x and y axis")
-        self.parser.add_argument("--shear", type=tuple, default=(0, 0),
+        self.parser.add_argument("--shear", type=tuple, default=(-0.05, 0.05),
                                  help="a list of two elements indicate shear on x and y axis")
-        self.parser.add_argument("--rotation", type=tuple, default=(0, 0),
+        self.parser.add_argument("--rotation", type=tuple, default=(-5, 5),
                                  help="a number indicate rotation of image")
 
         
