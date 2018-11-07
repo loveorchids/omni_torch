@@ -1,6 +1,6 @@
-import imgaug
+import random
+import imgaug, cv2
 from imgaug import augmenters
-import cv2
 import torch
 import torchvision.transforms as T
 import numpy as np
@@ -16,12 +16,17 @@ def read_image(args, path, seed=None, size=None, ops=None):
         image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
     else:
         raise TypeError("image channel shall be only 1 or 3")
-    if args.random_crop:
-        image = misc.random_crop(image, args.crop_size, seed)
+
     if not size:
         size = args.img_size
     else:
         assert len(size) is 2
+    if args.random_crop:
+        ratio = size[0]/size[1]+args.crop_size[0]*args.crop_size[1]
+        ratio = 0.9 if ratio < 0.9 else 1.1 if ratio > 1.1 else ratio
+        h = random.randint(min(args.crop_size[0], size[0]), max(args.crop_size[1], args.size[1]))
+        image = misc.random_crop(image, (h, h*ratio), seed)
+
     image = cv2.resize(image, tuple(size))
     if args.do_imgaug:
         if seed:
@@ -56,9 +61,13 @@ def just_return_it(args, data, seed=None, size=None, ops=None):
     return torch.tensor(data)
 
 def transform(args):
+    if args.do
     aug_list = [augmenters.Affine(scale={"x": args.scale, "y": args.scale},
                                   translate_percent={"x": args.translation, "y": args.translation},
-                                  rotate=args.rotation,shear=args.shear)]
+                                  rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color)]
+    if args.random_flip:
+        aug_list.append(augmenters.Fliplr(0.5))
+        aug_list.append(augmenters.Flipud(0.5))
     if args.random_brightness:
         aug_list.append(augmenters.Sometimes(0.2, augmenters.GaussianBlur(sigma=(0, 0.1))))
         aug_list.append(augmenters.ContrastNormalization((0.75, 1.5)))

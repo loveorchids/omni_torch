@@ -47,6 +47,7 @@ class Vgg16BN(nn.Module):
     
     
     def forward(self, x):
+        #assert len(layers) == len(keys)
         # In this scenario, input x is a grayscale image
         x = x.repeat(1, 3, 1, 1)
         out1 = self.conv_block1(x)
@@ -104,6 +105,8 @@ def fit(net, evaluator, args, data_loader, val_loader, device, e_device, optimiz
     S_MSE_3 = []
     loss_weight = dict(zip(["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
                               [0.65, 0.20, 0.1, 0.05]))
+    loss_weight_range = dict(zip(["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
+                           [(0.4, 1), (0.01, 0.5), (0.01, 0.5), (0.01, 0.5)]))
     for epoch in range(args.epoch_num):
         L = []
         start_time = time.time()
@@ -111,32 +114,33 @@ def fit(net, evaluator, args, data_loader, val_loader, device, e_device, optimiz
             img_batch, label_batch = img_batch.to(device), label_batch.to(device)
             optimizer.zero_grad()
             prediction = net(img_batch)
-            ps1, ps2, ps3 = evaluator(prediction.to(e_device))
-            ls1, ls2, ls3 = evaluator(label_batch.to(e_device))
-            if batch_idx % 100 == 0:
-                vb.vis_image(args, [img_batch, prediction, label_batch],
-                             epoch, batch_idx, idx=0)
             p_mse = criterion(prediction, label_batch) * loss_weight["p_mse"]
-            #del prediction, label_batch
-            s_mse_1 = criterion(ps1, ls1)/ps1.nelement() * loss_weight["s_mse_1"]
-            #del ps1, ls1
-            s_mse_2 = criterion(ps2, ls2)/ps2.nelement() * loss_weight["s_mse_2"]
-            #del ps2, ls2
-            s_mse_3 = criterion(ps3, ls3)/ps3.nelement() * loss_weight["s_mse_3"]
-            #del ps3, ls3
-
             p_mse.backward(retain_graph=True)
-            s_mse_1.backward(retain_graph=True)
-            s_mse_2.backward(retain_graph=True)
-            s_mse_3.backward(retain_graph=True)
-            
+            if args.S_MSE:
+                ps1, ps2, ps3 = evaluator(prediction.to(e_device))
+                ls1, ls2, ls3 = evaluator(label_batch.to(e_device))
+                #del prediction, label_batch
+                s_mse_1 = criterion(ps1, ls1)/ps1.nelement() * loss_weight["s_mse_1"]
+                #del ps1, ls1
+                s_mse_2 = criterion(ps2, ls2)/ps2.nelement() * loss_weight["s_mse_2"]
+                #del ps2, ls2
+                s_mse_3 = criterion(ps3, ls3)/ps3.nelement() * loss_weight["s_mse_3"]
+                #del ps3, ls3
+                s_mse_1.backward(retain_graph=True)
+                s_mse_2.backward(retain_graph=True)
+                s_mse_3.backward(retain_graph=True)
+
+                S_MSE_1.append(float((s_mse_1).data) / loss_weight["s_mse_1"])
+                S_MSE_2.append(float((s_mse_2).data) / loss_weight["s_mse_2"])
+                S_MSE_3.append(float((s_mse_3).data) / loss_weight["s_mse_3"])
+                L.append(float((p_mse).data) + float((s_mse_1).data) + float((s_mse_2).data)
+                         + float((s_mse_3).data))
             optimizer.step()
             P_MSE.append(float((p_mse).data) / loss_weight["p_mse"])
-            S_MSE_1.append(float((s_mse_1).data) / loss_weight["s_mse_1"])
-            S_MSE_2.append(float((s_mse_2).data) / loss_weight["s_mse_2"])
-            S_MSE_3.append(float((s_mse_3).data) / loss_weight["s_mse_3"])
-            L.append(float((p_mse).data) + float((s_mse_1).data)
-                     + float((s_mse_2).data) + float((s_mse_3).data))
+            L.append(float((p_mse).data))
+            if batch_idx % 100 == 0:
+                vb.vis_image(args, [img_batch, prediction, label_batch],
+                             epoch, batch_idx, L[-1], idx=0)
             #L.append(float((mse_loss).data))
         # os.system("nvidia-smi")
         print("--- loss: %8f at epoch %04d/%04d, cost %3f seconds ---" %
@@ -145,11 +149,11 @@ def fit(net, evaluator, args, data_loader, val_loader, device, e_device, optimiz
             pass
             #validation(args, net, val_loader, device, criterion, epoch)
             # test(net, args, data_loader, device)
-        if epoch is not 0 and epoch % 10 == 0:
+        if args.S_MSE and epoch is not 0 and epoch % 1 == 0:
             loss_dis = [np.asarray(P_MSE), np.asarray(S_MSE_1),
                         np.asarray(S_MSE_2), np.asarray(S_MSE_3)]
             loss_weight = update_loss_weight(loss_dis,["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
-                                             loss_weight, args.loss_weight_momentum)
+                                             loss_weight, loss_weight_range, args.loss_weight_momentum)
             plot_loss_distribution(loss_dis, ["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
                                    os.path.join(os.path.expanduser(args.path), "loss"),
                                    "loss_at_", epoch, loss_weight)
@@ -164,17 +168,34 @@ def fit(net, evaluator, args, data_loader, val_loader, device, e_device, optimiz
             torch.save(net.state_dict(), model_path + "_" + str(epoch))
     return
 
-def update_loss_weight(losses, keys, pre, momentum=0.8):
+def update_loss_weight(losses, keys, pre, range, momentum=0.8):
+    def out_of_bound(num, low_bound, up_bound):
+        if num < low_bound:
+            # return low bound index
+            return 0
+        elif num > up_bound:
+            # return up bound index
+            return 1
+        else:
+            return -1
     assert len(losses) == len(keys)
-    assert momentum > 0.0 and momentum < 0.9999
-    avg = [np.mean(loss) for loss in losses]
+    assert momentum >= 0 and momentum < 0.9999
+    avg = [float(np.mean(loss)) for loss in losses]
     l = sum(avg)
     weight = [a/l for a in avg]
+    avg = [pre[keys[i]] * momentum + weight[i] * (1 - momentum) for i, a in enumerate(avg)]
+    print(avg)
+
+    # --------------- support up and low bound of weight -----------------
+    mask = [out_of_bound(a, range[keys[i]][0], range[keys[i]][1]) for i, a in enumerate(avg)]
+    if mask[0] == -1 and all(mask):
+        pass
+    else:
+        s = sum([avg[i] if n is -1 else 0 for i, n in enumerate(mask)])
+        remain = 1 - sum([0 if n is -1 else range[keys[i]][n] for i, n in enumerate(mask)])
+        weight = [avg[i] / s * remain if n is -1 else range[keys[i]][n] for i, n in enumerate(mask)]
+    # --------------- support up and low bound of weight -----------------
     current = dict(zip(keys, weight))
-    
-    for key in keys:
-        current[key] = pre[key] * momentum + current[key] * (1 - momentum)
-        
     return current
     
             
@@ -221,10 +242,10 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight):
     
     fig, axis = plt.subplots(figsize=(18, 6))
     
-    plt.plot("x", names[0], data=df, marker="o", markersize=1, linewidth=1)
-    plt.plot("x", names[1], data=df, marker=".", markersize=2, linewidth=1)
-    plt.plot("x", names[2], data=df, marker="^", markersize=3, linewidth=1)
-    plt.plot("x", names[3], data=df, marker="2", markersize=4, linewidth=1)
+    plt.plot("x", names[0], data=df, markersize=1, linewidth=1)
+    plt.plot("x", names[1], data=df, markersize=2, linewidth=1)
+    plt.plot("x", names[2], data=df, markersize=2, linewidth=1)
+    plt.plot("x", names[3], data=df, markersize=3, linewidth=1)
     
     plt.legend(loc='upper right')
     img_name = name + str(epoch).zfill(4) + ".jpg"
@@ -238,11 +259,12 @@ if __name__ == "__main__":
     args = BaseOptions().initialize()
     args.path = "~/Pictures/dataset/buddha"
     args.model = "~/Pictures/dataset/buddha/models/train_model"
-    args.latest_model = "~/Pictures/dataset/buddha/models/train_model_resnet_1st_layer"
+    args.latest_model = "~/Pictures/dataset/buddha/models/train_model_2100"
     args.log = "~/Pictures/dataset/buddha/logs"
     args.img_channel = 1
     args.batch_size = 1
     args.do_imgaug = False
+    args.S_MSE = True
     
     import data
     
@@ -257,7 +279,8 @@ if __name__ == "__main__":
     evaluator = Vgg16BN()
     evaluator.to(e_device)
     
-    train_set = bd_misc.fetch_data(args, ["groupa", "groupb"])
+    strong_sup_set = bd_misc.fetch_data(args, ["groupa", "groupb"])
+    weak_sup_set = bd_misc.fetch_data(args, ["trainA", "trainB"])
     #train_set = fetch_new_data(args, [("groupa", "groupb"), "groupb"])
     val_set = bd_misc.fetch_val_data(args, ["testA", "testB"])
     for batch_idx, (img_batch, label_batch) in enumerate(val_set):
@@ -268,7 +291,7 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(buddhanet.parameters(), lr=args.learning_rate,
                                  weight_decay=1e-5)
     
-    fit(buddhanet, evaluator, args, train_set, val_set,device, e_device,
+    fit(buddhanet, evaluator, args, strong_sup_set, val_set,device, e_device,
         optimizer, criterion, finetune=False)
     
     

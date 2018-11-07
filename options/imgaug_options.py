@@ -24,23 +24,23 @@ class ImgAug:
                                  help="inverse the image bitwise")
         self.parser.add_argument("--do_imgaug", type=bool, default=True,
                                  help="do image augmentation on image or not")
-        
-        # Todo
+
         self.parser.add_argument("--random_flip", type=bool, default=True,
                                  help="randomly flip an image")
-        
-        self.parser.add_argument("--random_brightness", type=bool, default=True,
+        self.parser.add_argument("--aug_bg_color", type=int, default=255,
+                                 help="background color of augmentation")
+        self.parser.add_argument("--random_brightness", type=bool, default=False,
                                  help="adjust brightness on image")
         self.parser.add_argument("--random_noise", type=bool, default=False,
                                  help="apply random gaussian noise on image")
         
-        self.parser.add_argument("--translation", type=tuple, default=(0.05, 0.05),
+        self.parser.add_argument("--translation", type=tuple, default=(0.00, 0.00),
                                  help="a list of two elements indicate translation on x and y axis")
-        self.parser.add_argument("--scale", type=tuple, default=(0.8, 1.2),
+        self.parser.add_argument("--scale", type=tuple, default=(1, 1),
                                  help="a list of two elements indicate scale on x and y axis")
-        self.parser.add_argument("--shear", type=tuple, default=(-5, 5),
+        self.parser.add_argument("--shear", type=tuple, default=(0, 0),
                                  help="a list of two elements indicate shear on x and y axis")
-        self.parser.add_argument("--rotation", type=tuple, default=(-5, 5),
+        self.parser.add_argument("--rotation", type=tuple, default=(0, 0),
                                  help="a number indicate rotation of image")
 
         
