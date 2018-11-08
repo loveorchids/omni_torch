@@ -7,8 +7,10 @@ class ImgAug:
         # Todo: the role of random_crop and crop_size is still unclear
         self.parser.add_argument("--img_channel", type=int, default=3,
                                  help="3 stand for color image while 1 for greyscale")
-        self.parser.add_argument("--load_size", type=tuple, default=(512, 512),
+        self.parser.add_argument("--load_size", type=tuple, default=(360, 360),
                                  help="the image will be crop to this size before doing augmentation")
+        self.parser.add_argument("--do_resize", type=bool, default=True,
+                                 help="resize the input image or not")
         self.parser.add_argument("--img_size", type=tuple, default=(320, 320),
                                  help="size of input images")
         
@@ -17,23 +19,22 @@ class ImgAug:
         
         self.parser.add_argument("--affine_trans", type=bool, default=True,
                                  help="do affine transformation on image or not")
-        self.parser.add_argument("--translation", type=tuple, default=(0.3, 0.3),
+        self.parser.add_argument("--translation", type=tuple, default=(0.0, 0.0),
                                  help="a list of two elements indicate translation on x and y axis")
-        self.parser.add_argument("--scale", type=tuple, default=(0.8, 1.2),
+        self.parser.add_argument("--scale", type=tuple, default=(1.0, 1.0),
                                  help="a list of two elements indicate scale on x and y axis")
         self.parser.add_argument("--shear", type=tuple, default=(-0.05, 0.05),
                                  help="a list of two elements indicate shear on x and y axis")
         self.parser.add_argument("--rotation", type=tuple, default=(-5, 5),
                                  help="a number indicate rotation of image")
         self.parser.add_argument("--aug_bg_color", type=int, default=255,
-                                 help="background color of augmentation")
+                                 help="background color of augmentation, 0=>black, 255=>white")
         
         self.parser.add_argument("--random_crop", type=bool, default=True,
                                  help="randomly crop an image")
-        self.parser.add_argument("--crop_range", type=tuple, default=(0, 32),
-                                 help="size of input images")
-        self.parser.add_argument("--crop_percent", type=tuple, default=(0.0, 0.2),
-                                 help="size of input images")
+        self.parser.add_argument("--crop_percent", type=tuple,
+                                 default=((0.0, 0.2), (0.0, 0.2), (0.0, 0.2), (0.0, 0.2)),
+                                 help="percentage of crop top, right, bottom, left")
 
         self.parser.add_argument("--random_flip", type=bool, default=True,
                                  help="randomly flip an image horizontally and vertically")

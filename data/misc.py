@@ -37,32 +37,41 @@ def str2bytes(str):
     return str.encode("ASCII")
 
 def random_crop(image, crop_size, seed=None):
+    crop_size = list(crop_size)
+    RAISE_WARNING = False
     if crop_size[0] <= 0 or crop_size[1] <= 0:
         raise AssertionError("crop_size should bigger than 0")
-    if image.shape[0] < crop_size[0] or image.shape[1] < crop_size[1]:
-        if ALLOW_WARNING:
-            warnings.warn('One dimension of crop_size is larger than image itself.')
-        return image
+    if image.shape[0] < crop_size[0]:
+        crop_size[0] = image.shape[0]
+        RAISE_WARNING = True
+    if image.shape[1] < crop_size[1]:
+        crop_size[1] = image.shape[1]
+        RAISE_WARNING = True
+    if RAISE_WARNING and ALLOW_WARNING:
+        warnings.warn('One dimension of crop_size is larger than image itself.')
+    if seed:
+        np.random.seed(seed)
+    w = np.random.randint(0, image.shape[0] - crop_size[0] + 1)
+    h = np.random.randint(0, image.shape[1] - crop_size[1] + 1)
+    if len(image.shape) == 2:
+        # Grayscale Image
+        return image[w:w + crop_size[0], h:h + crop_size[1]]
+    elif len(image.shape) == 3:
+        # RGB Image
+        return image[w:w + crop_size[0], h:h + crop_size[1], :]
     else:
-        if seed:
-            np.random.seed(seed)
-        w = np.random.randint(0, image.shape[0] - crop_size[0] + 1)
-        h = np.random.randint(0, image.shape[1] - crop_size[1] + 1)
-        if len(image.shape) == 2:
-            # Grayscale Image
-            return image[w:w + crop_size[0], h:h + crop_size[1]]
-        elif len(image.shape) == 3:
-            # RGB Image
-            return image[w:w + crop_size[0], h:h + crop_size[1], :]
-        else:
-            raise TypeError("The input is not an image.")
+        raise TypeError("This function cannot process a tensor with a rank>=4")
         
 
 if __name__ == "__main__":
     img = np.random.randint(0, 1, size=[20, 20])
-    crop = random_crop(img, (18, 18))
+    crop = random_crop(img, (20, 20))
+    print(crop.shape)
     crop = random_crop(img, (15, 21))
+    print(crop.shape)
     crop = random_crop(img, (20, 1))
+    print(crop.shape)
     crop = random_crop(img, (21, 35))
+    print(crop.shape)
     pass
     data.allow_warning(False)

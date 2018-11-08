@@ -52,7 +52,6 @@ class Arbitrary_Dataset(tud.Dataset):
             self.sizes = options["sizes"]
         else:
             self.sizes = [args.img_size] * data_types
-
         
     def prepare(self):
         self.dataset = self.load_dataset()
@@ -71,7 +70,6 @@ class Arbitrary_Dataset(tud.Dataset):
                 items.append(self.dataset[j][i])
         else:
             items = self.dataset[index]
-        
         assert len(items) is len(self.load_funcs), "length of item and mode should be same."
         if self.args.deterministic_train:
             seed = index + self.args.curr_epoch

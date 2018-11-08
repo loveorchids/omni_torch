@@ -1,4 +1,4 @@
-import os, argparse
+import argparse
 from options.imgaug_options import ImgAug
 
 

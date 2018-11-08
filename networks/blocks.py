@@ -32,6 +32,8 @@ def conv_block(input, filters, repeat, kernel_sizes, stride, padding, groups,
     
 def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
                     batch_norm=True, name=None):
+    if name is None:
+        name = ""
     ops = nn.Sequential()
     #S, P, K = misc.get_stride_padding_kernel(input.shape[2], conv.shape[2])
     ops.add_module(name + "_shortcut_conv",
@@ -46,6 +48,8 @@ def stn_block():
     pass
 
 def fc_layer(input, layer_size, name=None, activation = nn.ReLU, batch_norm = True):
+    if name is None:
+        name = ""
     ops = nn.Sequential()
     layer_size = [input] + layer_size
     for i in range(len(layer_size) - 1):
