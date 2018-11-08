@@ -265,7 +265,7 @@ def prepare_args():
 
 if __name__ == "__main__":
     data.ALLOW_WARNING = False
-    args = misc.prepare_args()
+    args = prepare_args()
     if args.deterministic_train:
         torch.manual_seed(args.torch_seed)
         
