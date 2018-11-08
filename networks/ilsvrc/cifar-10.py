@@ -73,7 +73,7 @@ def fit(net, args, train_set, val_set, device, optimizer, criterion, finetune=Fa
     accu_list = []
     net.train()
     if finetune:
-        model_path = os.path.expanduser(args.model)
+        model_path = os.path.expanduser(args.model_dir)
         net.load_state_dict(torch.load(model_path))
     for epoch in range(args.epoch_num):
         for batch_idx, (img_batch, label_batch) in enumerate(train_set):
@@ -101,7 +101,7 @@ def fit(net, args, train_set, val_set, device, optimizer, criterion, finetune=Fa
                                 img_batch.size(0) * 100)
             avg_val_accu = sum(val_accu)/len(val_accu)
             if avg_val_accu > high_accu:
-                torch.save(net.state_dict(), args.model)
+                torch.save(net.state_dict(), args.model_dir)
             print("--- cost %03f seconds, validation accuracy: %03f ---" %
                   (time.time() - start_time, avg_val_accu))
     return accu_list
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     print("start")
     args = BaseOptions().initialize()
     args.path = "~/Downloads/cifar-10"
-    args.model = "~/Documents/cifar10"
+    args.model_dir = "~/Documents/cifar10"
     args.batch_size = 256
 
     device = torch.device("cuda:1")

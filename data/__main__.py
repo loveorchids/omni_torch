@@ -96,22 +96,14 @@ def test_cifar(args):
         print("--- %s seconds to read data batch %d---" % (time.time() - start_time, batch_idx))
         print(data.shape)
         print(target.shape)
-
-def test_multilayer_input(args):
-    import cv2
+        
+def test_segmented_input(args):
     args.path = "~/Pictures/dataset/buddha"
-    args.batch_size = 4
+    args.batch_size = 12
     args.img_channels = 1
-    # Uncomment if you want load images in random order
-    # args.random_order_load = True
-    def combine_multi_image(args, paths, seed, size, ops):
-        imgs = []
-        for path in paths:
-            imgs.append(loader.read_image(args, path, seed, size, ops))
-        return torch.cat(imgs)
-    data = Arbitrary_Dataset(args=args, sources=[("groupa", "groupb"), "groupb"], modes=["sep_path", "path"],
-                             load_funcs=[combine_multi_image, loader.read_image],
-                             dig_level=[0] * 2, **{"ops": cv2.bitwise_not})
+    args.do_imgaug = False
+    data = Arbitrary_Dataset(args=args, sources=["trainA", "trainB"], modes=[mode.load_img_from_path] * 2,
+                             load_funcs=[loader.to_tensor] * 2, dig_level=[0] * 2)
     data.prepare()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     kwargs = {'num_workers': 0, 'pin_memory': True} \
@@ -124,11 +116,13 @@ def test_multilayer_input(args):
         print("--- %s seconds to read data batch %d---" % (time.time() - start_time, batch_idx))
         print(data.shape)
         print(target.shape)
+    
 
 if __name__ == "__main__":
     args = BaseOptions().initialize()
+    test_segmented_input(args)
     #test_cifar(args)
     #test_img2img(args)
     test_img2img_advanced(args)
     test_super_reso(args)
-    test_multilayer_input(args)
+    #test_multilayer_input(args)

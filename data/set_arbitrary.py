@@ -51,7 +51,7 @@ class Arbitrary_Dataset(tud.Dataset):
             assert len(options["sizes"]) is data_types
             self.sizes = options["sizes"]
         else:
-            self.sizes = [None] * data_types
+            self.sizes = [args.img_size] * data_types
 
         
     def prepare(self):
@@ -61,7 +61,7 @@ class Arbitrary_Dataset(tud.Dataset):
         return len(self.dataset)
         
     def __getitem__(self, index):
-        #assert type(index) is int, "Arbitrary Dataset index should be int."
+        result = []
         if self.args.random_order_load:
             items = []
             item_num = len(self.dataset[0])
@@ -69,23 +69,24 @@ class Arbitrary_Dataset(tud.Dataset):
             for i in range(item_num):
                 j = random.randint(0, up_range-1)
                 items.append(self.dataset[j][i])
-            return self.load_item(items)
         else:
-            return self.load_item(self.dataset[index])
-    
-    def load_item(self, item):
-        assert len(item) is len(self.load_funcs), "length of item and mode should be same."
-        result = []
-        # seed is used to keep same image augmentation manner when load things from one item
-        seed = random.randint(0, 100000)
-        for i in range(len(item)):
+            items = self.dataset[index]
+        
+        assert len(items) is len(self.load_funcs), "length of item and mode should be same."
+        if self.args.deterministic_train:
+            seed = index + self.args.curr_epoch
+        else:
+            # seed is used to keep same image augmentation manner when load things from one item
+            seed = random.randint(0, 100000)
+        for i in range(len(items)):
             if self.load_funcs[i] is "image":
-                result.append(loader.read_image(self.args, item[i], seed, self.sizes[i], self.loader_ops[i]))
+                result.append(loader.read_image(self.args, items[i], seed, self.sizes[i], self.loader_ops[i]))
             elif callable(self.load_funcs[i]):
-                result.append(self.load_funcs[i](self.args, item[i], seed, self.sizes[i], self.loader_ops[i]))
+                result.append(self.load_funcs[i](self.args, items[i], seed, self.sizes[i], self.loader_ops[i]))
             else:
                 raise TypeError
         return result
+        
 
     def load_dataset(self):
         """

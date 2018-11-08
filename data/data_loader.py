@@ -9,49 +9,29 @@ import data
 
 ALLOW_WARNING = data.ALLOW_WARNING
 
-def read_image(args, path, seed=None, size=None, ops=None):
+def read_image(args, path, seed, size, ops=None):
     if args.img_channel is 1:
-        image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2GRAY)
-    elif args.img_channel is 3:
+        image = cv2.imread(path, 0)
+    else:
         image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
-    else:
-        raise TypeError("image channel shall be only 1 or 3")
-
-    if not size:
-        size = args.img_size
-    else:
-        assert len(size) is 2
-    if args.random_crop:
-        ratio = size[0]/size[1]+args.crop_size[0]*args.crop_size[1]
-        ratio = 0.9 if ratio < 0.9 else 1.1 if ratio > 1.1 else ratio
-        h = random.randint(min(args.crop_size[0], size[0]), max(args.crop_size[1], args.size[1]))
-        image = misc.random_crop(image, (h, h*ratio), seed)
-
-    image = cv2.resize(image, tuple(size))
+    image = misc.random_crop(image, args.load_size, seed)
     if args.do_imgaug:
-        if seed:
-            assert type(seed) is int, "random seed should be int."
-            imgaug.seed(seed)
-        image = transform(args).augment_image(image)
+        imgaug.seed(seed)
+        image = prepare_augmentation(args).augment_image(image)
+    image = cv2.resize(image, tuple(size))
+    if ops:
+        image = ops(image)
     if args.img_channel is 1:
         image = np.expand_dims(image, axis=-1)
-    if args.perform_ops and ops:
-        image = ops(image, args, path, seed, size)
-    else:
-        image = T.ToTensor()(image)
-    #image = T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(image)
-    return image
+    trans = T.Compose([T.ToTensor(), T.Normalize(args.img_mean, args.img_std)])
+    return trans(image)
 
-
-def to_tensor(args, image, seed=None, size=None, ops=None):
+def to_tensor(args, image, seed, size, ops=None):
     if args.do_imgaug:
-        if seed:
-            assert type(seed) is int, "random seed should be int."
-            imgaug.seed(seed)
-        image = transform(args).augment_image(image)
-    image = T.ToTensor()(image)
-    image = T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))(image)
-    return image
+        imgaug.seed(seed)
+        image = prepare_augmentation(args).augment_image(image)
+    trans = T.Compose([T.ToTensor(), T.Normalize(args.img_mean, args.img_std)])
+    return trans(image)
 
 def just_return_it(args, data, seed=None, size=None, ops=None):
     """
@@ -60,13 +40,14 @@ def just_return_it(args, data, seed=None, size=None, ops=None):
     """
     return torch.tensor(data)
 
-def transform(args):
+def prepare_augmentation(args):
+    aug_list = []
     if args.affine_trans:
-        aug_list = [augmenters.Affine(scale={"x": args.scale, "y": args.scale},
+        aug_list.append(augmenters.Affine(scale={"x": args.scale, "y": args.scale},
                                       translate_percent={"x": args.translation, "y": args.translation},
-                                      rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color)]
-    else:
-        aug_list = []
+                                      rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color))
+    if args.random_crop:
+        aug_list.append(augmenters.Crop(percent=args.crop_percent, keep_size=True))
     if args.random_flip:
         aug_list.append(augmenters.Fliplr(0.5))
         aug_list.append(augmenters.Flipud(0.5))

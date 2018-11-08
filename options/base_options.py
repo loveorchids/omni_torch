@@ -8,11 +8,17 @@ class BaseOptions(ImgAug):
     
     def initialize(self):
         ImgAug.initialize(self)
+        self.parser.add_argument("--code_name", type=str, required=True,
+                                 help="Anyway, you have to name your experiment.")
+        
         self.parser.add_argument("--gpu_id", type=str, default="0",
                                  help="if None, then use CPU mode.")
-        
-        self.parser.add_argument("--epoch_num", type=int, default=5000,
+        self.parser.add_argument("--epoch_num", type=int, default=2000,
                                  help="Total training epoch")
+        self.parser.add_argument("--deterministic_train", type=bool, default=False,
+                                 help="Make the training reproducable")
+        self.parser.add_argument("--torch_seed", type=int, default=88)
+        self.parser.add_argument("--finetune", type=bool, default=False)
         
         # -------------------------------Optimizer------------------------------------
         self.parser.add_argument("--learning_rate", type=float, default=0.001)
@@ -27,12 +33,15 @@ class BaseOptions(ImgAug):
         self.parser.add_argument("--log", type=str, help="the path want to save your log")
         self.parser.add_argument("--extensions", type=list,
                                  default = ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"])
+        self.parser.add_argument("--loading_threads", type=int, default=2,
+                                 help="threads used to load data to cpu-memory")
 
         self.parser.add_argument("--random_order_load", type=bool, default=False,
                                  help="perform randomly select input source from dataset")
         
         # ------------------------------Miscellaneous----------------------------------
-        self.parser.add_argument("--log_dir", type=str, help="log location")
+        self.parser.add_argument("--log_dir", type=str, help="place where you save your training logs")
+        self.parser.add_argument("--model_dir", type=str, help="place where you save your training models")
         args = self.parser.parse_args()
         return args
 

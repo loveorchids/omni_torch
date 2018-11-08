@@ -102,3 +102,25 @@ def load_cifar_from_pickle(args, length, names, dig_level=0):
                 data.append(reshape(dict[misc.str2bytes("data")][i, :]))
                 label.append(dict[misc.str2bytes("labels")][i])
     return data, label
+
+def load_img_from_path(args, length, names, dig_level=0):
+    """
+    Not recommand to use unless your dataset is at a small scale(<100 pics)
+    :param args:
+    :param length:
+    :param names:
+    :param dig_level:
+    :return:
+    """
+    import cv2
+    import data.data_loader_ops as dop
+    data = []
+    paths = load_path_from_folder(args, length, names, dig_level)[0]
+    while len(paths) is not 0:
+        cell = paths.pop()
+        if args.img_channel is 1:
+            image = cv2.imread(cell, 0)
+        else:
+            image = cv2.cvtColor(cv2.imread(cell), cv2.COLOR_BGR2RGB)
+        data += dop.segment_image(image, args, None, None, None, False)
+    return [data]

@@ -7,7 +7,7 @@ import data
 
 ALLOW_WARNING = data.ALLOW_WARNING
 
-def segment_image(image, args, path, seed, size):
+def segment_image(image, args, path, seed, size, to_tensor=False):
     """
     :param image: input image
     :param args:
@@ -40,13 +40,21 @@ def segment_image(image, args, path, seed, size):
         # When it was a grayscale image:
         image = np.expand_dims(image, axis=-1)
     imgs = []
-    for i in range(slice[0]):
-        for j in range(slice[1]):
-            img = T.ToTensor()(image[i * args.patch_size[0]:(i + 1) * args.patch_size[1],
-                                                          j * args.patch_size[1]:(j + 1) * args.patch_size[1], :])
-            imgs.append(torch.unsqueeze(img, 0))
-    return torch.cat(imgs, dim=0)
-
+    if to_tensor:
+        for i in range(slice[0]):
+            for j in range(slice[1]):
+                img = T.ToTensor()(image[i * args.patch_size[0]:(i + 1) * args.patch_size[1],
+                                                              j * args.patch_size[1]:(j + 1) * args.patch_size[1], :])
+                imgs.append(torch.unsqueeze(img, 0))
+        return torch.cat(imgs, dim=0)
+    else:
+        for i in range(slice[0]):
+            for j in range(slice[1]):
+                imgs.append(image[i * args.patch_size[0]:(i + 1) * args.patch_size[1],
+                    j * args.patch_size[1]:(j + 1) * args.patch_size[1], :])
+        return imgs
+    
+    
 def inverse_image(image, args, path, seed, size):
     image = cv2.bitwise_not(image)
     if len(image.shape) == 2:
