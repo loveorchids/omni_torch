@@ -32,7 +32,7 @@ class ImgAug:
                                  help="randomly crop an image")
         self.parser.add_argument("--crop_range", type=tuple, default=(0, 32),
                                  help="size of input images")
-        self.parser.add_argument("--crop_percent", type=tuple, default=(0.0, 0.4),
+        self.parser.add_argument("--crop_percent", type=tuple, default=(0.0, 0.2),
                                  help="size of input images")
 
         self.parser.add_argument("--random_flip", type=bool, default=True,

@@ -15,7 +15,7 @@ import data.data_loader as loader
 import data.path_loader as mode
 import data
 
-
+# ~~~~~~~~~~ NETWORK ~~~~~~~~~~~~
 class ResNet18(nn.Module):
     def __init__(self):
         super(ResNet18, self).__init__()
@@ -62,7 +62,6 @@ class Vgg16BN(nn.Module):
 class BuddhaNet(nn.Module):
     def __init__(self):
         super(BuddhaNet, self).__init__()
-        
         self.down_conv1 = block.conv_block(1, [48, 128, 128], 1, kernel_sizes=[5, 3, 3],
                                            stride=[2, 1, 1], padding=[2, 1, 1], groups=[1] * 3,
                                            activation=nn.SELU, name="block1")
@@ -91,7 +90,7 @@ class BuddhaNet(nn.Module):
         out = self.up_conv2(out)
         out = self.up_conv3(out)
         return out
-
+# ~~~~~~~~~~ NETWORK ~~~~~~~~~~~~
 
 def fit(net, evaluator, args, dataset_1, dataset_2, device_1, device_2, optimizer, criterion, finetune=False,
         do_validation=True, validate_every_n_epoch=1):
@@ -185,6 +184,7 @@ def validation(net, args, val_dataset, device):
         if batch_idx is not 0 and (batch_idx+1) % int(iter) is 0:
             misc.save_tensor_to_img(args, prediction, batch_idx+1)
 
+# =========LOAD DATASET ==========
 def fetch_data(args, sources):
     data = Img2Img_Dataset(args=args, sources=sources, modes=["path"] * 2,
                            load_funcs=[loader.read_image] * 2, dig_level=[0] * 2)
@@ -228,6 +228,40 @@ def segmented_input(args, source):
     data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
                                               shuffle=False, **kwargs)
     return data_loader
+# =========LOAD DATASET ==========
+
+def prepare_args():
+    from options.base_options import BaseOptions
+    args = BaseOptions().initialize()
+    args.deterministic_train = True
+    args.path = "~/Pictures/dataset/buddha"
+    args.log_dir = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "_log")
+    args.model_dir = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "_model")
+    args.img_channel = 1
+    args.batch_size = 1
+    args.do_imgaug = True
+    args.segments = (6, 6)
+
+    # =================UNIQUE OPTIONS  =================
+    args.curr_epoch = 0
+    args.latest_model = os.path.join(args.model_dir, "DynaLoss_D_01_epoch_0500")
+    args.loss_log = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "_loss")
+    args.S_MSE = True
+    args.update_n_epoch = 10
+    # =================UNIQUE OPTIONS  =================
+    if not os.path.exists(args.log_dir):
+        os.mkdir(args.log_dir)
+    elif not args.cover_exist:
+        raise IOError("such code name already exists")
+    if not os.path.exists(args.model_dir):
+        os.mkdir(args.model_dir)
+    elif not args.cover_exist:
+        raise IOError("such code name already exists")
+    if not os.path.exists(args.loss_log):
+        os.mkdir(args.loss_log)
+    elif not args.cover_exist:
+        raise IOError("such code name already exists")
+    return args
 
 if __name__ == "__main__":
     data.ALLOW_WARNING = False

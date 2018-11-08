@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/omni_torch.iml" filepath="$PROJECT_DIR$/.idea/omni_torch.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../tps_stn_pytorch-master/.idea/tps_stn_pytorch-master.iml" filepath="$PROJECT_DIR$/../tps_stn_pytorch-master/.idea/tps_stn_pytorch-master.iml" />
     </modules>
   </component>
 </project>

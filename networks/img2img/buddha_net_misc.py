@@ -1,9 +1,11 @@
 import os, math
 import cv2
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import torch
 
 def update_loss_weight(losses, keys, pre, range, momentum=0.8):
     def out_of_bound(num, low_bound, up_bound):
@@ -34,7 +36,6 @@ def update_loss_weight(losses, keys, pre, range, momentum=0.8):
     print(current)
     return current
 
-
 def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight):
     names = []
     for key in keyname:
@@ -59,24 +60,41 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight):
     plt.savefig(os.path.join(save_path, img_name))
     # plt.show()
 
+def to_nd_image(tensor):
+    img = tensor.data.to("cpu").numpy() * 255 + 128
+    img = img.transpose((1, 2, 0)).astype("uint8")
+    if img.shape[2] == 1:
+        img = np.tile(img, (1, 1, 3))
+    return img
 
-def plot(tensor):
-    def to_nd_image(tensor):
-        img = tensor.data.to("cpu").numpy() * 255 + 128
-        img = img.transpose((1, 2, 0)).astype("uint8")
-        if img.shape[2] == 1:
-            img = np.tile(img, (1, 1, 3))
-        return img
-    num = tensor.size(0)
+def normalize_grad_to_image(tensor):
+    tensor = tensor.data
+    min_v = torch.min(tensor)
+    diff = torch.max(tensor) - min_v
+    if diff == 0:
+        tensor_norm = torch.zeros(tensor.shape) + 255
+    else:
+        tensor_norm = (tensor - min_v) / diff * 255
+    tensor = tensor_norm.to("cpu").numpy().squeeze
+
+def plot(tensor, dim=0, op=to_nd_image, visualize="plot"):
+    """
+    This is a function to plot one tensor at a time.
+    :param tensor: can be gradient, parameter, data_batch, etc.
+    :param axis: decomposite a tensor along n-th dimension
+    :param op: operation that convert a (C, W, H) tensor into nd-array
+    :return:
+    """
+    num = tensor.size(dim)
     v_num = int(math.sqrt(num))
     h_num = math.ceil(num / v_num)
     fig, axis = plt.subplots(v_num, h_num, figsize=(8, 8))
     if v_num == 1 and h_num == 1:
-        axis.imshow(to_nd_image(tensor[0]))
+        axis.imshow(op(tensor[0]))
     else:
         for i in range(v_num):
             for j in range(h_num):
-                axis[i, j].imshow(to_nd_image(tensor[i * h_num + j]))
+                axis[i, j].imshow(op(tensor[i * h_num + j]))
     plt.show()
     
 def save_tensor_to_img(args, tensor_list, epoch):
@@ -116,36 +134,3 @@ def vis_image(args, tensorlist, epoch, batch, loss_dict, idx=None, concat_axis=1
         cv2.putText(img, loss, font_position, font, font_size, (48, 33, 255), thickness)
         cv2.imwrite(path, img)
 
-def prepare_args():
-    from options.base_options import BaseOptions
-    args = BaseOptions().initialize()
-    args.deterministic_train = True
-    args.loading_threads = 0
-    args.path = "~/Pictures/dataset/buddha"
-    args.log_dir = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "_log")
-    args.model_dir = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "_model")
-    args.img_channel = 1
-    args.batch_size = 4
-    args.do_imgaug = True
-    args.segments = (6, 6)
-    
-    # =================UNIQUE OPTIONS  =================
-    args.curr_epoch = 0
-    args.latest_model = os.path.join(args.model_dir, "DynaLoss_D_01_epoch_0500")
-    args.loss_log = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "_loss")
-    args.S_MSE = True
-    args.update_n_epoch = 10
-    # =================UNIQUE OPTIONS  =================
-    if not os.path.exists(args.log_dir):
-        os.mkdir(args.log_dir)
-    elif not(type(args.code_name) is int or args.finetune):
-        raise IOError("such code name already exists")
-    if not os.path.exists(args.model_dir):
-        os.mkdir(args.model_dir)
-    elif not(type(args.code_name) is int or args.finetune):
-        raise IOError("such code name already exists")
-    if not os.path.exists(args.loss_log):
-        os.mkdir(args.loss_log)
-    elif not(type(args.code_name) is int or args.finetune):
-        raise IOError("such code name already exists")
-    return args
