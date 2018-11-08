@@ -59,8 +59,10 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight):
     img_name = name + str(epoch).zfill(4) + ".jpg"
     plt.savefig(os.path.join(save_path, img_name))
     # plt.show()
+    plt.close()
 
 def to_nd_image(tensor):
+    assert len(tensor.shape) == 3
     img = tensor.data.to("cpu").numpy() * 255 + 128
     img = img.transpose((1, 2, 0)).astype("uint8")
     if img.shape[2] == 1:
@@ -68,34 +70,66 @@ def to_nd_image(tensor):
     return img
 
 def normalize_grad_to_image(tensor):
+    assert len(tensor.shape) == 3
     tensor = tensor.data
     min_v = torch.min(tensor)
     diff = torch.max(tensor) - min_v
     if diff == 0:
-        tensor_norm = torch.zeros(tensor.shape) + 255
+        tensor = torch.zeros(tensor.shape) + 255
     else:
-        tensor_norm = (tensor - min_v) / diff * 255
-    tensor = tensor_norm.to("cpu").numpy().squeeze
+        tensor = (tensor - min_v) / diff * 255
+    array = tensor.to("cpu").numpy().astype("uint8")
+    num = array.shape[0]
+    if num in [1, 3]:
+        # Plot the image directly
+        # delete one dimension of this is a gray-scale image
+        canvas = array.transpose((1, 2, 0))
+    else:
+        v = array.shape[1]
+        h = array.shape[2]
+        v_num = int(max(math.sqrt(num), 1))
+        h_num = math.ceil(num / v_num)
+        canvas = np.zeros((v_num * v, (h_num * h))).astype("uint8")
+        for i in range(v_num):
+            for j in range(h_num):
+                canvas[i * v: (i + 1) * v, j * h: (j + 1) * h] = array[i * h_num + j, :, :]
+    if len(canvas.shape) == 2:
+        canvas = np.expand_dims(canvas, axis=-1)
+    if canvas.shape[2] == 1:
+        canvas = np.tile(canvas, (1, 1, 3))
+    return canvas
 
-def plot(tensor, dim=0, op=to_nd_image, visualize="plot"):
+
+def plot(tensor, op, title=None, sub_title=None, ratio=1, path=None):
     """
     This is a function to plot one tensor at a time.
     :param tensor: can be gradient, parameter, data_batch, etc.
-    :param axis: decomposite a tensor along n-th dimension
     :param op: operation that convert a (C, W, H) tensor into nd-array
+    :param path: if not None, function will save the image onto the local disk.
     :return:
     """
-    num = tensor.size(dim)
+    assert ratio >= 0.2 and ratio <= 5, "this ratio is too strange"
+    num = tensor.size(0)
     v_num = int(math.sqrt(num))
     h_num = math.ceil(num / v_num)
-    fig, axis = plt.subplots(v_num, h_num, figsize=(8, 8))
+    v_sub = math.ceil(math.sqrt(tensor.size(1)) * tensor.size(2) * v_num /100)
+    h_sub = math.ceil(math.sqrt(tensor.size(1)) * tensor.size(3) * h_num / 100)
+    fig, axis = plt.subplots(ncols=v_num, nrows=h_num, figsize = (v_sub, h_sub))
     if v_num == 1 and h_num == 1:
         axis.imshow(op(tensor[0]))
     else:
         for i in range(v_num):
             for j in range(h_num):
                 axis[i, j].imshow(op(tensor[i * h_num + j]))
-    plt.show()
+    if title:
+        plt.title(title)
+    if sub_title:
+        plt.suptitle(sub_title)
+    if path is not None:
+        plt.savefig(path)
+    else:
+        plt.show()
+    plt.close()
     
 def save_tensor_to_img(args, tensor_list, epoch):
     vertical_slice = []

@@ -92,25 +92,19 @@ class BuddhaNet(nn.Module):
         return out
 # ~~~~~~~~~~ NETWORK ~~~~~~~~~~~~
 
-def fit(net, evaluator, args, dataset_1, dataset_2, device_1, device_2, optimizer, criterion, finetune=False,
-        do_validation=True, validate_every_n_epoch=1):
+def fit(net, evaluator, args, dataset_1, dataset_2, optimizer, criterion, finetune=False):
     net.train()
     model_path = os.path.expanduser(args.latest_model)
     if finetune and os.path.exists(model_path):
         net.load_state_dict(torch.load(model_path))
-    P_MSE = []
-    S_MSE_1 = []
-    S_MSE_2 = []
-    S_MSE_3 = []
-    loss_weight = dict(zip(["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
-                              [0.65, 0.20, 0.10, 0.05]))
-    loss_weight_range = dict(zip(["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
-                           [(0.30, 1.00), (0.05, 0.50), (0.05, 0.50), (0.04, 0.40)]))
+    L, P_MSE, S_MSE = [], [], [[], [], []]
+    loss_name = ["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"]
+    loss_weight = dict(zip(loss_name, [0.65, 0.20, 0.10, 0.05]))
+    loss_weight_range = dict(zip(loss_name, [(0.30, 1.00), (0.05, 0.50), (0.05, 0.50), (0.04, 0.40)]))
     for epoch in range(args.epoch_num):
         # The mean of curr_epoch is to increase the diversity during deterministic training
         # see code in set_arbitrary.py  => def __getitem__(self, index)
         args.curr_epoch = epoch
-        L = []
         start_time = time.time()
         for batch_idx, (img_batch, label_batch) in enumerate(dataset_1):
             img_batch, label_batch = img_batch.to(device), label_batch.to(device)
@@ -118,51 +112,45 @@ def fit(net, evaluator, args, dataset_1, dataset_2, device_1, device_2, optimize
             prediction = net(img_batch)
             p_mse = criterion(prediction, label_batch) * loss_weight["p_mse"]
             p_mse.backward(retain_graph=True)
+            loss_sum = []
             if args.S_MSE:
-                ps1, ps2, ps3 = evaluator(prediction)
-                ls1, ls2, ls3 = evaluator(label_batch)
-                #del prediction, label_batch
-                s_mse_1 = criterion(ps1, ls1)/ps1.nelement() * loss_weight["s_mse_1"]
-                #del ps1, ls1
-                s_mse_2 = criterion(ps2, ls2)/ps2.nelement() * loss_weight["s_mse_2"]
-                #del ps2, ls2
-                s_mse_3 = criterion(ps3, ls3)/ps3.nelement() * loss_weight["s_mse_3"]
-                #del ps3, ls3
-                s_mse_1.backward(retain_graph=True)
-                s_mse_2.backward(retain_graph=True)
-                s_mse_3.backward(retain_graph=True)
-
-                S_MSE_1.append(float((s_mse_1).data) / loss_weight["s_mse_1"])
-                S_MSE_2.append(float((s_mse_2).data) / loss_weight["s_mse_2"])
-                S_MSE_3.append(float((s_mse_3).data) / loss_weight["s_mse_3"])
-                L.append(float((p_mse).data) + float((s_mse_1).data) + float((s_mse_2).data)
-                         + float((s_mse_3).data))
+                pred_sem_loss = evaluator(prediction)
+                gt_sem_loss = evaluator(label_batch)
+                assert max(len(pred_sem_loss), len(gt_sem_loss), len(loss_name)-1, len(S_MSE)) is \
+                       min(len(pred_sem_loss), len(gt_sem_loss), len(loss_name)-1, len(S_MSE))
+                s_mse_losses = [criterion(pred_s_mse, gt_sem_loss[i])/pred_s_mse.nelement() * loss_weight[loss_name[i+1]]
+                                            for i, pred_s_mse in pred_sem_loss]
+                for i, s_mse in enumerate(s_mse_losses):
+                    s_mse.backward(retain_graph=True)
+                    S_MSE[i].append(float((s_mse).data) / loss_weight[loss_name[i+1]])
+                    loss_sum.append(float((s_mse).data))
+                L.append(float((p_mse).data) + sum(loss_sum))
+            else:
+                P_MSE.append(float((p_mse).data) / loss_weight["p_mse"])
+                L.append(float((p_mse).data))
             optimizer.step()
-            P_MSE.append(float((p_mse).data) / loss_weight["p_mse"])
-            L.append(float((p_mse).data))
+
             if batch_idx % 100 == 0:
-                loss_dict = dict(zip(["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
-                                     [float((p_mse).data), float((s_mse_1).data), float((s_mse_2).data),  float((s_mse_3).data)]))
+                loss_dict = dict(zip(loss_name, [float((p_mse).data)] + loss_sum))
                 misc.vis_image(args, [img_batch, prediction, label_batch],
                              epoch, batch_idx, loss_dict, idx=0)
         print("--- loss: %8f at epoch %04d/%04d, cost %3f seconds ---" %
               (sum(L) / len(L), epoch, args.epoch_num, time.time() - start_time))
-        if do_validation and epoch % validate_every_n_epoch == 0:
-            pass
-            #validation(args, net, val_loader, device, criterion, epoch)
-            # test(net, args, data_loader, device)
-        if args.S_MSE and epoch is not 0 and (epoch+1) % args.update_n_epoch == 0:
-            loss_dis = [np.asarray(P_MSE), np.asarray(S_MSE_1),
-                        np.asarray(S_MSE_2), np.asarray(S_MSE_3)]
-            loss_weight = misc.update_loss_weight(loss_dis,["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
-                                             loss_weight, loss_weight_range, args.loss_weight_momentum)
-            misc.plot_loss_distribution(loss_dis, ["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"],
-                                        args.loss_log, "loss_at_", epoch, loss_weight)
-            P_MSE = []
-            S_MSE_1 = []
-            S_MSE_2 = []
-            S_MSE_3 = []
-        if epoch is not 0 and (epoch+1) % 100 == 0:
+
+        if args.S_MSE and epoch is not 0 and epoch % args.update_n_epoch == 0:
+            # Visualize the gradient
+            for name, param in net.named_parameters():
+                print("Visualizing gradient of layer: " + name)
+                title = "Loss on: " + name
+                sub_title = "Loss norm in L1: %6f L2: %6f" %(float(param.grad.norm(1)), float(param.grad.norm(2)))
+                img_path = os.path.join(args.grad_log, name + "_" + str(epoch).zfill(4) + ".jpg")
+                misc.plot(param.grad, op=misc.normalize_grad_to_image, title=title, sub_title=sub_title, path=img_path)
+            print("Gradient visualization completed")
+            loss_dis = [np.asarray(P_MSE)] + [np.asarray(_) for _ in S_MSE]
+            loss_weight = misc.update_loss_weight(loss_dis,loss_name, loss_weight, loss_weight_range, args.loss_weight_momentum)
+            misc.plot_loss_distribution(loss_dis, loss_name, args.loss_log, "loss_at_", epoch, loss_weight)
+            P_MSE, S_MSE = [], [[], [], []]
+        if epoch is not 0 and epoch % 100 == 0:
             model_path = os.path.join(args.model_dir, args.code_name + "_epoch_" + str(epoch).zfill(4))
             torch.save(net.state_dict(), model_path)
     return L
@@ -231,12 +219,19 @@ def segmented_input(args, source):
 # =========LOAD DATASET ==========
 
 def prepare_args():
+    def verify_existence(path, raiseError):
+        if not os.path.exists(path):
+            os.mkdir(path)
+        elif not raiseError:
+            raise FileExistsError("such code name already exists")
     from options.base_options import BaseOptions
     args = BaseOptions().initialize()
     args.deterministic_train = True
     args.path = "~/Pictures/dataset/buddha"
-    args.log_dir = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "_log")
-    args.model_dir = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "_model")
+    args.log_dir = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "/log")
+    args.model_dir = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "/model")
+    args.loss_log = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "/loss")
+    args.grad_log = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "/grad")
     args.img_channel = 1
     args.batch_size = 1
     args.do_imgaug = True
@@ -245,23 +240,14 @@ def prepare_args():
     # =================UNIQUE OPTIONS  =================
     args.curr_epoch = 0
     args.latest_model = os.path.join(args.model_dir, "DynaLoss_D_01_epoch_0500")
-    args.loss_log = os.path.expanduser("~/Pictures/dataset/buddha/" + args.code_name + "_loss")
     args.S_MSE = True
     args.update_n_epoch = 10
     # =================UNIQUE OPTIONS  =================
-    if not os.path.exists(args.log_dir):
-        os.mkdir(args.log_dir)
-    elif not args.cover_exist:
-        raise IOError("such code name already exists")
-    if not os.path.exists(args.model_dir):
-        os.mkdir(args.model_dir)
-    elif not args.cover_exist:
-        raise IOError("such code name already exists")
-    if not os.path.exists(args.loss_log):
-        os.mkdir(args.loss_log)
-    elif not args.cover_exist:
-        raise IOError("such code name already exists")
-    return args
+    verify_existence(args.log_dir, args.cover_exist)
+    verify_existence(args.model_dir, args.cover_exist)
+    verify_existence(args.loss_log, args.cover_exist)
+    verify_existence(args.grad_log, args.cover_exist)
+    return
 
 if __name__ == "__main__":
     data.ALLOW_WARNING = False
@@ -278,8 +264,8 @@ if __name__ == "__main__":
     evaluator.to(device)
     
     strong_sup_set = fetch_data(args, ["groupa", "groupb"])
-    weak_sup_set = fetch_data(args, ["trainA", "trainB"])
-    val_set = segmented_input(args, ["trainA", "trainB"])
+    #weak_sup_set = fetch_data(args, ["trainA", "trainB"])
+    #val_set = segmented_input(args, ["trainA", "trainB"])
     #train_set = milti_layer_input(args, [("groupa", "groupb"), "groupb"])
 
 
@@ -287,6 +273,5 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(buddhanet.parameters(), lr=args.learning_rate,
                                  weight_decay=1e-5)
     #validation(buddhanet, args, val_set, device)
-    fit(buddhanet, evaluator, args, strong_sup_set, weak_sup_set,device, device,
-        optimizer, criterion, finetune=args.finetune)
+    fit(buddhanet, evaluator, args, strong_sup_set, strong_sup_set, optimizer, criterion, finetune=args.finetune)
     

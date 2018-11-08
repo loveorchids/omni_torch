@@ -41,9 +41,11 @@ class BaseOptions(ImgAug):
         self.parser.add_argument("--random_order_load", type=bool, default=False,
                                  help="perform randomly select input source from dataset")
         
-        # ------------------------------Miscellaneous----------------------------------
+        # ------------------------------ Logging ----------------------------------
         self.parser.add_argument("--log_dir", type=str, help="place where you save your training logs")
         self.parser.add_argument("--model_dir", type=str, help="place where you save your training models")
+        self.parser.add_argument("--loss_log", type=str, help="place where you save the change of your training loss")
+        self.parser.add_argument("--grad_log", type=str, help="place where you save your trend of training gradients")
         args = self.parser.parse_args()
         return args
 
