@@ -122,12 +122,12 @@ def fit(net, evaluator, args, dataset_1, dataset_2, optimizer, criterion, finetu
                                             for i, pred_s_mse in pred_sem_loss]
                 for i, s_mse in enumerate(s_mse_losses):
                     s_mse.backward(retain_graph=True)
-                    S_MSE[i].append(float((s_mse).data) / loss_weight[loss_name[i+1]])
-                    loss_sum.append(float((s_mse).data))
-                L.append(float((p_mse).data) + sum(loss_sum))
+                    S_MSE[i].append(float(s_mse.data) / loss_weight[loss_name[i+1]])
+                    loss_sum.append(float(s_mse.data))
+                L.append(float(p_mse.data) + sum(loss_sum))
             else:
-                P_MSE.append(float((p_mse).data) / loss_weight["p_mse"])
-                L.append(float((p_mse).data))
+                P_MSE.append(float(p_mse.data) / loss_weight["p_mse"])
+                L.append(float(p_mse.data))
             optimizer.step()
 
             if batch_idx % 100 == 0:

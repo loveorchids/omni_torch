@@ -3,9 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="a7c06bec-ea05-47d9-964f-379b66919876" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/networks/img2img/buddha_net.py" beforeDir="false" afterPath="$PROJECT_DIR$/networks/img2img/buddha_net.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/networks/img2img/buddha_net_misc.py" beforeDir="false" afterPath="$PROJECT_DIR$/networks/img2img/buddha_net_misc.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/options/base_options.py" beforeDir="false" afterPath="$PROJECT_DIR$/options/base_options.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp.py" beforeDir="false" afterPath="$PROJECT_DIR$/tmp.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -51,14 +48,14 @@
         <counts>
           <entry key="Python Console" value="1341" />
           <entry key="dummy" value="59" />
-          <entry key="py" value="10368" />
+          <entry key="py" value="10369" />
           <entry key="txt" value="30" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="PLAIN_TEXT" value="89" />
-          <entry key="Python" value="11709" />
+          <entry key="Python" value="11710" />
         </counts>
       </usages-collector>
     </session>
@@ -68,8 +65,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="606">
-              <caret line="125" column="56" lean-forward="true" selection-start-line="125" selection-start-column="56" selection-end-line="125" selection-end-column="56" />
+            <state relative-caret-position="-10">
+              <caret line="158" column="14" lean-forward="true" selection-start-line="158" selection-start-column="14" selection-end-line="158" selection-end-column="14" />
               <folding>
                 <element signature="e#577#1062#0" />
                 <element signature="e#1094#2119#0" />
@@ -77,7 +74,7 @@
                 <element signature="e#9237#9794#0" />
                 <element signature="e#9838#10631#0" />
                 <element signature="e#10672#11402#0" />
-                <marker date="1541672036134" expanded="true" signature="11237:11402" ph="..." />
+                <marker date="1541672369752" expanded="true" signature="11227:11392" ph="..." />
               </folding>
             </state>
           </provider>
@@ -86,8 +83,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net_misc.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="506">
-              <caret line="124" column="24" lean-forward="true" selection-start-line="124" selection-start-column="24" selection-end-line="124" selection-end-column="24" />
+            <state relative-caret-position="584">
+              <caret line="158" column="81" selection-start-line="158" selection-start-column="81" selection-end-line="158" selection-end-column="81" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
                 <marker date="1541669270390" expanded="true" signature="2845:3631" ph="..." />
@@ -140,8 +137,8 @@
     <findStrings>
       <find>tn</find>
       <find>args.path</find>
-      <find>gif</find>
       <find>S_MSE_1</find>
+      <find>gif</find>
     </findStrings>
     <replaceStrings>
       <replace>nn</replace>
@@ -716,10 +713,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/options/base_options.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="242">
+          <caret line="12" column="47" selection-start-line="12" selection-start-column="36" selection-end-line="12" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net_misc.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="506">
-          <caret line="124" column="24" lean-forward="true" selection-start-line="124" selection-start-column="24" selection-end-line="124" selection-end-column="24" />
+        <state relative-caret-position="584">
+          <caret line="158" column="81" selection-start-line="158" selection-start-column="81" selection-end-line="158" selection-end-column="81" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
             <marker date="1541669270390" expanded="true" signature="2845:3631" ph="..." />
@@ -728,17 +732,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/options/base_options.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="12" column="47" selection-start-line="12" selection-start-column="36" selection-end-line="12" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="606">
-          <caret line="125" column="56" lean-forward="true" selection-start-line="125" selection-start-column="56" selection-end-line="125" selection-end-column="56" />
+        <state relative-caret-position="-10">
+          <caret line="158" column="14" lean-forward="true" selection-start-line="158" selection-start-column="14" selection-end-line="158" selection-end-column="14" />
           <folding>
             <element signature="e#577#1062#0" />
             <element signature="e#1094#2119#0" />
@@ -746,7 +743,7 @@
             <element signature="e#9237#9794#0" />
             <element signature="e#9838#10631#0" />
             <element signature="e#10672#11402#0" />
-            <marker date="1541672036134" expanded="true" signature="11237:11402" ph="..." />
+            <marker date="1541672369752" expanded="true" signature="11227:11392" ph="..." />
           </folding>
         </state>
       </provider>
