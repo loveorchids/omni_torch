@@ -236,7 +236,7 @@ def fit(net, evaluator, args, dataset_1, dataset_2, optimizer, criterion, finetu
         print("--- loss: %8f at epoch %04d/%04d, cost %3f seconds ---" %
               (sum(L) / len(L), epoch, args.epoch_num, time.time() - start_time))
         
-        del s_mse_losses, s_mse, prediction, label_batch, pred_sem_loss, gt_sem_loss
+        #del s_mse_losses, s_mse, prediction, label_batch, pred_sem_loss, gt_sem_loss
         
         if args.S_MSE and epoch is not 0 and epoch % args.update_n_epoch == 0:
             # Visualize the gradient
@@ -350,7 +350,7 @@ def prepare_args():
     args.curr_epoch = 0
     args.latest_model = os.path.join(args.model_dir, "DynaLoss_D_01_epoch_0500")
     # Use semantic label loss or not
-    args.S_MSE = True
+    args.S_MSE = False
     # Visualize the loss and gradient, update the loss distribution on every n epochs
     args.update_n_epoch = 5
     args.loss_name = ["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"]
@@ -376,7 +376,7 @@ if __name__ == "__main__":
         torch.manual_seed(args.torch_seed)
         
     device = torch.device("cuda:" + args.gpu_id)
-    buddhanet = BuddhaNet_MLP()
+    buddhanet = BuddhaNet()
     buddhanet.to(device)
     
     #evaluator = ResNet18()

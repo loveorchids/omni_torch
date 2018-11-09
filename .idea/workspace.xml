@@ -2,6 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a7c06bec-ea05-47d9-964f-379b66919876" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/omni_torch.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/omni_torch.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/processed/test.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/processed/training.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/raw/t10k-images-idx3-ubyte" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/raw/t10k-labels-idx1-ubyte" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/raw/train-images-idx3-ubyte" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/raw/train-labels-idx1-ubyte" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/networks/img2img/buddha_net.py" beforeDir="false" afterPath="$PROJECT_DIR$/networks/img2img/buddha_net.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,14 +28,15 @@
     <session id="1715458499">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="9" />
+          <entry key="project.closed" value="10" />
           <entry key="project.open.time.10" value="1" />
           <entry key="project.open.time.2" value="1" />
           <entry key="project.open.time.24" value="1" />
           <entry key="project.open.time.4" value="2" />
           <entry key="project.open.time.5" value="2" />
+          <entry key="project.open.time.6" value="1" />
           <entry key="project.open.time.7" value="3" />
-          <entry key="project.opened" value="10" />
+          <entry key="project.opened" value="11" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -48,14 +57,14 @@
         <counts>
           <entry key="Python Console" value="1341" />
           <entry key="dummy" value="59" />
-          <entry key="py" value="10369" />
+          <entry key="py" value="10375" />
           <entry key="txt" value="30" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="PLAIN_TEXT" value="89" />
-          <entry key="Python" value="11710" />
+          <entry key="Python" value="11716" />
         </counts>
       </usages-collector>
     </session>
@@ -65,16 +74,17 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-10">
-              <caret line="158" column="14" lean-forward="true" selection-start-line="158" selection-start-column="14" selection-end-line="158" selection-end-column="14" />
+            <state relative-caret-position="764">
+              <caret line="352" column="22" selection-start-line="352" selection-start-column="22" selection-end-line="352" selection-end-column="22" />
               <folding>
-                <element signature="e#577#1062#0" />
-                <element signature="e#1094#2119#0" />
-                <element signature="e#2153#4131#0" />
-                <element signature="e#9237#9794#0" />
-                <element signature="e#9838#10631#0" />
-                <element signature="e#10672#11402#0" />
-                <marker date="1541672369752" expanded="true" signature="11227:11392" ph="..." />
+                <element signature="e#847#1332#0" />
+                <element signature="e#1364#2385#0" />
+                <element signature="e#2419#4380#0" />
+                <element signature="e#4418#6881#0" />
+                <element signature="e#6919#9872#0" />
+                <element signature="e#14673#15230#0" />
+                <element signature="e#15274#16067#0" />
+                <element signature="e#16108#16838#0" />
               </folding>
             </state>
           </provider>
@@ -83,12 +93,10 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net_misc.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="584">
-              <caret line="158" column="81" selection-start-line="158" selection-start-column="81" selection-end-line="158" selection-end-column="81" />
+            <state relative-caret-position="3410">
+              <caret line="207" column="81" selection-start-line="207" selection-start-column="81" selection-end-line="207" selection-end-column="81" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
-                <marker date="1541669270390" expanded="true" signature="2845:3631" ph="..." />
-                <marker date="1541669270390" expanded="true" signature="4843:4848" ph="..." />
               </folding>
             </state>
           </provider>
@@ -97,7 +105,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tmp.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="308">
+            <state relative-caret-position="286">
               <caret line="14" column="25" selection-start-line="14" selection-start-column="25" selection-end-line="14" selection-end-column="25" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
@@ -118,8 +126,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/options/imgaug_options.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="386">
-              <caret line="34" column="80" selection-start-line="34" selection-start-column="80" selection-end-line="34" selection-end-column="80" />
+            <state relative-caret-position="792">
+              <caret line="36" column="80" selection-start-line="36" selection-start-column="80" selection-end-line="36" selection-end-column="80" />
             </state>
           </provider>
         </entry>
@@ -209,6 +217,12 @@
               <item name="omni_torch" type="b2602c69:ProjectViewProjectNode" />
               <item name="omni_torch" type="462c0819:PsiDirectoryNode" />
               <item name="networks" type="462c0819:PsiDirectoryNode" />
+              <item name="ilsvrc" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="omni_torch" type="b2602c69:ProjectViewProjectNode" />
+              <item name="omni_torch" type="462c0819:PsiDirectoryNode" />
+              <item name="networks" type="462c0819:PsiDirectoryNode" />
               <item name="img2img" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -228,7 +242,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../tps_stn_pytorch-master" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Python" />
   </component>
   <component name="RestoreUpdateTree" date="Moments ago" ActionInfo="_Update">
     <UpdatedFiles>
@@ -245,22 +259,22 @@
           <option name="myCanBeAbsent" value="false" />
           <option name="myId" value="UPDATED" />
           <PATH vcs="Git" revision="">$PROJECT_DIR$/.idea/omni_torch.iml</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/data/__main__.py</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/data/__pycache__/data_loader.cpython-35.pyc</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/data/__pycache__/misc.cpython-35.pyc</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/data/__pycache__/set_arbitrary.cpython-35.pyc</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/data/data_loader.py</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/data/data_loader_ops.py</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/data/path_loader.py</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/data/misc.py</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/data/set_arbitrary.py</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/__pycache__/blocks.cpython-35.pyc</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/blocks.py</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/ilsvrc/cifar-10.py</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/img2img/__pycache__/buddha_net_misc.cpython-35.pyc</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/img2img/buddha_net.py</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/img2img/buddha_net_misc.py</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/options/__pycache__/base_options.cpython-35.pyc</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/options/__pycache__/imgaug_options.cpython-35.pyc</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/options/base_options.py</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/options/imgaug_options.py</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/visualize/__pycache__/basic.cpython-35.pyc</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/visualize/basic.py</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/requirements.txt</PATH>
         </FILE-GROUP>
         <FILE-GROUP>
           <option name="myUpdateName" value="Created" />
@@ -268,20 +282,6 @@
           <option name="mySupportsDeletion" value="false" />
           <option name="myCanBeAbsent" value="false" />
           <option name="myId" value="CREATED" />
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/data/__pycache__/data_loader_ops.cpython-35.pyc</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/data/__pycache__/path_loader.cpython-35.pyc</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/data/__pycache__/set_arbitrary.cpython-35.pyc</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/data/__pycache__/set_img2img.cpython-35.pyc</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/ilsvrc/__init__.py</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/ilsvrc/processed/test.pt</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/ilsvrc/processed/training.pt</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/ilsvrc/raw/t10k-images-idx3-ubyte</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/ilsvrc/raw/t10k-labels-idx1-ubyte</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/ilsvrc/raw/train-images-idx3-ubyte</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/ilsvrc/raw/train-labels-idx1-ubyte</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/ilsvrc/stn_net.py</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/img2img/__pycache__/buddha_net_misc.cpython-35.pyc</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/networks/img2img/buddha_net_misc.py</PATH>
         </FILE-GROUP>
         <FILE-GROUP>
           <option name="myUpdateName" value="Deleted" />
@@ -512,13 +512,13 @@
     <frame x="-8" y="-8" width="1936" height="1096" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.15245202" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.15405117" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" x="-1722" y="215" width="856" height="556" id="Run" order="2" type="WINDOWED" weight="0.3298647" />
-      <window_info anchor="bottom" x="-1204" y="89" width="1161" height="961" id="Debug" order="3" type="WINDOWED" visible="true" weight="0.3995657" />
+      <window_info anchor="bottom" x="-1204" y="89" width="1161" height="961" id="Debug" order="3" type="WINDOWED" weight="0.3995657" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32899022" />
@@ -544,6 +544,13 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/networks/img2img/buddha_net.py</url>
+          <line>234</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -696,16 +703,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/options/imgaug_options.py">
+    <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="386">
-          <caret line="34" column="80" selection-start-line="34" selection-start-column="80" selection-end-line="34" selection-end-column="80" />
+        <state relative-caret-position="764">
+          <caret line="352" column="22" selection-start-line="352" selection-start-column="22" selection-end-line="352" selection-end-column="22" />
+          <folding>
+            <element signature="e#847#1332#0" />
+            <element signature="e#1364#2385#0" />
+            <element signature="e#2419#4380#0" />
+            <element signature="e#4418#6881#0" />
+            <element signature="e#6919#9872#0" />
+            <element signature="e#14673#15230#0" />
+            <element signature="e#15274#16067#0" />
+            <element signature="e#16108#16838#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net_misc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3410">
+          <caret line="207" column="81" selection-start-line="207" selection-start-column="81" selection-end-line="207" selection-end-column="81" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tmp.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="308">
+        <state relative-caret-position="286">
           <caret line="14" column="25" selection-start-line="14" selection-start-column="25" selection-end-line="14" selection-end-column="25" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
@@ -720,31 +747,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net_misc.py">
+    <entry file="file://$PROJECT_DIR$/options/imgaug_options.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="584">
-          <caret line="158" column="81" selection-start-line="158" selection-start-column="81" selection-end-line="158" selection-end-column="81" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-            <marker date="1541669270390" expanded="true" signature="2845:3631" ph="..." />
-            <marker date="1541669270390" expanded="true" signature="4843:4848" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-10">
-          <caret line="158" column="14" lean-forward="true" selection-start-line="158" selection-start-column="14" selection-end-line="158" selection-end-column="14" />
-          <folding>
-            <element signature="e#577#1062#0" />
-            <element signature="e#1094#2119#0" />
-            <element signature="e#2153#4131#0" />
-            <element signature="e#9237#9794#0" />
-            <element signature="e#9838#10631#0" />
-            <element signature="e#10672#11402#0" />
-            <marker date="1541672369752" expanded="true" signature="11227:11392" ph="..." />
-          </folding>
+        <state relative-caret-position="792">
+          <caret line="36" column="80" selection-start-line="36" selection-start-column="80" selection-end-line="36" selection-end-column="80" />
         </state>
       </provider>
     </entry>
