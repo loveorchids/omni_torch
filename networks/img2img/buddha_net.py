@@ -139,6 +139,41 @@ class BuddhaNet_MLP(nn.Module):
         out = self.up_conv3(out)
         return out
 
+
+class BuddhaNet_NICE(nn.Module):
+    def __init__(self, nice_block=5):
+        super(BuddhaNet_NICE, self).__init__()
+        self.down_conv1 = block.conv_block(1, [48, 128, 128], 1, kernel_sizes=[5, 3, 3],
+                                           stride=[2, 1, 1], padding=[2, 1, 1], groups=[1] * 3,
+                                           activation=nn.SELU, name="block1")
+        self.down_conv2 = block.conv_block(128, [256, 256, 256], 1, kernel_sizes=[3, 3, 3],
+                                           stride=[2, 1, 1], padding=[1] * 3, groups=[1] * 3,
+                                           activation=nn.SELU, name="block2")
+        self.down_conv3 = block.conv_block(256, [256, 512, 1024], 1, kernel_sizes=[3] * 3,
+                                           stride=[2] + [1] * 2, padding=[1] * 3, groups=[1] * 3,
+                                           activation=nn.SELU, name="block3")
+
+        self.up_conv1 = block.conv_block(256, [256, 256, 128], 1, kernel_sizes=[4, 3, 3],
+                                         stride=[0.5, 1, 1], padding=[1] * 3, groups=[1] * 3,
+                                         activation=nn.SELU, name="up_block1")
+        self.up_conv2 = block.conv_block(128, [128, 128, 48], 1, kernel_sizes=[4, 3, 3],
+                                         stride=[0.5, 1, 1], padding=[1] * 3, groups=[1] * 3,
+                                         activation=nn.SELU, name="up_block2")
+        self.up_conv3 = block.conv_block(48, [48, 24, 1], 1, kernel_sizes=[4, 3, 3],
+                                         stride=[0.5, 1, 1], padding=[1] * 3, groups=[1] * 3,
+                                         activation=nn.SELU, name="up_block3")
+
+    def forward(self, x):
+        out = self.down_conv1(x)
+        out = self.down_conv2(out)
+        out = self.down_conv3(out)
+        out = self.inference(out)
+        out = self.down_conv4(out)
+        out = self.up_conv1(out)
+        out = self.up_conv2(out)
+        out = self.up_conv3(out)
+        return out
+
 class BuddhaNet_Res(nn.Module):
     def __init__(self):
         super(BuddhaNet_Res, self).__init__()
@@ -227,8 +262,8 @@ def fit(net, evaluator, args, dataset_1, dataset_2, optimizer, criterion, finetu
                 L.append(float(p_mse.data) + sum(loss_sum))
             else:
                 L.append(float(p_mse.data))
-                
             optimizer.step()
+
             if batch_idx % 100 == 0:
                 loss_dict = dict(zip(loss_name, [float(p_mse.data)] + loss_sum))
                 misc.vis_image(args, [img_batch, prediction, label_batch],
@@ -237,7 +272,6 @@ def fit(net, evaluator, args, dataset_1, dataset_2, optimizer, criterion, finetu
               (sum(L) / len(L), epoch, args.epoch_num, time.time() - start_time))
         
         #del s_mse_losses, s_mse, prediction, label_batch, pred_sem_loss, gt_sem_loss
-        
         if args.S_MSE and epoch is not 0 and epoch % args.update_n_epoch == 0:
             # Visualize the gradient
             """
@@ -342,7 +376,6 @@ def prepare_args():
     args.do_resize = False
     args.do_imgaug = True
     args.segments = (6, 6)
-    args.gpu_id = "1"
 
     # =================UNIQUE OPTIONS  =================
     # The mean of curr_epoch is to increase the diversity during deterministic training

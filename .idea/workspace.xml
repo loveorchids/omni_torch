@@ -2,14 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a7c06bec-ea05-47d9-964f-379b66919876" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/omni_torch.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/omni_torch.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/processed/test.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/processed/training.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/raw/t10k-images-idx3-ubyte" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/raw/t10k-labels-idx1-ubyte" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/raw/train-images-idx3-ubyte" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/networks/ilsvrc/raw/train-labels-idx1-ubyte" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/networks/blocks.py" beforeDir="false" afterPath="$PROJECT_DIR$/networks/blocks.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/networks/img2img/buddha_net.py" beforeDir="false" afterPath="$PROJECT_DIR$/networks/img2img/buddha_net.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -42,7 +36,7 @@
       <usages-collector id="statistics.file.extensions.open">
         <counts>
           <entry key="_bootstrap&gt;" value="4" />
-          <entry key="py" value="47" />
+          <entry key="py" value="48" />
           <entry key="txt" value="1" />
         </counts>
       </usages-collector>
@@ -50,21 +44,21 @@
         <counts>
           <entry key="PLAIN_TEXT" value="1" />
           <entry key="PyRemoteDebug" value="4" />
-          <entry key="Python" value="47" />
+          <entry key="Python" value="48" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="Python Console" value="1341" />
           <entry key="dummy" value="59" />
-          <entry key="py" value="10375" />
+          <entry key="py" value="10518" />
           <entry key="txt" value="30" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="PLAIN_TEXT" value="89" />
-          <entry key="Python" value="11716" />
+          <entry key="Python" value="11859" />
         </counts>
       </usages-collector>
     </session>
@@ -74,17 +68,29 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="764">
-              <caret line="352" column="22" selection-start-line="352" selection-start-column="22" selection-end-line="352" selection-end-column="22" />
+            <state relative-caret-position="-230">
+              <caret line="135" column="34" lean-forward="true" selection-start-line="135" selection-start-column="34" selection-end-line="135" selection-end-column="34" />
               <folding>
                 <element signature="e#847#1332#0" />
                 <element signature="e#1364#2385#0" />
                 <element signature="e#2419#4380#0" />
-                <element signature="e#4418#6881#0" />
                 <element signature="e#6919#9872#0" />
                 <element signature="e#14673#15230#0" />
                 <element signature="e#15274#16067#0" />
                 <element signature="e#16108#16838#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/networks/blocks.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="396">
+              <caret line="18" column="44" selection-start-line="18" selection-start-column="44" selection-end-line="18" selection-end-column="44" />
+              <folding>
+                <marker date="1541749013715" expanded="true" signature="1579:1594" ph="..." />
+                <marker date="1541749013715" expanded="true" signature="1713:1718" ph="..." />
               </folding>
             </state>
           </provider>
@@ -160,7 +166,6 @@
       <list>
         <option value="$PROJECT_DIR$/requirements.txt" />
         <option value="$PROJECT_DIR$/networks/prototype.py" />
-        <option value="$PROJECT_DIR$/networks/blocks.py" />
         <option value="$PROJECT_DIR$/networks/ilsvrc/cifar-10.py" />
         <option value="$PROJECT_DIR$/data/mode.py" />
         <option value="$PROJECT_DIR$/data/ops.py" />
@@ -178,6 +183,7 @@
         <option value="$PROJECT_DIR$/networks/img2img/buddha_net_misc.py" />
         <option value="$PROJECT_DIR$/options/base_options.py" />
         <option value="$PROJECT_DIR$/networks/img2img/buddha_net.py" />
+        <option value="$PROJECT_DIR$/networks/blocks.py" />
       </list>
     </option>
   </component>
@@ -547,7 +553,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/networks/img2img/buddha_net.py</url>
-          <line>234</line>
+          <line>269</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>
@@ -575,13 +581,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="399">
           <caret line="359" column="18" lean-forward="true" selection-start-line="359" selection-start-column="18" selection-end-line="359" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/networks/blocks.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="528">
-          <caret line="27" column="23" selection-start-line="27" selection-start-column="23" selection-end-line="27" selection-end-column="23" />
         </state>
       </provider>
     </entry>
@@ -703,23 +702,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="764">
-          <caret line="352" column="22" selection-start-line="352" selection-start-column="22" selection-end-line="352" selection-end-column="22" />
-          <folding>
-            <element signature="e#847#1332#0" />
-            <element signature="e#1364#2385#0" />
-            <element signature="e#2419#4380#0" />
-            <element signature="e#4418#6881#0" />
-            <element signature="e#6919#9872#0" />
-            <element signature="e#14673#15230#0" />
-            <element signature="e#15274#16067#0" />
-            <element signature="e#16108#16838#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net_misc.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3410">
@@ -751,6 +733,33 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="792">
           <caret line="36" column="80" selection-start-line="36" selection-start-column="80" selection-end-line="36" selection-end-column="80" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/networks/blocks.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="396">
+          <caret line="18" column="44" selection-start-line="18" selection-start-column="44" selection-end-line="18" selection-end-column="44" />
+          <folding>
+            <marker date="1541749013715" expanded="true" signature="1579:1594" ph="..." />
+            <marker date="1541749013715" expanded="true" signature="1713:1718" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/networks/img2img/buddha_net.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-230">
+          <caret line="135" column="34" lean-forward="true" selection-start-line="135" selection-start-column="34" selection-end-line="135" selection-end-column="34" />
+          <folding>
+            <element signature="e#847#1332#0" />
+            <element signature="e#1364#2385#0" />
+            <element signature="e#2419#4380#0" />
+            <element signature="e#6919#9872#0" />
+            <element signature="e#14673#15230#0" />
+            <element signature="e#15274#16067#0" />
+            <element signature="e#16108#16838#0" />
+          </folding>
         </state>
       </provider>
     </entry>

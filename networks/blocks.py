@@ -29,6 +29,10 @@ def conv_block(input, filters, repeat, kernel_sizes, stride, padding, groups,
         if batch_norm:
             ops.add_module(name + "_BN_" + str(i), nn.BatchNorm2d(filters[i+1]))
     return ops
+
+def nice_block(input, filters, repeat, kernel_sizes, stride, padding, group):
+    conv_block(input, filters, repeat, kernel_sizes, stride, padding, group),
+    pass
     
 def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
                     batch_norm=True, name=None):
