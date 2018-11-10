@@ -51,19 +51,19 @@ def just_return_it(args, data, seed=None, size=None, ops=None):
 
 def prepare_augmentation(args):
     aug_list = []
-    if args.affine_trans:
+    if args.do_affine:
         aug_list.append(augmenters.Affine(scale={"x": args.scale, "y": args.scale},
                                       translate_percent={"x": args.translation, "y": args.translation},
                                       rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color))
-    if args.random_crop:
+    if args.do_random_crop:
         aug_list.append(augmenters.Crop(percent=args.crop_percent, keep_size=True))
-    if args.random_flip:
-        aug_list.append(augmenters.Fliplr(0.5))
-        aug_list.append(augmenters.Flipud(0.0))
-    if args.random_brightness:
+    if args.do_random_flip:
+        aug_list.append(augmenters.Fliplr(args.h_flip_prob))
+        aug_list.append(augmenters.Flipud(args.v_flip_prob))
+    if args.do_random_brightness:
         aug_list.append(augmenters.ContrastNormalization((0.75, 1.5)))
         aug_list.append(augmenters.Multiply((0.9, 1.1), per_channel=0.2))
-    if args.random_noise:
+    if args.do_random_noise:
         aug_list.append(augmenters.Sometimes(0.2, augmenters.GaussianBlur(sigma=(0, 0.1))))
         aug_list.append(augmenters.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05 * 255),
                                                          per_channel=0.5))

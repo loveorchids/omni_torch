@@ -31,7 +31,7 @@ def test_img2img(args):
 
 def test_img2img_advanced(args):
     args.path = "~/Pictures/dataset/buddha"
-    args.random_crop = False
+    args.do_random_crop = False
     args.segments = [4, 4]
     # Uncomment if you want load images in random order
     # args.random_order_load = True
