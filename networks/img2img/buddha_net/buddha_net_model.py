@@ -125,8 +125,8 @@ class BuddhaNet_MLP(nn.Module):
 class BuddhaNet_NIN(nn.Module):
     def __init__(self):
         super(BuddhaNet_NIN, self).__init__()
-        self.down_conv1 = block.conv_block(1, [48, 128, 128, 128], 1, kernel_sizes=[5, 3, 3, 1],
-                                           stride=[2, 1, 1, 1], padding=[2, 1, 1, 0], groups=[1] * 4,
+        self.down_conv1 = block.conv_block(1, [48, 128, 128, 128], 1, kernel_sizes=[3, 3, 3, 1],
+                                           stride=[2, 1, 1, 1], padding=[1, 1, 1, 0], groups=[1] * 4,
                                            activation=nn.SELU, name="block1")
         self.down_conv2 = block.conv_block(128, [256, 256, 256, 256], 1, kernel_sizes=[3, 3, 3, 1],
                                            stride=[2, 1, 1, 1], padding=[1] * 3 + [0], groups=[1] * 4,
@@ -223,24 +223,24 @@ class BuddhaNet_Res(nn.Module):
                                          activation=nn.SELU, name="up_block3", batch_norm=BATCH_NORM)
     
     def forward(self, x):
+        res = self.shortcur1(x)
         out = self.down_conv1(x)
-        res = self.shortcur1(out)
         out = tf.relu(out + res)
         
-        out = self.down_conv2(out)
         res = self.shortcur2(out)
+        out = self.down_conv2(out)
         out = tf.relu(out + res)
         
-        out = self.down_conv3(out)
         res = self.shortcur3(out)
+        out = self.down_conv3(out)
         out = tf.relu(out + res)
         
-        out = self.up_conv1(out)
         res = self.shortcur4(out)
+        out = self.up_conv1(out)
         out = tf.relu(out + res)
         
-        out = self.up_conv2(out)
         res = self.shortcur5(out)
+        out = self.up_conv2(out)
         out = tf.relu(out + res)
         
         out = self.up_conv3(out)
@@ -248,14 +248,32 @@ class BuddhaNet_Res(nn.Module):
 
 
 class BuddhaNet_Recur(nn.Module):
-    def __init__(self, n_block=3):
+    def __init__(self):
         super(BuddhaNet_Recur, self).__init__()
         self.batch_norm = False
-        self.networks = nn.Sequential(*[self.recurrent_block() for _ in range(n_block)])
-        # self.myparameters = nn.ParameterList([_.parameters() for _ in self.networks])
+        self.net1 = nn.Sequential(*self.recurrent_block_big())
+        self.net2 = nn.Sequential(*self.recurrent_block_small())
+        self.net3 = nn.Sequential(*self.recurrent_block_small())
+        
+    def recurrent_block_big(self):
+        return [
+            block.conv_block(1, [48, 128, 128], 1, kernel_sizes=[3, 3, 1], stride=[2, 1, 1], padding=[1, 1, 0],
+                             groups=[1] * 3, activation=nn.SELU, name="block1"),
+            block.conv_block(128, [256, 256, 256], 1, kernel_sizes=[3, 3, 1], stride=[2, 1, 1],
+                             padding=[1] * 2 + [0], groups=[1] * 3, activation=nn.SELU, name="block2"),
+            block.conv_block(256, [256, 512, 1024, 1024], 1, kernel_sizes=[3] * 3 + [1], stride=[2] + [1] * 3,
+                             padding=[1] * 3 + [0], groups=[1] * 4, activation=nn.SELU, name="block3"),
+            block.conv_block(1024, [1024, 512, 256], 1, kernel_sizes=[3] * 2 + [1], stride=[1] * 3,
+                             padding=[1] * 2 + [0], groups=[1] * 3, activation=nn.SELU, name="block4"),
+            block.conv_block(256, [256, 256, 128], 1, kernel_sizes=[4, 3, 1], stride=[0.5, 1, 1],
+                             padding=[1] * 2 + [0], groups=[1] * 3, activation=nn.SELU, name="up_block1"),
+            block.conv_block(128, [128, 48, 48], 1, kernel_sizes=[4, 3, 1], stride=[0.5, 1, 1],
+                             padding=[1] * 2 + [0], groups=[1] * 3, activation=nn.SELU, name="up_block2"),
+            block.conv_block(48, [48, 24, 1], 1, kernel_sizes=[4, 3, 3], stride=[0.5, 1, 1],
+                             padding=[1] * 3, groups=[1] * 3, activation=nn.SELU, name="up_block3")]
     
-    def recurrent_block(self):
-        return nn.Sequential(*[
+    def recurrent_block_small(self):
+        return [
             # Down Conv Layer
             block.conv_block(1, [64, 128, 256], 1, kernel_sizes=[3, 3, 3], stride=[2, 2, 2], padding=[1, 1, 1],
                              groups=[1] * 3, activation=nn.SELU, name="block1", batch_norm=self.batch_norm),
@@ -266,14 +284,17 @@ class BuddhaNet_Recur(nn.Module):
             block.conv_block(256, [256, 128, 64, 1], 1, kernel_sizes=[4, 4, 4, 1], stride=[0.5, 0.5, 0.5, 1],
                              padding=[1, 1, 1, 0], groups=[1] * 4, activation=nn.SELU, name="up_block1",
                              batch_norm=self.batch_norm)
-        ])
+        ]
     
     def forward(self, x):
-        results = []
-        for recur_block in self.networks:
-            x = recur_block(x)
-            results.append(x)
-        return results
+        result = []
+        x = self.net1(x)
+        result.append(x)
+        x = self.net2(x)
+        result.append(x)
+        x = self.net3(x)
+        result.append(x)
+        return result
 # ~~~~~~~~~~ NETWORK ~~~~~~~~~~~~
 
 MODEL = {

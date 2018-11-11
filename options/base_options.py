@@ -46,6 +46,8 @@ class BaseOptions(ImgAug):
         # ------------------------------MISC-----------------------------------
         self.parser.add_argument("--loading_threads", type=int, default=2,
                                  help="threads used to load data to cpu-memory")
+        self.parser.add_argument("--random_order_load", type=bool, default=False,
+                                 help="ingore the correspondence of input and output data when load the dataset")
         self.parser.add_argument("--path", type=str, help="the path of dataset")
         self.parser.add_argument("--extensions", type=list,
                                  default = ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"])

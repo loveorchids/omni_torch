@@ -8,13 +8,7 @@ import data
 
 ALLOW_WARNING = data.ALLOW_WARNING
 
-def read_image(args, path, seed, size, ops=None):
-    if args.img_channel is 1:
-        image = cv2.imread(path, 0)
-    else:
-        image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
-    image = misc.random_crop(image, args.load_size, seed)
-    #print("before: " + str(image.shape))
+def prepare_image(args, image, seed, size):
     if args.do_imgaug:
         imgaug.seed(seed)
         image = prepare_augmentation(args).augment_image(image)
@@ -25,13 +19,27 @@ def read_image(args, path, seed, size, ops=None):
     ver = 8 * round(size[0] / 8)
     height = 8 * round(size[1] / 8)
     image = cv2.resize(image, (ver, height))
+    return image
+
+
+def read_image(args, path, seed, size, ops=None):
+    if args.img_channel is 1:
+        image = cv2.imread(path, 0)
+    else:
+        image = cv2.imread(path)
+    image = misc.random_crop(image, args.load_size, seed)
     if ops:
         image = ops(image)
-    if args.img_channel is 1:
-        image = np.expand_dims(image, axis=-1)
-    #print("after: " + str(image.shape))
-    return to_tensor(args, image, seed, size, ops)
-
+    #print("before: " + str(image.shape))
+    if type(image) is list or type(image) is tuple:
+        image = [prepare_image(args, img, seed, size) for img in image]
+        image = [np.expand_dims(img, axis=-1) if len(img.shape) == 2 else img for img in image]
+        return [to_tensor(args, img, seed, size, ops) for img in image]
+    else:
+        if len(image.shape) == 2:
+            image = np.expand_dims(prepare_image(args, image, seed, size), axis=-1)
+        return to_tensor(args, image, seed, size, ops)
+    
 def to_tensor(args, image, seed, size, ops=None):
     trans = T.Compose([T.ToTensor(), T.Normalize(args.img_mean, args.img_std)])
     return trans(image)

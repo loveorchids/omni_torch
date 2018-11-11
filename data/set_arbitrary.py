@@ -79,6 +79,8 @@ class Arbitrary_Dataset(tud.Dataset):
         for i in range(len(items)):
             if self.load_funcs[i] is "image":
                 result.append(loader.read_image(self.args, items[i], seed, self.sizes[i], self.loader_ops[i]))
+            if self.load_funcs[i] is "multiimages":
+                result += loader.read_image(self.args, items[i], seed, self.sizes[i], self.loader_ops[i])
             elif callable(self.load_funcs[i]):
                 result.append(self.load_funcs[i](self.args, items[i], seed, self.sizes[i], self.loader_ops[i]))
             else:
