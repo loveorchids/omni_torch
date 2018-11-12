@@ -1,29 +1,9 @@
-import os, json
-
-general_preset_name = "general_preset.json"
-unique_preset_name = "unique_preset.json"
-
-
-class Bunch(object):
-  def __init__(self, adict):
-    self.__dict__.update(adict)
-
-def save_args(ops, args, name):
-    path = os.path.expanduser(os.path.join(ops.path, ops.code_name, name))
-    with open(path, "w") as file:
-        json.dump(vars(args), file)
-    return
-
-def load_preset(args, path):
-    path = os.path.expanduser(path)
-    with open(path, "r") as file:
-        data = json.load(file)
-    data = vars(args).update(data)
-    return Bunch(data)
+import networks.util as util
     
 class GeneralPattern_01:
     def create_args(self, ops):
-        args = Bunch({})
+        args = util.Bunch({})
+        args.path = "~/Pictures/dataset/buddha"
         args.deterministic_train = True
         args.epoch_num = 100
         args.batch_size = 1
@@ -46,18 +26,12 @@ class GeneralPattern_01:
 
         args.segments = (6, 6)
         args.segment_patch_size = (320, 320)
-        save_args(ops, args, general_preset_name)
+        util.save_args(ops, args, util.Bunch.general_preset_name)
         return vars(args)
-    
-    def set(self, args):
-        out = vars(args)
-        tmp = self.create_args(args)
-        out.update(tmp)
-        return Bunch(out)
     
 class UniquePattern_01:
     def create_args(self, ops):
-        args = Bunch({})
+        args = util.Bunch({})
         # The mean of curr_epoch is to increase the diversity during deterministic training
         # see code in set_arbitrary.py  => def __getitem__(self, index)
         args.curr_epoch = 0
@@ -69,13 +43,8 @@ class UniquePattern_01:
         args.loss_name = ["p_mse", "s_mse_1", "s_mse_2", "s_mse_3"]
         args.loss_weight = [0.65, 0.20, 0.10, 0.05]
         args.loss_weight_range = [(0.30, 1.00), (0.05, 0.50), (0.05, 0.50), (0.04, 0.40)]
-        save_args(ops, args, unique_preset_name)
+        util.save_args(ops, args, util.Bunch.unique_preset_name)
         return vars(args)
-    
-    def set(self, args):
-        out = vars(args)
-        out.update(self.create_args(args))
-        return Bunch(out)
     
     
 PRESET_Gen = {

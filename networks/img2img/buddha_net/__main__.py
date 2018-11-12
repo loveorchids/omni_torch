@@ -185,9 +185,24 @@ def prepare_args():
         elif not raiseError:
             raise FileExistsError("such code name already exists")
     args = BaseOptions().initialize()
+    #  General Options
+    try:
+        int(args.general_options)
+        general_settings = preset.PRESET_Gen[args.general_options]()
+        args = util.set(general_settings, args)
+    except ValueError:
+        assert os.path.exists(os.path.expanduser(args.general_options))
+        args = util.load_preset(args, args.general_options)
+    #  Unique Options
+    try:
+        int(args.unique_options)
+        unique_settings = preset.PRESET_Unq[args.unique_options]()
+        args = util.set(unique_settings, args)
+    except ValueError:
+        assert os.path.exists(os.path.expanduser(args.unique_options))
+        args = util.load_preset(args, args.general_options)
     
     # Options can be infered by args
-    args.path = os.path.expanduser("~/Pictures/dataset/buddha")
     args.model_dir = os.path.join(args.path, args.code_name)
     args.log_dir = os.path.join(args.path, args.code_name, "log")
     args.loss_log = os.path.join(args.path, args.code_name, "loss")
@@ -197,22 +212,7 @@ def prepare_args():
     verify_existence(args.loss_log, args.cover_exist)
     verify_existence(args.grad_log, args.cover_exist)
     
-    #  General Options
-    try:
-        int(args.general_options)
-        general_settings = preset.PRESET_Gen[args.general_options]()
-        args = general_settings.set(args)
-    except ValueError:
-        assert os.path.exists(os.path.expanduser(args.general_options))
-        args = preset.load_preset(args, args.general_options)
-    #  Unique Options
-    try:
-        int(args.unique_options)
-        unique_settings = preset.PRESET_Unq[args.unique_options]()
-        args = unique_settings.set(args)
-    except ValueError:
-        assert os.path.exists(os.path.expanduser(args.unique_options))
-        args = preset.load_preset(args, args.general_options)
+    
 
     args.loss_weight = dict(zip(args.loss_name, args.loss_weight))
     args.loss_weight_range = dict(zip(args.loss_name, args.loss_weight_range))
