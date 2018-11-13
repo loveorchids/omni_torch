@@ -16,31 +16,50 @@ def get_stride_padding_kernel(input, out):
                 if float(P) == (input - 1 - S * (out - 1)) / 2:
                     return S, P, K
                 
-
+def prepare_args(args, presets):
+    def load_preset(args, preset, preset_code):
+        class Bunch:
+            def __init__(self, adict):
+                self.__dict__.update(adict)
+        if preset_code.endswith(".json"):
+            assert os.path.exists(preset_code)
+            path = os.path.expanduser(preset_code)
+            with open(path, "r") as file:
+                data = json.load(file)
+            data = vars(args).update(data)
+            return Bunch(data)
+        else:
+            args = preset[preset_code](args)
+            # pattern_dict = pattern.create_args(self.args)
+            return args
+    def save_args(args):
+        path = os.path.expanduser(os.path.join(args.path, args.code_name, "preset.json"))
+        with open(path, "w") as file:
+            json.dump(vars(args), file)
+        return
+    def make_folder(args, name=""):
+        path = os.path.join(args.path, args.code_name, name)
+        if not os.path.exists(path):
+            os.mkdir(path)
+        elif not args.cover_exist:
+            raise FileExistsError("such code name already exists")
+        return path
     
-def load_preset(args, preset, preset_code):
-    class Bunch:
-        def __init__(self, adict):
-            self.__dict__.update(adict)
-    if preset_code.endswith(".json"):
-        assert os.path.exists(preset_code)
-        path = os.path.expanduser(preset_code)
-        with open(path, "r") as file:
-            data = json.load(file)
-        data = vars(args).update(data)
-        return Bunch(data)
-    else:
-        args = preset[preset_code](args)
-        #pattern_dict = pattern.create_args(self.args)
-        return args
+    # Load general and unique options
+    args = load_preset(args, presets, args.general_options)
+    args = load_preset(args, presets, args.unique_options)
 
-def save_args(args):
-    path = os.path.expanduser(os.path.join(args.path, args.code_name, "preset.json"))
-    with open(path, "w") as file:
-        json.dump(vars(args), file)
-    return
+    args.path = os.path.expanduser(args.path)
+    args.model_dir = make_folder(args)
+    args.log_dir = make_folder(args, "log")
+    args.loss_log = make_folder(args, "loss")
+    args.grad_log = make_folder(args, "grad")
+    args.val_log = make_folder(args, "val")
+    
+    save_args(args)
 
-                
+    return args
+    
 def save_model(args, epoch, state_dict, keep_latest=5):
     model_list = [_  for _ in glob.glob(args.model_dir + "/*.pth") if os.path.isfile(_)]
     model_list.sort()

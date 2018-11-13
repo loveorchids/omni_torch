@@ -8,7 +8,7 @@ class BaseOptions(ImgAug):
     
     def initialize(self):
         ImgAug.initialize(self)
-        self.parser.add_argument("--code_name", type=str, required=True,
+        self.parser.add_argument("--code_name", type=str, required=False,
                                  help="Anyway, you have to name your experiment.")
         self.parser.add_argument("--cover_exist", action="store_true")
         

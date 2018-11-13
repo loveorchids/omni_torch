@@ -8,9 +8,9 @@ import torchvision.transforms as T
 import numpy as np
 import visualize.basic as vb
 import networks.util as util
-import networks.img2img.buddha_net.buddha_net_misc as misc
-import networks.img2img.buddha_net.buddha_net_model as model
-import networks.img2img.buddha_net.buddha_net_preset as preset
+import networks.img2img.buddha_net as basic
+import networks.img2img.buddha_net.models as model
+import networks.img2img.buddha_net.presets as preset
 from options.base_options import BaseOptions
 from data.set_img2img import Img2Img_Dataset
 from data.set_arbitrary import Arbitrary_Dataset
@@ -100,9 +100,9 @@ def fit(net, evaluator, args, dataset_1, dataset_2, device, optimizer, criterion
     # =============== Special Part ================
     if args.S_MSE:
         loss_dis = [np.asarray(P_MSE)] + [np.asarray(_) for _ in S_MSE]
-        args.loss_weight = misc.update_loss_weight(loss_dis, loss_name, args.loss_weight, args.loss_weight_range,
+        args.loss_weight = basic.update_loss_weight(loss_dis, loss_name, args.loss_weight, args.loss_weight_range,
                                               args.loss_weight_momentum)
-        misc.plot_loss_distribution(loss_dis, loss_name, args.loss_log, "loss_at_", args.curr_epoch, args.loss_weight)
+        basic.plot_loss_distribution(loss_dis, loss_name, args.loss_log, "loss_at_", args.curr_epoch, args.loss_weight)
     # =============== Special Part ================
     return L
 
@@ -178,47 +178,12 @@ def segmented_input(args, source):
 
 # =========LOADING DATASET ==========
 
-def prepare_args():
-    def verify_existence(path, raiseError):
-        if not os.path.exists(path):
-            os.mkdir(path)
-        elif not raiseError:
-            raise FileExistsError("such code name already exists")
-    args = BaseOptions().initialize()
-    #  General Options
-    try:
-        int(args.general_options)
-        general_settings = preset.PRESET_Gen[args.general_options]()
-        args = util.set(general_settings, args)
-    except ValueError:
-        assert os.path.exists(os.path.expanduser(args.general_options))
-        args = util.load_preset(args, args.general_options)
-    #  Unique Options
-    try:
-        int(args.unique_options)
-        unique_settings = preset.PRESET_Unq[args.unique_options]()
-        args = util.set(unique_settings, args)
-    except ValueError:
-        assert os.path.exists(os.path.expanduser(args.unique_options))
-        args = util.load_preset(args, args.general_options)
-    
-    # Options can be infered by args
-    args.model_dir = os.path.join(args.path, args.code_name)
-    args.log_dir = os.path.join(args.path, args.code_name, "log")
-    args.loss_log = os.path.join(args.path, args.code_name, "loss")
-    args.grad_log = os.path.join(args.path, args.code_name, "grad")
-    verify_existence(args.model_dir, args.cover_exist)
-    verify_existence(args.log_dir, args.cover_exist)
-    verify_existence(args.loss_log, args.cover_exist)
-    verify_existence(args.grad_log, args.cover_exist)
-    
-    
+def verify_args(args, presets):
+    args = util.prepare_args(args, presets)
 
     args.loss_weight = dict(zip(args.loss_name, args.loss_weight))
     args.loss_weight_range = dict(zip(args.loss_name, args.loss_weight_range))
-    
-    
-    
+
     assert args.batch_size == 1, "set batch size to 1 makes the training result better"
     assert args.loss_name[0] == "p_mse"
     assert 0.9999 <= sum([_ for _ in args.loss_weight.values()]) <= 1.0001
@@ -228,12 +193,26 @@ def prepare_args():
 
 if __name__ == "__main__":
     data.ALLOW_WARNING = False
-    args = prepare_args()
+    args = BaseOptions().initialize()
+    
+    # Running Info
+    args.loading_threads = 2
+    args.model1 = "buddhanet_unet"
+    args.model2 = "vgg16bn"
+    args.general_options = "G_01"
+    args.unique_options = "U_01"
+    args.cover_exist = True
+    args.code_name = "Dynaloss_Unet_var1"
+    args.gpu_id = "0"
+    args = verify_args(args, preset.PRESET)
+    
     if args.deterministic_train:
         torch.manual_seed(args.seed)
     device = torch.device("cuda:" + args.gpu_id)
     
+    #x = torch.rand((1, 1, 352, 352))
     buddhanet = model.MODEL[args.model1.lower()]()
+    #y = buddhanet(x)
     evaluator = model.MODEL[args.model2.lower()]()
     buddhanet.to(device)
     evaluator.to(device)

@@ -8,7 +8,7 @@ import torchvision.transforms as T
 import numpy as np
 import visualize.basic as vb
 import networks.util as util
-import networks.img2img.style_trans.misc as misc
+import networks.img2img.style_trans as basic
 import networks.img2img.style_trans.models as model
 import networks.img2img.style_trans.presets as preset
 from options.base_options import BaseOptions
@@ -24,7 +24,7 @@ import data
 
 # TERMINAL RUN  (Fill the --code_name)
 """
-python3 ~/Documents/omni_torch/networks/img2img/buddha_net  --gpu_id 0 \
+python3 ~/Documents/omni_torch/networks/img2img/style_trans  --gpu_id 0 \
 --loading_threads 0  --model1 buddhanet_nin --model2 vgg16bn \
 --general_options 01 --unique_options 01 --code_name debug
 """
@@ -152,43 +152,29 @@ def fetch_data(args, sources):
     return data_loader
 
 
-def prepare_args():
-    def verify_existence(path, raiseError):
-        if not os.path.exists(path):
-            os.mkdir(path)
-        elif not raiseError:
-            raise FileExistsError("such code name already exists")
-    args = BaseOptions().initialize()
+def verify_args(args, presets):
+    args = util.prepare_args(args, presets)
     
-    #  Load general and unique options
-    args = util.load_preset(args, preset.PRESET, args.general_options)
-    args = util.load_preset(args, preset.PRESET, args.unique_options)
-    util.save_args(args)
-    
-    # Options can be infered by args
-    args.model_dir = os.path.join(args.path, args.code_name)
-    args.log_dir = os.path.join(args.path, args.code_name, "log")
-    args.loss_log = os.path.join(args.path, args.code_name, "loss")
-    args.grad_log = os.path.join(args.path, args.code_name, "grad")
-    args.val_log = os.path.join(args.path, args.code_name, "val")
-    verify_existence(args.model_dir, args.cover_exist)
-    verify_existence(args.log_dir, args.cover_exist)
-    verify_existence(args.loss_log, args.cover_exist)
-    verify_existence(args.grad_log, args.cover_exist)
-    verify_existence(args.val_log, args.cover_exist)
-
-    args.loss_weight = dict(zip(args.loss_name, args.loss_weight))
-    args.loss_weight_range = dict(zip(args.loss_name, args.loss_weight_range))
-    
-    assert args.batch_size == 1, "set batch size to 1 makes the training result better"
-    assert args.loss_name[0] == "p_mse"
-    assert 0.9999 <= sum([_ for _ in args.loss_weight.values()]) <= 1.0001
-    assert all([True if _[0] >= 0 and _[1] <= 1 else False for _ in args.loss_weight_range.values()])
+    # Verification Code Here
+    pass
     return args
 
 if __name__ == "__main__":
     data.ALLOW_WARNING = False
-    args = prepare_args()
+    args = BaseOptions().initialize()
+
+    #============================
+    args.gpu_id = "1"
+    args.loading_threads = 2
+    args.model1 = "buddhanet_nin"
+    args.model2 = "vgg16bn"
+    args.general_options = "maps"
+    args.unique_options = "U_01"
+    args.cover_exist = True
+    args.code_name = "debug"
+    #============================
+
+    args = verify_args(args, preset.PRESET)
     if args.deterministic_train:
         torch.manual_seed(args.seed)
     device = torch.device("cuda:" + args.gpu_id)

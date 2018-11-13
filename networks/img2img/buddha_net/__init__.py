@@ -5,6 +5,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
+
 def update_loss_weight(losses, keys, pre, bound, momentum=0.8):
     def out_of_bound(num, low_bound, up_bound):
         if num < low_bound:
@@ -15,11 +16,12 @@ def update_loss_weight(losses, keys, pre, bound, momentum=0.8):
             return 1
         else:
             return -1
+
     assert len(losses) == len(keys)
-    assert 0 <= momentum  < 0.9999
+    assert 0 <= momentum < 0.9999
     avg = [float(np.mean(loss)) for loss in losses]
     l = sum(avg)
-    weight = [a/l for a in avg]
+    weight = [a / l for a in avg]
     avg = [pre[keys[i]] * momentum + weight[i] * (1 - momentum) for i, a in enumerate(avg)]
     # --------------- support up and low bound of weight -----------------
     mask = [out_of_bound(a, bound[keys[i]][0], bound[keys[i]][1]) for i, a in enumerate(avg)]
@@ -34,6 +36,7 @@ def update_loss_weight(losses, keys, pre, bound, momentum=0.8):
     print(current)
     return current
 
+
 def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight):
     names = []
     for key in keyname:
@@ -42,24 +45,19 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight):
     losses.append(np.asarray(list(x_axis)))
     names.append("x")
     plot_data = dict(zip(names, losses))
-    
+
     # sio.savemat(os.path.expanduser(args.path)+"loss_info.mat", plot_data)
     df = pd.DataFrame(plot_data)
-    
+
     plt.subplots(figsize=(18, 6))
-    
+
     plt.plot("x", names[0], data=df, markersize=1, linewidth=1)
     plt.plot("x", names[1], data=df, markersize=2, linewidth=1)
     plt.plot("x", names[2], data=df, markersize=2, linewidth=1)
     plt.plot("x", names[3], data=df, markersize=3, linewidth=1)
-    
+
     plt.legend(loc='upper right')
     img_name = name + str(epoch).zfill(4) + ".jpg"
     plt.savefig(os.path.join(save_path, img_name))
     # plt.show()
     plt.close()
-
-
-
-if __name__ == "__main__":
-    pass
