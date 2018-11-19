@@ -1,2 +1,11 @@
+.DS_Store
 networks/
+networks/img2img/
+*/__pycache__
+.pyc
+*/*.pyc
+*/**/*.pyc
+*/**/**/*.pyc
+*/**/**/**/*.pyc
+*/**/**/**/**/*.pyc
 .idea
