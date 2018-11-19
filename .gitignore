@@ -1,5 +1,5 @@
 .DS_Store
-networks/
+networks/ocr/
 networks/img2img/
 */.__pycache__
 */*.__pycache__

@@ -1,4 +1,46 @@
+import torch
 import torch.nn as nn
+import torch.nn.functional as tf
+
+class Resnet_Block(nn.Module):
+    def __init__(self, input, filters, kernel_sizes, stride, padding, groups,
+               name=None, activation = nn.ReLU, batch_norm = True):
+        super().__init__()
+        # repeat always equals to 1 here, because we only create one Resnet Block
+        self.conv_block = conv_block(input, filters, 1, kernel_sizes, stride, padding, groups,
+               name, activation, batch_norm)
+        self.shortcut = resnet_shortcut(input, filters[-1])
+    def forward(self, x):
+        return tf.relu(self.shortcut(x)+self.conv_block(x))
+
+class InceptionBlock(nn.Module):
+    def __init__(self, input, filters, kernel_sizes, stride, padding, inner_groups,
+               name=None, activation = nn.ReLU, batch_norm = True):
+        """
+        :param input: int
+        :param filters: in the form of [[...], [...], ... , [...]]
+        :param kernel_sizes: in the form of [[...], [...], ... , [...]]
+        :param stride: in the form of [[...], [...], ... , [...]]
+        :param padding: in the form of [[...], [...], ... , [...]]
+        :param inner_groups: int, number of inner blocks
+        :param name:
+        :param activation:
+        :param batch_norm:
+        """
+        assert max([len(filters), len(kernel_sizes), len(stride), len(padding), inner_groups]) is \
+               min([len(filters), len(kernel_sizes), len(stride), len(padding), inner_groups])
+        super().__init__()
+        self.inner_blocks = []
+        for i in range(inner_groups):
+            assert max([len(filters[i]), len(kernel_sizes[i]), len(stride[i]), len(padding[i])]) is \
+                   min([len(filters[i]), len(kernel_sizes[i]), len(stride[i]), len(padding[i])])
+            # repeat always equals to 1 here, because we only create one Inception Block
+            self.inner_blocks.append(conv_block(input, filters[i], 1, kernel_sizes[i], stride[i], padding[i],
+                                                groups=[1] * len(filters[i]), name=name+"_inner_" + str(i), activation=activation,
+                                                batch_norm=batch_norm,))
+    def forward(self, x):
+        out = [block(x) for block in self.inner_blocks]
+        return torch.cat(out, dim=1)
 
 
 def conv_block(input, filters, repeat, kernel_sizes, stride, padding, groups,

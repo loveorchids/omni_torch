@@ -50,11 +50,12 @@ def prepare_args(args, presets):
     args = load_preset(args, presets, args.unique_options)
 
     args.path = os.path.expanduser(args.path)
-    args.model_dir = make_folder(args)
-    args.log_dir = make_folder(args, "log")
-    args.loss_log = make_folder(args, "loss")
-    args.grad_log = make_folder(args, "grad")
-    args.val_log = make_folder(args, "val")
+    if args.create_path:
+        args.model_dir = make_folder(args)
+        args.log_dir = make_folder(args, "log")
+        args.loss_log = make_folder(args, "loss")
+        args.grad_log = make_folder(args, "grad")
+        args.val_log = make_folder(args, "val")
     
     save_args(args)
 
@@ -75,6 +76,9 @@ def save_model(args, epoch, state_dict, keep_latest=5):
 def load_latest_model(args, net):
     model_list = [_ for _ in glob.glob(args.model_dir + "/*.pth") if os.path.isfile(_)]
     model_list.sort()
+    epoch =int(model_list[-1][model_list[-1].rfind("_")+1:model_list[-1].rfind(".")])
+    args.curr_epoch = epoch
+    print("Load model form: " + model_list[-1])
     net.load_state_dict(torch.load(model_list[-1]))
     return net
     
