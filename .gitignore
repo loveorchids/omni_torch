@@ -1,7 +1,8 @@
 .DS_Store
 networks/
 networks/img2img/
-*/__pycache__
+*/.__pycache__
+*/*.__pycache__
 .pyc
 */*.pyc
 */**/*.pyc
