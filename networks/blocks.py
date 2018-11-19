@@ -4,18 +4,19 @@ import torch.nn.functional as tf
 
 class Resnet_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, groups,
-               name=None, activation = nn.ReLU, batch_norm = True):
+               dropout=0.2, name=None, activation = nn.ReLU, batch_norm = True):
         super().__init__()
         # repeat always equals to 1 here, because we only create one Resnet Block
         self.conv_block = conv_block(input, filters, 1, kernel_sizes, stride, padding, groups,
                name, activation, batch_norm)
         self.shortcut = resnet_shortcut(input, filters[-1])
+        self.dropout = nn.Dropout(p=dropout)
     def forward(self, x):
-        return tf.relu(self.shortcut(x)+self.conv_block(x))
+        return tf.relu(self.dropout(self.conv_block(x))+self.shortcut(x))
 
 class InceptionBlock(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, inner_groups,
-               name=None, activation = nn.ReLU, batch_norm = True):
+               dropout=0.2, name=None, activation = nn.ReLU, batch_norm = True):
         """
         :param input: int
         :param filters: in the form of [[...], [...], ... , [...]]
@@ -38,8 +39,9 @@ class InceptionBlock(nn.Module):
             self.inner_blocks.append(conv_block(input, filters[i], 1, kernel_sizes[i], stride[i], padding[i],
                                                 groups=[1] * len(filters[i]), name=name+"_inner_" + str(i), activation=activation,
                                                 batch_norm=batch_norm,))
+            self.dropout = nn.Dropout(p=dropout)
     def forward(self, x):
-        out = [block(x) for block in self.inner_blocks]
+        out = [self.dropour(block(x)) for block in self.inner_blocks]
         return torch.cat(out, dim=1)
 
 
