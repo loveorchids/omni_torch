@@ -9,9 +9,11 @@ class ImgAug:
         self.parser.add_argument("--img_channel", type=int, default=3,
                                  help="3 stand for color image while 1 for greyscale")
         self.parser.add_argument("--load_size", type=tuple, default=(512, 512),
-                                 help="the image will be crop to this size before doing augmentation")
+                                 help="the image will be cropped to this size")
         self.parser.add_argument("--do_resize", type=bool, default=True,
                                  help="resize the input image or not")
+        self.parser.add_argument("--resize_gcd", type=int, default=8,
+                                 help="make the width and height of image be divided evenly by gcd")
         self.parser.add_argument("--img_size", type=tuple, default=(224, 224),
                                  help="size of input images")
 
@@ -36,6 +38,8 @@ class ImgAug:
                                  help="randomly crop an image")
         self.parser.add_argument("--crop_percent", type=tuple,default=(0.0, 0.2),
                                  help="percentage of crop top, right, bottom, left")
+        self.parser.add_argument("--keep_ratio", type=bool, default=True,
+                                 help="Keep ratio or not")
 
         self.parser.add_argument("--do_random_flip", type=bool, default=True,
                                  help="randomly flip an image horizontally and vertically")
