@@ -65,8 +65,14 @@ class Arbitrary_Dataset(tud.Dataset):
             items = []
             item_num = len(self.dataset[0])
             up_range = len(self.dataset)
+            selected_j = []
             for i in range(item_num):
                 j = random.randint(0, up_range-1)
+                # avoid repeated elements
+                while j in selected_j:
+                    #print("repeat element ENCOUNTERED!")
+                    j = random.randint(0, up_range - 1)
+                selected_j.append(j)
                 items.append(self.dataset[j][i])
         else:
             items = self.dataset[index]

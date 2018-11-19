@@ -11,6 +11,7 @@ class BaseOptions(ImgAug):
         self.parser.add_argument("--code_name", type=str, required=False,
                                  help="Anyway, you have to name your experiment.")
         self.parser.add_argument("--cover_exist", action="store_true")
+        self.parser.add_argument("--create_path", type=bool, default=True)
         
         # -------------------------------Training------------------------------------
         self.parser.add_argument("--gpu_id", type=str, default="0",

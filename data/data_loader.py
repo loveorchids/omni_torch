@@ -38,6 +38,8 @@ def read_image(args, path, seed, size, ops=None):
     else:
         if len(image.shape) == 2:
             image = np.expand_dims(prepare_image(args, image, seed, size), axis=-1)
+        else:
+            image = prepare_image(args, image, seed, size)
         return to_tensor(args, image, seed, size, ops)
     
 def to_tensor(args, image, seed, size, ops=None):

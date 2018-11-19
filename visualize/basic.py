@@ -2,6 +2,10 @@ import os, math, time
 import torch
 import cv2
 import numpy as np
+import pandas as pd
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 def visualize_gradient(args, net, img_ratio=16/9):
     for name, param in net.named_parameters():
@@ -123,3 +127,24 @@ def plot_tensor(tensor, path=None, title=None, op=to_image, ratio=1, margin=5, s
         cv2.imwrite(path, canvas)
     else:
         return canvas
+
+
+def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight, fig_size=(18, 6)):
+    names = []
+    if keyname:
+        for key in keyname:
+            names.append(key.ljust(8) + ": " + str(weight[key])[:5])
+    x_axis = range(len(losses[0]))
+    losses.append(np.asarray(list(x_axis)))
+    names.append("x")
+    
+    plot_data = dict(zip(names, losses))
+    df = pd.DataFrame(plot_data)
+    
+    plt.subplots(figsize=fig_size)
+    for i, data in enumerate(names):
+        plt.plot(data, data=df, markersize=1, linewidth=1)
+    plt.legend(loc='upper right')
+    img_name = name + str(epoch).zfill(4) + ".jpg"
+    plt.savefig(os.path.join(save_path, img_name))
+    plt.close()

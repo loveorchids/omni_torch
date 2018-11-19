@@ -101,9 +101,9 @@ def fit(net, evaluator, args, dataset_1, dataset_2, device, optimizer, criterion
     # =============== Special Part ================
     if args.S_MSE:
         loss_dis = [np.asarray(P_MSE)] + [np.asarray(_) for _ in S_MSE]
-        args.loss_weight = misc.update_loss_weight(loss_dis, loss_name, args.loss_weight, args.loss_weight_range,
+        args.loss_weight = basic.update_loss_weight(loss_dis, loss_name, args.loss_weight, args.loss_weight_range,
                                                    args.loss_weight_momentum)
-        misc.plot_loss_distribution(loss_dis, loss_name, args.loss_log, "loss_at_", args.curr_epoch, args.loss_weight)
+        basic.plot_loss_distribution(loss_dis, loss_name, args.loss_log, "loss_at_", args.curr_epoch, args.loss_weight)
     # =============== Special Part ================
     return L
 
