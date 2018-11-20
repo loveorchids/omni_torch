@@ -51,7 +51,7 @@ class Arbitrary_Dataset(tud.Dataset):
             assert len(options["sizes"]) is data_types
             self.sizes = options["sizes"]
         else:
-            self.sizes = [args.img_size] * data_types
+            self.sizes = [args.final_size] * data_types
         
     def prepare(self):
         self.dataset = self.load_dataset()

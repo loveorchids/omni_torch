@@ -6,14 +6,21 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import scipy.signal as ss
 
-def visualize_gradient(args, net, img_ratio=16/9):
+def visualize_gradient(args, net, img_ratio=16/9, minimun_rank=2):
     for name, param in net.named_parameters():
+        if param.grad is None:
+            # If the grad of parameter does not exist
+            # or current layer does not need BP
+            continue
+        if len(param.shape) < minimun_rank:
+            continue
         if len(param.shape) == 2:
             param = param.unsqueeze(0)
         if len(param.shape) == 3:
             param = param.unsqueeze(0)
-        if len(param.shape) > 4 or len(param.shape) == 1:
+        if len(param.shape) > 4:
             # We do not visualize tensor with such shape
             continue
         norm = float(param.grad.norm(2))
@@ -135,7 +142,9 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight, fig_
         for key in keyname:
             names.append(key.ljust(8) + ": " + str(weight[key])[:5])
     x_axis = range(len(losses[0]))
+    losses = [ss.savgol_filter(_, 7, 2) for _ in losses]
     losses.append(np.asarray(list(x_axis)))
+    
     names.append("x")
     
     plot_data = dict(zip(names, losses))
@@ -148,3 +157,7 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight, fig_
     img_name = name + str(epoch).zfill(4) + ".jpg"
     plt.savefig(os.path.join(save_path, img_name))
     plt.close()
+    
+if __name__ == "__main__":
+    a = [1,5,3,67,3,2,6,4,9,7,4,7,5,6,4,5,3,4,2,3,2,3,1,2,3,2,1,2,3,2,1]
+    plot_loss_distribution([a], None, "/home/wang/Pictures", "tmp", 0, None, fig_size=(8, 3))
