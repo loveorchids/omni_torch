@@ -8,18 +8,6 @@ class ImgAug:
         # Image Loading
         self.parser.add_argument("--img_channel", type=int, default=3,
                                  help="3 stand for color image while 1 for greyscale")
-<<<<<<< HEAD
-        
-=======
-        self.parser.add_argument("--load_size", type=tuple, default=(512, 512),
-                                 help="the image will be cropped to this size")
-        self.parser.add_argument("--do_resize", type=bool, default=True,
-                                 help="resize the input image or not")
-        self.parser.add_argument("--resize_gcd", type=int, default=8,
-                                 help="make the width and height of image be divided evenly by gcd")
-        self.parser.add_argument("--img_size", type=tuple, default=(224, 224),
-                                 help="size of input images")
->>>>>>> d91fb3933ce89088cfee1fdb9a655c37cdea9bf4
 
         # Image Augmentation
         self.parser.add_argument("--do_imgaug", type=bool, default=True,
@@ -40,13 +28,8 @@ class ImgAug:
         
         self.parser.add_argument("--do_random_crop", type=bool, default=True,
                                  help="randomly crop an image")
-<<<<<<< HEAD
         self.parser.add_argument("--crop_size", type=tuple,default=(360, 360),
                                  help="the image will be cropped to this size")
-=======
-        self.parser.add_argument("--crop_percent", type=tuple,default=(0.0, 0.2),
-                                 help="percentage of crop top, right, bottom, left")
->>>>>>> d91fb3933ce89088cfee1fdb9a655c37cdea9bf4
         self.parser.add_argument("--keep_ratio", type=bool, default=True,
                                  help="Keep ratio or not")
 
