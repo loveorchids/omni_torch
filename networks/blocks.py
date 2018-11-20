@@ -2,21 +2,23 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as tf
 
+
 class Resnet_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, groups,
-               dropout=0.2, name=None, activation = nn.ReLU, batch_norm = True):
+                 name=None, activation=nn.ReLU, batch_norm=True):
         super().__init__()
         # repeat always equals to 1 here, because we only create one Resnet Block
         self.conv_block = conv_block(input, filters, 1, kernel_sizes, stride, padding, groups,
-               name, activation, batch_norm)
+                                     name, activation, batch_norm)
         self.shortcut = resnet_shortcut(input, filters[-1])
-        self.dropout = nn.Dropout(p=dropout)
+
     def forward(self, x):
-        return tf.relu(self.dropout(self.conv_block(x))+self.shortcut(x))
+        return tf.relu(self.conv_block(x) + self.shortcut(x))
+
 
 class InceptionBlock(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, inner_groups,
-               dropout=0.2, name=None, activation = nn.ReLU, batch_norm = True):
+                 name=None, activation=nn.ReLU, batch_norm=True):
         """
         :param input: int
         :param filters: in the form of [[...], [...], ... , [...]]
@@ -31,27 +33,30 @@ class InceptionBlock(nn.Module):
         assert max([len(filters), len(kernel_sizes), len(stride), len(padding), inner_groups]) is \
                min([len(filters), len(kernel_sizes), len(stride), len(padding), inner_groups])
         super().__init__()
-        self.inner_blocks = []
+        inner_blocks = []
         for i in range(inner_groups):
             assert max([len(filters[i]), len(kernel_sizes[i]), len(stride[i]), len(padding[i])]) is \
                    min([len(filters[i]), len(kernel_sizes[i]), len(stride[i]), len(padding[i])])
             # repeat always equals to 1 here, because we only create one Inception Block
-            self.inner_blocks.append(conv_block(input, filters[i], 1, kernel_sizes[i], stride[i],
-                                                padding[i], groups=[1] * len(filters[i]), name=name+"_inner_" + str(i),
+            inner_blocks.append(conv_block(input, filters[i], 1, kernel_sizes[i], stride[i],
+                                                padding[i], groups=[1] * len(filters[i]),
+                                                name=name + "_inner_" + str(i),
                                                 activation=activation, batch_norm=batch_norm))
-            self.dropout = nn.Dropout(p=dropout)
+            self.innerblocks = nn.ModuleList(inner_blocks)
+
     def forward(self, x):
-        out = [self.dropour(block(x)) for block in self.inner_blocks]
+        out = [block(x) for block in self.inner_blocks]
         return torch.cat(out, dim=1)
-    
+
+
 class Xception_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, inner_groups,
-               dropout=0.2, name=None, activation = nn.ReLU, batch_norm = True):
+                 name=None, activation=nn.ReLU, batch_norm=True):
         super().__init__()
         self.conv_block = InceptionBlock(input, filters, kernel_sizes, stride, padding,
-                                         inner_groups, dropout, name, activation, batch_norm)
+                                         inner_groups, name, activation, batch_norm)
         self.shortcut = resnet_shortcut(input, filters[-1])
-        self.dropout = nn.Dropout(p=dropout)
+
     def forward(self, x):
         return tf.relu(self.dropout(self.conv_block(x)) + self.shortcut(x))
 
