@@ -6,7 +6,10 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import scipy.signal as ss
+try:
+    import scipy.signal as ss
+except ImportError:
+    pass
 
 def visualize_gradient(args, net, img_ratio=16/9, minimun_rank=2):
     for name, param in net.named_parameters():
@@ -34,7 +37,7 @@ def visualize_gradient(args, net, img_ratio=16/9, minimun_rank=2):
             os.mkdir(os.path.join(args.grad_log, name))
         img_path = os.path.join(args.grad_log, name, name + "_" + str(args.curr_epoch).zfill(4) + ".jpg")
         plot_tensor(norm_grad, title=title, path=img_path, ratio=img_ratio, sub_margin=1)
-    
+
 
 def to_image(tensor, margin, deNormalize):
     assert len(tensor.shape) == 3
@@ -90,7 +93,7 @@ def plot_tensor(tensor, path=None, title=None, op=to_image, ratio=1, margin=5, s
             patch_margin = sub_margin
     else:
         patch_margin = 0
-    
+
     # Find out the size of each small image patches
     img = op(tensor[0], patch_margin, deNormalize)
     v_p, h_p, c_p = img.shape
@@ -142,14 +145,15 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight, fig_
         for key in keyname:
             names.append(key.ljust(8) + ": " + str(weight[key])[:5])
     x_axis = range(len(losses[0]))
-    losses = [ss.savgol_filter(_, 7, 2) for _ in losses]
+    if ss:
+        losses = [ss.savgol_filter(_, 7, 2) for _ in losses]
     losses.append(np.asarray(list(x_axis)))
-    
+
     names.append("x")
-    
+
     plot_data = dict(zip(names, losses))
     df = pd.DataFrame(plot_data)
-    
+
     plt.subplots(figsize=fig_size)
     for i, data in enumerate(names):
         plt.plot(data, data=df, markersize=1, linewidth=1)
@@ -157,7 +161,7 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch, weight, fig_
     img_name = name + str(epoch).zfill(4) + ".jpg"
     plt.savefig(os.path.join(save_path, img_name))
     plt.close()
-    
+
 if __name__ == "__main__":
     a = [1,5,3,67,3,2,6,4,9,7,4,7,5,6,4,5,3,4,2,3,2,3,1,2,3,2,1,2,3,2,1]
     plot_loss_distribution([a], None, "/home/wang/Pictures", "tmp", 0, None, fig_size=(8, 3))
