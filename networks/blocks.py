@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as tf
 
-##MODIFICATION1
+##MODIFICATION
 
 
 class Resnet_Block(nn.Module):
