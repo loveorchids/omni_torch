@@ -14,13 +14,12 @@ if IMGAUG_ENGINE == "cv2":
     import imgaug
     from imgaug import augmenters
 
-
 def prepare_image(args, image, seed, size):
     if args.do_imgaug:
         if IMGAUG_ENGINE == "cv2":
             imgaug.seed(seed)
             image = prepare_augmentation(args).augment_image(image)
-            # image = misc.random_crop(image, args.crop_size, seed)
+            #image = misc.random_crop(image, args.crop_size, seed)
         elif IMGAUG_ENGINE == "PIL":
             random.seed(seed)
             image = Image.fromarray(image)
@@ -41,7 +40,7 @@ def prepare_image(args, image, seed, size):
 
 def read_image(args, path, seed, size, ops=None):
     """
-
+    
     :param args:
     :param path:
     :param seed:
@@ -63,10 +62,10 @@ def read_image(args, path, seed, size, ops=None):
         else:
             image = Image.open(path)
             image = np.array(image)
-    # image = misc.random_crop(image, args.crop_size, seed)
+    #image = misc.random_crop(image, args.crop_size, seed)
     if ops:
         image = ops(image, args, path, seed, size)
-    # print("before: " + str(image.shape))
+    #print("before: " + str(image.shape))
     if type(image) is list or type(image) is tuple:
         image = [prepare_image(args, img, seed, size) for img in image]
         image = [np.expand_dims(img, axis=-1) if len(img.shape) == 2 else img for img in image]
@@ -77,19 +76,16 @@ def read_image(args, path, seed, size, ops=None):
         else:
             image = prepare_image(args, image, seed, size)
         return to_tensor(args, image, seed, size, ops)
-
-
+    
 def to_tensor(args, image, seed, size, ops=None):
     trans = T.Compose([T.ToTensor(), T.Normalize(args.img_mean, args.img_std)])
     return trans(image)
-
 
 def to_tensor_with_aug(args, image, seed, size, ops=None):
     if args.do_imgaug:
         imgaug.seed(seed)
         image = prepare_augmentation(args).augment_image(image)
     return to_tensor(args, image, seed, size, ops)
-
 
 def just_return_it(args, data, seed=None, size=None, ops=None):
     """
@@ -98,15 +94,14 @@ def just_return_it(args, data, seed=None, size=None, ops=None):
     """
     return torch.tensor(data)
 
-
 def prepare_augmentation(args):
     aug_list = []
     if args.do_affine:
         aug_list.append(augmenters.Affine(scale={"x": args.scale, "y": args.scale},
-                                          translate_percent={"x": args.translation, "y": args.translation},
-                                          rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color))
+                                      translate_percent={"x": args.translation, "y": args.translation},
+                                      rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color))
     if args.do_random_crop:
-        aug_list.append(augmenters.Crop(px=args.crop_size_cv2, keep_size=args.keep_ratio))
+        aug_list.append(augmenters.Crop(px=args.crop_size, keep_size=args.keep_ratio))
     if args.do_random_flip:
         aug_list.append(augmenters.Fliplr(args.h_flip_prob))
         aug_list.append(augmenters.Flipud(args.v_flip_prob))
@@ -120,23 +115,21 @@ def prepare_augmentation(args):
     seq = augmenters.Sequential(aug_list, random_order=True)
     return seq
 
-
 def pil_prepare_augmentation(args):
     aug_list = []
     if args.do_affine:
         aug_list.append(T.RandomAffine(scale=args.scale, translate=args.translation,
-                                       degrees=args.rotation, shear=args.shear, fillcolor=args.aug_bg_color))
+                                      degrees=args.rotation, shear=args.shear, fillcolor =args.aug_bg_color))
     if args.do_random_crop:
         ratio = 1 if args.keep_ratio else (0.75, 1.33333333)
         # scale is augmented above so we will keep the scale here
-        aug_list.append(T.RandomResizedCrop(size=args.crop_size_pil, scale=1, ratio=ratio))
+        aug_list.append(T.RandomResizedCrop(size=args.loadsize, scale=1, ratio=ratio))
     if args.do_random_flip:
         aug_list.append(T.RandomHorizontalFlip(args.h_flip_prob))
         aug_list.append(T.RandomHorizontalFlip(args.v_flip_prob))
     if args.do_random_brightness:
         aug_list.append(T.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1))
     return T.Compose(aug_list)
-
 
 def one_hot(label_num, index):
     assert type(label_num) is int and type(index) is int, "Parameters Error"
