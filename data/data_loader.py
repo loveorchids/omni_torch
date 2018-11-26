@@ -106,7 +106,7 @@ def prepare_augmentation(args):
                                           translate_percent={"x": args.translation, "y": args.translation},
                                           rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color))
     if args.do_random_crop:
-        aug_list.append(augmenters.Crop(px=args.crop_size, keep_size=args.keep_ratio))
+        aug_list.append(augmenters.Crop(px=args.crop_size_cv2, keep_size=args.keep_ratio))
     if args.do_random_flip:
         aug_list.append(augmenters.Fliplr(args.h_flip_prob))
         aug_list.append(augmenters.Flipud(args.v_flip_prob))
@@ -129,7 +129,7 @@ def pil_prepare_augmentation(args):
     if args.do_random_crop:
         ratio = 1 if args.keep_ratio else (0.75, 1.33333333)
         # scale is augmented above so we will keep the scale here
-        aug_list.append(T.RandomResizedCrop(size=args.loadsize, scale=1, ratio=ratio))
+        aug_list.append(T.RandomResizedCrop(size=args.crop_size_pil, scale=1, ratio=ratio))
     if args.do_random_flip:
         aug_list.append(T.RandomHorizontalFlip(args.h_flip_prob))
         aug_list.append(T.RandomHorizontalFlip(args.v_flip_prob))
