@@ -6,22 +6,21 @@ import numpy as np
 import data.misc as misc
 import data
 from PIL import Image
-
-IMGAUG_ENGINE = data.IMGAUG_ENGINE
-ALLOW_WARNING = data.ALLOW_WARNING
-
-if IMGAUG_ENGINE == "cv2":
+try:
     import imgaug
     from imgaug import augmenters
+except:
+    pass
 
+ALLOW_WARNING = data.ALLOW_WARNING
 
 def prepare_image(args, image, seed, size):
     if args.do_imgaug:
-        if IMGAUG_ENGINE == "cv2":
+        if args.imgaug_engine == "cv2":
             imgaug.seed(seed)
             image = prepare_augmentation(args).augment_image(image)
             # image = misc.random_crop(image, args.crop_size, seed)
-        elif IMGAUG_ENGINE == "PIL":
+        elif args.imgaug_engine == "PIL":
             random.seed(seed)
             image = Image.fromarray(image)
             image = pil_prepare_augmentation(args)(image)
@@ -51,12 +50,12 @@ def read_image(args, path, seed, size, ops=None):
             ops can invert image color, switch channel
     :return:
     """
-    if IMGAUG_ENGINE == "cv2":
+    if args.imgaug_engine == "cv2":
         if args.img_channel is 1:
             image = cv2.imread(path, 0)
         else:
             image = cv2.imread(path)
-    elif IMGAUG_ENGINE == "PIL":
+    elif args.imgaug_engine == "PIL":
         if args.img_channel is 1:
             image = Image.open(path).convert("L")
             image = np.array(image)
