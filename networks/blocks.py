@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as tf
 
+#Modification
 
 class Resnet_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, groups,
