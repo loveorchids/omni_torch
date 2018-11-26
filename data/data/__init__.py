@@ -1,3 +1,0 @@
-
-ALLOW_WARNING = False
-IMGAUG_ENGINE = "cv2"
