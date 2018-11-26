@@ -48,6 +48,7 @@ def prepare_args(args, presets):
     # Load general and unique options
     args = load_preset(args, presets, args.general_options)
     args = load_preset(args, presets, args.unique_options)
+    args = load_preset(args, presets, args.runtime_options)
 
     args.path = os.path.expanduser(args.path)
     if args.create_path:
