@@ -2,6 +2,7 @@
 networks/ocr/
 networks/img2img/
 networks/img_retrieval/
+*.sh
 */.__pycache__
 */*.__pycache__
 .pyc
