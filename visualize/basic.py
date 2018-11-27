@@ -71,7 +71,7 @@ def to_image(tensor, margin, deNormalize):
 
 
 def plot_tensor(tensor, path=None, title=None, op=to_image, ratio=1, margin=5, sub_margin=True,
-         deNormalize=False, font_size=1):
+         deNormalize=False, font_size=1, bg_color=255):
     """
     This is a function to plot one tensor at a time.
     :param tensor: can be gradient, parameter, data_batch, etc.
@@ -113,16 +113,18 @@ def plot_tensor(tensor, path=None, title=None, op=to_image, ratio=1, margin=5, s
             width = int(text_w * 1.1)
         h_complement = text_h * 2
         height += h_complement
-        canvas = np.zeros((height, width, 3)).astype("uint8") + 255
+        canvas = np.zeros((height, width, 3)).astype("uint8") + bg_color
         position = (int((width - text_w) / 2), int(text_h * 1.5))
         cv2.putText(canvas, title, position, font, fontScale=font_size, color=(48, 33, 255), thickness=2)
         # cv2.imwrite(path, canvas)
     else:
-        canvas = np.zeros((height, width, 3)).astype("uint8") + 255
+        canvas = np.zeros((height, width, 3)).astype("uint8") + bg_color
 
     # fig, axis = plt.subplots(ncols=h_num, nrows=v_num, figsize = (h_sub, v_sub))
-    if v == 1 and h == 1:
-        cv2.imwrite(path, img)
+    if v ==  h == 1:
+        canvas[h_complement + margin:h_complement + margin + img.shape[0],
+                        margin:margin + img.shape[1], :] = img
+        cv2.imwrite(path, canvas)
     else:
         for i in range(v):
             for j in range(h):

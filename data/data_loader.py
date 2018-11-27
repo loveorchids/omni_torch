@@ -34,7 +34,9 @@ def prepare_image(args, image, seed, size):
         width = args.resize_gcd * round(size[0] / args.resize_gcd)
         height = args.resize_gcd * round(size[1] / args.resize_gcd)
         size = (width, height)
-    image = cv2.resize(image, size)
+    # opencv will invert the width and height, need to confirm later
+    # TODO: replace opencv with PIL
+    image = cv2.resize(image, (size[1], size[0]))
     return image
 
 
@@ -95,7 +97,7 @@ def just_return_it(args, data, seed=None, size=None, ops=None):
     Because the label in cifar dataset is int
     So here it will be transfered to a torch tensor
     """
-    return torch.tensor(data)
+    return torch.tensor(data, dtype=torch.float)
 
 
 def prepare_augmentation(args):
