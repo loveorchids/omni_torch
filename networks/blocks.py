@@ -126,5 +126,5 @@ def fc_layer(input, layer_size, name=None, activation=nn.ReLU, batch_norm=True):
             ops.add_module(name + "_active_" + str(i), activation())
         if batch_norm:
             ops.add_module(name + "_BN_" + str(i),
-                           nn.BatchNorm2d(layer_size[i + 1]))
+                           nn.BatchNorm1d(layer_size[i + 1]))
     return ops

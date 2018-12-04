@@ -40,7 +40,7 @@ def prepare_image(args, image, seed, size):
     return image
 
 
-def read_image(args, path, seed, size, ops=None):
+def read_image(args, path, seed, size, ops=None, to_tensor=True):
     """
 
     :param args:
@@ -71,13 +71,19 @@ def read_image(args, path, seed, size, ops=None):
     if type(image) is list or type(image) is tuple:
         image = [prepare_image(args, img, seed, size) for img in image]
         image = [np.expand_dims(img, axis=-1) if len(img.shape) == 2 else img for img in image]
-        return [to_tensor(args, img, seed, size, ops) for img in image]
+        if to_tensor:
+            return [to_tensor(args, img, seed, size, ops) for img in image]
+        else:
+            return image
     else:
         if len(image.shape) == 2:
             image = np.expand_dims(prepare_image(args, image, seed, size), axis=-1)
         else:
             image = prepare_image(args, image, seed, size)
-        return to_tensor(args, image, seed, size, ops)
+        if to_tensor:
+            return to_tensor(args, image, seed, size, ops)
+        else:
+            return image
 
 
 def to_tensor(args, image, seed, size, ops=None):
@@ -92,7 +98,7 @@ def to_tensor_with_aug(args, image, seed, size, ops=None):
     return to_tensor(args, image, seed, size, ops)
 
 
-def just_return_it(args, data, seed=None, size=None, ops=None):
+def just_return_it(args, data, seed, size, ops=None):
     """
     Because the label in cifar dataset is int
     So here it will be transfered to a torch tensor
