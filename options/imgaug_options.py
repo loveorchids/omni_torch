@@ -44,8 +44,14 @@ class ImgAug:
 
         self.parser.add_argument("--do_random_brightness", type=bool, default=True,
                                  help="adjust brightness on image")
-        self.parser.add_argument("--brightness_vibrator", type=float, default=0.1,
+        self.parser.add_argument("--brightness_vibrator", type=tuple, default=(1.0, 1.0),
                                  help="adjust brightness on image")
+        self.parser.add_argument("--brightness_multiplier", type=tuple, default=(1.0, 1.0),
+                                 help="adjust brightness on image")
+        self.parser.add_argument("--linear_contrast", type=float, default=1.0,
+                                 help="adjust contrast on image")
+        self.parser.add_argument("--gamma_contrast", type=float, default=1.0,
+                                 help="adjust contrast on image")
         self.parser.add_argument("--do_random_noise", type=bool, default=True,
                                  help="apply random gaussian noise on image")
 

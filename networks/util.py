@@ -1,4 +1,4 @@
-import os, glob
+import os, glob, warnings
 import torch
 import json
 
@@ -16,7 +16,7 @@ def get_stride_padding_kernel(input, out):
                 if float(P) == (input - 1 - S * (out - 1)) / 2:
                     return S, P, K
                 
-def prepare_args(args, presets):
+def prepare_args(args, presets, options=None):
     def load_preset(args, preset, preset_code):
         class Bunch:
             def __init__(self, adict):
@@ -46,9 +46,13 @@ def prepare_args(args, presets):
         return path
     
     # Load general and unique options
-    args = load_preset(args, presets, args.general_options)
-    args = load_preset(args, presets, args.unique_options)
-    args = load_preset(args, presets, args.runtime_options)
+    if options:
+        for option in options:
+            args = load_preset(args, presets, option)
+    else:
+        args = load_preset(args, presets, args.general_options)
+        args = load_preset(args, presets, args.unique_options)
+        args = load_preset(args, presets, args.runtime_options)
 
     args.path = os.path.expanduser(args.path)
     if args.create_path:
@@ -76,11 +80,18 @@ def save_model(args, epoch, state_dict, keep_latest=5):
     
 def load_latest_model(args, net):
     model_list = [_ for _ in glob.glob(args.model_dir + "/*.pth") if os.path.isfile(_)]
+    if not model_list:
+        warnings.warn("Cannot find models")
+        return net
     model_list.sort()
     epoch =int(model_list[-1][model_list[-1].rfind("_")+1:model_list[-1].rfind(".")])
-    args.curr_epoch = epoch
     print("Load model form: " + model_list[-1])
-    net.load_state_dict(torch.load(model_list[-1]))
+    try:
+        net.load_state_dict(torch.load(model_list[-1]))
+    except RuntimeError:
+        warnings.warn("Model shape does not matches!")
+        return net
+    args.curr_epoch = epoch
     return net
     
 if __name__ == "__main__":

@@ -30,7 +30,6 @@ class KL_Divergence(nn.Module):
         self.dimension_warn = dimension_warn
         
     def forward(self, x, y):
-        
         # Normalize
         x = x.view(x.size(0), x.size(1), -1)
         x = x / x.norm(1, dim=-1).unsqueeze(-1)
@@ -69,3 +68,42 @@ class Triplet_Loss(nn.Module):
             print("actual loss shape is larger than zero, sum is somewhat wrong. fixing it...")
             dist = torch.sum(dist)
         return dist
+    
+class JS_Divergence(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.engine = nn.KLDivLoss()
+        
+    def forward(self, x, y):
+        return self.engine(x, y) + self.engine(y, x)
+    
+class KL_Triplet_Loss(nn.Module):
+    def __init__(self, symmetric=True):
+        """
+        :param symmetric: if symmetric, we will use JS Divergence, if not KL Divergence will be used.
+        """
+        super().__init__()
+        self.symmetric = symmetric
+        self.engine = nn.KLDivLoss()
+        
+    def forward(self, x, y):
+        if len(x.shape)==4 and len(y.shape)==4:
+            x = x.view(x.size(0) * x.size(1), -1)
+            y = y.view(y.size(0) * y.size(1), -1)
+        elif len(x.shape)==2 and len(y.shape)==2:
+            pass
+        else:
+            raise TypeError("We need a tensor of either rank 2 or rank 4.")
+        if self.symmetric:
+            loss = self.engine(x, y)
+        else:
+            loss = self.engine(x, y) + self.engine(y, x)
+        return loss
+    
+if __name__ == "__main__":
+    klTriplket = KL_Triplet_Loss()
+    x = torch.randn(64, 256, 10, 10)
+    y = torch.randn(64, 256, 10, 10)
+    loss = klTriplket(x, y)
+    print(loss.shape, loss)
+    

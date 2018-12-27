@@ -40,7 +40,7 @@ def prepare_image(args, image, seed, size):
     return image
 
 
-def read_image(args, path, seed, size, ops=None, to_tensor=True):
+def read_image(args, path, seed, size, ops=None, _to_tensor=True):
     """
 
     :param args:
@@ -71,7 +71,7 @@ def read_image(args, path, seed, size, ops=None, to_tensor=True):
     if type(image) is list or type(image) is tuple:
         image = [prepare_image(args, img, seed, size) for img in image]
         image = [np.expand_dims(img, axis=-1) if len(img.shape) == 2 else img for img in image]
-        if to_tensor:
+        if _to_tensor:
             return [to_tensor(args, img, seed, size, ops) for img in image]
         else:
             return image
@@ -80,7 +80,7 @@ def read_image(args, path, seed, size, ops=None, to_tensor=True):
             image = np.expand_dims(prepare_image(args, image, seed, size), axis=-1)
         else:
             image = prepare_image(args, image, seed, size)
-        if to_tensor:
+        if _to_tensor:
             return to_tensor(args, image, seed, size, ops)
         else:
             return image
@@ -113,17 +113,19 @@ def prepare_augmentation(args):
                                           translate_percent={"x": args.translation, "y": args.translation},
                                           rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color))
     if args.do_random_crop:
-        aug_list.append(augmenters.Crop(px=args.crop_size_cv2, keep_size=args.keep_ratio))
+        aug_list.append(augmenters.Crop(px=args.crop_size, keep_size=args.keep_ratio))
     if args.do_random_flip:
         aug_list.append(augmenters.Fliplr(args.h_flip_prob))
         aug_list.append(augmenters.Flipud(args.v_flip_prob))
     if args.do_random_brightness:
-        aug_list.append(augmenters.ContrastNormalization((0.75, 1.5)))
-        aug_list.append(augmenters.Multiply((0.9, 1.1), per_channel=0.2))
+        aug_list.append(augmenters.ContrastNormalization(args.brightness_vibrator))
+        aug_list.append(augmenters.Multiply(args.brightness_multiplier, per_channel=0.2))
+        #aug_list.append(augmenters.contrast.LinearContrast(alpha=args.linear_contrast))
     if args.do_random_noise:
         aug_list.append(augmenters.Sometimes(0.2, augmenters.GaussianBlur(sigma=(0, 0.1))))
         aug_list.append(augmenters.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05 * 255),
                                                          per_channel=0.5))
+        
     seq = augmenters.Sequential(aug_list, random_order=True)
     return seq
 
@@ -136,7 +138,7 @@ def pil_prepare_augmentation(args):
     if args.do_random_crop:
         ratio = 1 if args.keep_ratio else (0.75, 1.33333333)
         # scale is augmented above so we will keep the scale here
-        aug_list.append(T.RandomResizedCrop(size=args.crop_size_pil, scale=1, ratio=ratio))
+        aug_list.append(T.RandomResizedCrop(size=args.crop_size, scale=1, ratio=ratio))
     if args.do_random_flip:
         aug_list.append(T.RandomHorizontalFlip(args.h_flip_prob))
         aug_list.append(T.RandomHorizontalFlip(args.v_flip_prob))

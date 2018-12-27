@@ -4,12 +4,18 @@ import torch.nn.functional as tf
 
 class Resnet_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, groups,
-                 name=None, activation=nn.ReLU, batch_norm=True):
+                 name=None, activation=nn.ReLU, batch_norm=True, shortcut_stride=1):
         super().__init__()
         # repeat always equals to 1 here, because we only create one Resnet Block
         self.conv_block = conv_block(input, filters, 1, kernel_sizes, stride, padding, groups,
                                      name, activation, batch_norm)
-        self.shortcut = resnet_shortcut(input, filters[-1])
+        if shortcut_stride < 1:
+            kernel_size, padding = 2, 0
+        else:
+            kernel_size, padding = 1, 0
+        self.shortcut = conv_block(input, [filters[-1]], 1, kernel_sizes=[kernel_size], stride=[shortcut_stride],
+                                   padding=[padding], groups=[groups[-1]], name=name+"_shortcut",
+                                   activation=activation, batch_norm=batch_norm)
 
     def forward(self, x):
         return tf.relu(self.conv_block(x) + self.shortcut(x))
