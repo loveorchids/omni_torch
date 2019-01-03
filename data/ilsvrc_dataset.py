@@ -1,6 +1,6 @@
 import os
 import data.misc as misc
-from data.set_arbitrary import Arbitrary_Dataset
+from data.arbitrary_dataset import Arbitrary_Dataset
 import data
 
 ALLOW_WARNING = data.ALLOW_WARNING

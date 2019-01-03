@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as tf
 sys.path.append(os.path.expanduser("~/Documents/omni_torch"))
 import networks.blocks as block
-from data.set_arbitrary import Arbitrary_Dataset
+from data.arbitrary_dataset import Arbitrary_Dataset
 import data.data_loader as loader
 import data.path_loader as mode
 
@@ -13,58 +13,45 @@ class CifarNet(nn.Module):
     def __init__(self):
         super(CifarNet, self).__init__()
 
-        self.shortcut1 = block.resnet_shortcut(input=3, output=64)
-        self.conv_block1 = block.conv_block(input=3, filters=[64, 64], repeat=2)
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1)
+        self.conv_block1_1 = block.Resnet_Block(input=3, filters=[64, 64], kernel_sizes=[3, 3],
+                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
+        self.conv_block1_2 = block.Resnet_Block(input=64, filters=[64, 64], kernel_sizes=[3, 3],
+                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
+        
 
-        self.shortcut2 = block.resnet_shortcut(input=64, output=128)
-        self.conv_block2 = block.conv_block(input=64, filters=[128, 128], repeat=2)
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1)
+        self.conv_block2_1 = block.Resnet_Block(input=64, filters=[128, 128], kernel_sizes=[3, 3],
+                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
+        self.conv_block2_2 = block.Resnet_Block(input=128, filters=[128, 128], kernel_sizes=[3, 3],
+                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
 
-        self.shortcut3 = block.resnet_shortcut(input=128, output=256)
-        self.conv_block3 = block.conv_block(input=128, filters=[256, 256], repeat=2)
-        self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1)
+        self.conv_block3_1 = block.Resnet_Block(input=128, filters=[256, 256], kernel_sizes=[3, 3],
+                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
+        self.conv_block3_2 = block.Resnet_Block(input=256, filters=[256, 256], kernel_sizes=[3, 3],
+                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
 
-        self.shortcut4 = block.resnet_shortcut(input=256, output=512)
-        self.conv_block4 = block.conv_block(input=256, filters=[512, 512], repeat=2)
-        self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1)
+        self.conv_block4_1 = block.Resnet_Block(input=256, filters=[512, 512], kernel_sizes=[3, 3],
+                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
+        self.conv_block4_2 = block.Resnet_Block(input=512, filters=[512, 512], kernel_sizes=[3, 3],
+                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
 
-        self.conv_block5 = block.conv_block(input=512, filters=[512], repeat=1)
+        self.conv_block5 = block.conv_block(input=512, filters=[512], kernel_sizes=[3], stride=[1],
+                                            padding=[1], groups=[1], repeat=1)
 
-        self.fc_layer = block.fc_layer(input=2048, layer_size=[128, 256, 512, 1024, 10], activation=None,
-                                       batch_norm=False)
+        self.fc_layer = block.fc_layer(input=2048, layer_size=[128, 256, 512, 1024, 10], activation=nn.ReLU,
+                                       batch_norm=True)
 
-    def forward(self, input):
-        res = self.shortcut1(input)
-        out = self.conv_block1(input)
-        out += res
-        out = tf.relu(out)
-        out = self.pool1(out)
+    def forward(self, x):
+        x = self.pool(self.conv_block1_2(self.conv_block1_1(x)))
+        x = self.pool(self.conv_block2_2(self.conv_block2_1(x)))
+        x = self.pool(self.conv_block3_2(self.conv_block3_1(x)))
+        x = self.pool(self.conv_block4_2(self.conv_block4_1(x)))
+        x = self.conv_block5(x)
+        #x = tf.relu(x)
 
-        res = self.shortcut2(out)
-        out = self.conv_block2(out)
-        out += res
-        out = tf.relu(out)
-        out = self.pool2(out)
-
-        res = self.shortcut3(out)
-        out = self.conv_block3(out)
-        out += res
-        out = tf.relu(out)
-        out = self.pool3(out)
-
-        res = self.shortcut4(out)
-        out = self.conv_block4(out)
-        out += res
-        out = tf.relu(out)
-        out = self.pool4(out)
-
-        out = self.conv_block5(out)
-        out = tf.relu(out)
-
-        out = out.view(out.size(0), -1)
-        out = self.fc_layer(out)
-        return out
+        x = x.view(x.size(0), -1)
+        x = self.fc_layer(x)
+        return x
 
 
 def fit(net, args, train_set, val_set, device, optimizer, criterion, finetune=False,
@@ -116,7 +103,7 @@ def fetch_data(args, source):
         """
         return torch.tensor(data)
     print("loading Dataset...")
-    data = Arbitrary_Dataset(args=args, load_funcs=[loader.to_tensor, just_return_it],
+    data = Arbitrary_Dataset(args=args, load_funcs=[loader.to_tensor, loader.just_return_it],
                              sources=source, modes=[mode.load_cifar_from_pickle], dig_level=[0])
     data.prepare()
     print("loading Completed!")
@@ -132,7 +119,7 @@ if __name__ == "__main__":
     import matplotlib as plt
     print("start")
     args = BaseOptions().initialize()
-    args.path = "~/Downloads/cifar-10"
+    args.path = "~/Pictures/dataset/cifar-10"
     args.model_dir = "~/Documents/cifar10"
     args.batch_size = 256
 
@@ -141,11 +128,11 @@ if __name__ == "__main__":
     cifar.to(device)
 
     train_set = fetch_data(args, [("data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4")])
-    test_set = fetch_data(args, ["test_batch"])
+    #test_set = fetch_data(args, ["test_batch"])
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(cifar.parameters(), lr=args.learning_rate)
 
-    trace = fit(cifar, args, train_set, test_set, device, optimizer, criterion, finetune=True)
+    trace = fit(cifar, args, train_set, train_set, device, optimizer, criterion, finetune=False)
     
     fig = plt.figure()
     ax = plt.axes()

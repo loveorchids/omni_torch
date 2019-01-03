@@ -121,7 +121,7 @@ class Arbitrary_Dataset(tud.Dataset):
                 data += mode.load_path_from_folder(self.args, len(data), sub_paths[i],
                                                        self.dig_level[i])
             elif self.modes[i] == "sep_path":
-                data += mode.load_path_from_folder_sep(self.args, len(data), sub_paths[i],
+                data += mode.load_path_from_multi_folder(self.args, len(data), sub_paths[i],
                                                    self.dig_level[i])
             # We can add other modes if we want
             elif callable(self.modes[i]):

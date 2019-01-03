@@ -1,8 +1,8 @@
 import os, time
 import multiprocessing as mpi
 import torch
-from data.set_arbitrary import Arbitrary_Dataset
-from data.set_img2img import Img2Img_Dataset
+from data.arbitrary_dataset import Arbitrary_Dataset
+from data.img2img_dataset import Img2Img_Dataset
 import data.path_loader as mode
 import data.data_loader as loader
 import data.data_loader_ops as dop

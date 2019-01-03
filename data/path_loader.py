@@ -43,7 +43,7 @@ def load_path_from_folder(args, length, paths, dig_level=0):
     output.sort()
     return [output]
 
-def load_path_from_folder_sep(args, length, paths, dig_level=0):
+def load_path_from_multi_folder(args, length, paths, dig_level=0):
     """
     The only difference from its sibling "load_path_from_folder"
     is that the sibling function merge all sub_folders into one list,
@@ -105,7 +105,7 @@ def load_cifar_from_pickle(args, length, names, dig_level=0):
 
 def load_img_from_path(args, length, names, dig_level=0):
     """
-    Not recommand to use unless your dataset is at a small scale(<100 pics)
+    Not recommanded to use unless you have a small scale dataset
     :param args:
     :param length:
     :param names:

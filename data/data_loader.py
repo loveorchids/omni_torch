@@ -113,7 +113,7 @@ def prepare_augmentation(args):
                                           translate_percent={"x": args.translation, "y": args.translation},
                                           rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color))
     if args.do_random_crop:
-        aug_list.append(augmenters.Crop(px=args.crop_size, keep_size=args.keep_ratio))
+        aug_list.append(augmenters.Crop(px=args.crop_size, keep_size=args.keep_ratio, sample_independently=False))
     if args.do_random_flip:
         aug_list.append(augmenters.Fliplr(args.h_flip_prob))
         aug_list.append(augmenters.Flipud(args.v_flip_prob))
@@ -126,7 +126,7 @@ def prepare_augmentation(args):
         aug_list.append(augmenters.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05 * 255),
                                                          per_channel=0.5))
         
-    seq = augmenters.Sequential(aug_list, random_order=True)
+    seq = augmenters.Sequential(aug_list, random_order=False)
     return seq
 
 

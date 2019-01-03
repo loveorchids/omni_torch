@@ -92,14 +92,11 @@ def conv_block(input, filters, repeat, kernel_sizes, stride, padding, groups,
         if activation:
             ops.add_module(name + "_active_" + str(i), activation())
         if batch_norm:
-            ops.add_module(name + "_BN_" + str(i), nn.BatchNorm2d(filters[i + 1]))
+            if type(batch_norm) is str and batch_norm.lower() == "instance":
+                ops.add_module(name + "_InsNorm_" + str(i), nn.InstanceNorm2d(filters[i + 1]))
+            else:
+                ops.add_module(name + "_BthNorm_" + str(i), nn.BatchNorm2d(filters[i + 1]))
     return ops
-
-
-def nice_block(input, filters, repeat, kernel_sizes, stride, padding, group):
-    conv_block(input, filters, repeat, kernel_sizes, stride, padding, group),
-    pass
-
 
 def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
                     batch_norm=True, name=None):
@@ -112,13 +109,11 @@ def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
                              kernel_size=kernel_size,
                              stride=stride, padding=padding))
     if batch_norm:
-        ops.add_module(name + "_shortcut_BN", nn.BatchNorm2d(output))
+        if type(batch_norm) is str and batch_norm.lower() == "instance":
+            ops.add_module(name + "_shortcut_InsNorm", nn.InstanceNorm2d(output))
+        else:
+            ops.add_module(name + "_shortcut_BthNorm", nn.BatchNorm2d(output))
     return ops
-
-
-def stn_block():
-    pass
-
 
 def fc_layer(input, layer_size, name=None, activation=nn.ReLU, batch_norm=True):
     if name is None:
@@ -131,6 +126,8 @@ def fc_layer(input, layer_size, name=None, activation=nn.ReLU, batch_norm=True):
         if activation:
             ops.add_module(name + "_active_" + str(i), activation())
         if batch_norm:
-            ops.add_module(name + "_BN_" + str(i),
-                           nn.BatchNorm1d(layer_size[i + 1]))
+            if type(batch_norm) is str and batch_norm.lower() == "instance":
+                ops.add_module(name + "_BN_" + str(i), nn.InstanceNorm1d(layer_size[i + 1]))
+            else:
+                ops.add_module(name + "_BN_" + str(i), nn.BatchNorm1d(layer_size[i + 1]))
     return ops
