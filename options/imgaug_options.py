@@ -1,6 +1,5 @@
 import argparse
 
-
 class ImgAug:
     def initialize(self):
         self.parser = argparse.ArgumentParser()
@@ -32,7 +31,7 @@ class ImgAug:
                                  help="randomly crop an image")
         self.parser.add_argument("--crop_size", type=tuple,default=(360, 360),
                                  help="the image will be cropped to this size")
-        self.parser.add_argument("--keep_ratio", type=bool, default=True,
+        self.parser.add_argument("--keep_size", type=bool, default=True,
                                  help="Keep ratio or not")
 
         self.parser.add_argument("--do_random_flip", type=bool, default=True,
@@ -64,7 +63,7 @@ class ImgAug:
                                  help="size of input images")
         self.parser.add_argument("--standardize_size", type=bool, default=True,
                                  help="make the image be able to fit the network.")
-        self.parser.add_argument("--resize_gcd", type=int, default=8,
+        self.parser.add_argument("--standardize_gcd", type=int, default=8,
                                  help="make the width and height of image be divided evenly by gcd")
 
         self.parser.add_argument("--img_mean", type=tuple, default=(0.5, 0.5, 0.5),

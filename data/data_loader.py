@@ -1,4 +1,4 @@
-import random
+import random, warnings, itertools
 import cv2
 import torch
 import torchvision.transforms as T
@@ -31,8 +31,8 @@ def prepare_image(args, image, seed, size):
     else:
         size = (image.shape[0], image.shape[1])
     if args.standardize_size:
-        width = args.resize_gcd * round(size[0] / args.resize_gcd)
-        height = args.resize_gcd * round(size[1] / args.resize_gcd)
+        width = args.standardize_gcd * round(size[0] / args.standardize_gcd)
+        height = args.standardize_gcd * round(size[1] / args.standardize_gcd)
         size = (width, height)
     # opencv will invert the width and height, need to confirm later
     # TODO: replace opencv with PIL
@@ -107,26 +107,61 @@ def just_return_it(args, data, seed, size, ops=None):
 
 
 def prepare_augmentation(args):
-    aug_list = []
+    # --------------------------------------------Create imgaug process from args--------------------------------------------
+    aug_dict = {}
     if args.do_affine:
-        aug_list.append(augmenters.Affine(scale={"x": args.scale, "y": args.scale},
-                                          translate_percent={"x": args.translation, "y": args.translation},
-                                          rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color))
+        aug_dict.update({"affine": [
+            augmenters.Affine(scale={"x": args.scale, "y": args.scale},
+                              translate_percent={"x": args.translation, "y": args.translation},
+                              rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color),
+        ]})
     if args.do_random_crop:
-        aug_list.append(augmenters.Crop(px=args.crop_size, keep_size=args.keep_ratio, sample_independently=False))
+        aug_dict.update({"random_crop": [
+            augmenters.CropToFixedSize(width=args.crop_size[1], height=args.crop_size[0]),
+        ]})
+    if args.do_random_zoom:
+        aug_dict.update({"random_zoom": [
+            augmenters.Crop(px=args.pixel_eliminate, sample_independently=args.sample_independent),
+        ]})
     if args.do_random_flip:
-        aug_list.append(augmenters.Fliplr(args.h_flip_prob))
-        aug_list.append(augmenters.Flipud(args.v_flip_prob))
+        aug_dict.update({"random_flip": [
+            augmenters.Fliplr(args.h_flip_prob),
+            augmenters.Flipud(args.v_flip_prob),
+        ]})
     if args.do_random_brightness:
-        aug_list.append(augmenters.ContrastNormalization(args.brightness_vibrator))
-        aug_list.append(augmenters.Multiply(args.brightness_multiplier, per_channel=0.2))
-        #aug_list.append(augmenters.contrast.LinearContrast(alpha=args.linear_contrast))
+        aug_dict.update({"random_brightness": [
+            augmenters.ContrastNormalization(args.brightness_vibrator),
+            augmenters.Multiply(args.multiplier, per_channel=args.per_channel_multiplier),
+            augmenters.LinearContrast(alpha=args.linear_contrast),
+        ]})
     if args.do_random_noise:
-        aug_list.append(augmenters.Sometimes(0.2, augmenters.GaussianBlur(sigma=(0, 0.1))))
-        aug_list.append(augmenters.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05 * 255),
-                                                         per_channel=0.5))
-        
-    seq = augmenters.Sequential(aug_list, random_order=False)
+        aug_dict.update({"random_noise": [
+            augmenters.GaussianBlur(sigma=args.gaussian_sigma),
+            #augmenters.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05 * 255), per_channel=0.5),
+        ]})
+    # ----------------------------------------------Combine imgaug process----------------------------------------------
+    if type(args.imgaug_order) is list:
+        assert len(set(args.imgaug_order)) == len(args.imgaug_order), \
+            "repeated element in args.imgaug_order"
+        assert len(args.imgaug_order) == len(aug_dict), \
+            "args.imgaug_order should have 6 elements."
+        try:
+            aug_list = [aug_dict[item] for item in args.imgaug_order]
+        except KeyError:
+            print(aug_dict.keys())
+            print("some element in args.imgaug_order does not match the key above")
+            raise KeyError
+        seq = augmenters.Sequential(list(itertools.chain.from_iterable(aug_list)))
+    elif args.imgaug_order == "random":
+        seq = augmenters.Sequential(list(itertools.chain.from_iterable(aug_dict.values())),
+                                    random_order=True)
+    elif args.imgaug_order == "default":
+        seq = augmenters.Sequential(list(itertools.chain.from_iterable(aug_dict.values())),
+                                    random_order=False)
+    else:
+        warnings.warn("unrecognizable args.amgaug_order, it should either be 'random', 'default' or a list.")
+        seq = augmenters.Sequential(list(itertools.chain.from_iterable(aug_dict.values())),
+                                    random_order=False)
     return seq
 
 
@@ -136,7 +171,7 @@ def pil_prepare_augmentation(args):
         aug_list.append(T.RandomAffine(scale=args.scale, translate=args.translation,
                                        degrees=args.rotation, shear=args.shear, fillcolor=args.aug_bg_color))
     if args.do_random_crop:
-        ratio = 1 if args.keep_ratio else (0.75, 1.33333333)
+        ratio = 1 if args.keep_size else (0.75, 1.33333333)
         # scale is augmented above so we will keep the scale here
         aug_list.append(T.RandomResizedCrop(size=args.crop_size, scale=1, ratio=ratio))
     if args.do_random_flip:
@@ -150,3 +185,8 @@ def pil_prepare_augmentation(args):
 def one_hot(label_num, index):
     assert type(label_num) is int and type(index) is int, "Parameters Error"
     return torch.eye(label_num)[index]
+
+if __name__ == "__main__":
+    import os
+    img_path = os.path.expanduser("~/Pictures/sample.jpg")
+
