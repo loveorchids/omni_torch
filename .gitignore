@@ -12,3 +12,4 @@ networks/img_retrieval/
 */**/**/**/*.pyc
 */**/**/**/**/*.pyc
 .idea
+*.py

@@ -16,5 +16,14 @@ BaseOptions=edict({
     "batch_norm":True,
     "finetune":False,
 
+    "model1": None,
+    "model2": None,
+    "model3": None,
+    "model4": None,
+    "model5": None,
+
+    "loading_threads": 2,
+    "random_order_load": False,
+
 
 })
