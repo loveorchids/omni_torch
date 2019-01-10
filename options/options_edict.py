@@ -1,6 +1,6 @@
 from easydict import EasyDict as edict
 
-BaseOptions=edict({
+default_options=edict({
     "code_name": None,
     "cover_exist":False,
     "create_path":True,
@@ -25,10 +25,8 @@ BaseOptions=edict({
     "loading_threads": 2,
     "random_order_load": False,
     "path": None,
-    "extensions": ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"]
-})
+    "extensions": ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"],
 
-ImageAugmentation=edict({
     "img_channel": 3,
     "imgaug_engine": "cv2",
 
@@ -74,3 +72,10 @@ ImageAugmentation=edict({
     "img_mean": (0.5, 0.5, 0.5),
     "img_std": (1.0, 1.0, 1.0),
 })
+
+def initialize():
+    return default_options
+
+if __name__ == "__main__":
+    opt = initialize()
+    print(opt)
