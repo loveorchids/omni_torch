@@ -104,7 +104,6 @@ class AdamTF(Optimizer):
                 bias_correction2 = 1 - beta2 ** state['step']
                 step_size = group['lr'] * bias_correction2 / bias_correction1
 
-                #2
                 p.data.addcdiv_(-step_size, exp_avg, denom)
 
         return loss
