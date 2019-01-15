@@ -117,7 +117,7 @@ def denormalize_image(args, img):
         mean = 0.29 * args.img_mean[0] + 0.59 * args.img_mean[1] + 0.12 * args.img_mean[2]
         std = sum(args.img_std) / len(args.img_std)
         bias = sum(args.img_bias) / len(args.img_bias)
-    elif img.shape[0] == 3:
+    elif img.shape[2] == 3:
         mean, std, bias = args.img_mean, args.img_std, args.img_bias
     else:
         raise RuntimeError("image channel should either be 1 or 3")
