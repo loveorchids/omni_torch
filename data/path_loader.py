@@ -1,7 +1,7 @@
 import glob, pickle
-import data.misc as misc
+import omni_torch.data.misc as misc
 import numpy as np
-import data
+import omni_torch.data
 
 ALLOW_WARNING = data.ALLOW_WARNING
 

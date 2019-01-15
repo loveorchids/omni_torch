@@ -3,10 +3,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as tf
 sys.path.append(os.path.expanduser("~/Documents/omni_torch"))
-import networks.blocks as block
-from data.arbitrary_dataset import Arbitrary_Dataset
-import data.data_loader as loader
-import data.path_loader as mode
+import omni_torch.networks.blocks as block
+from omni_torch.data.arbitrary_dataset import Arbitrary_Dataset
+import omni_torch.data.data_loader as loader
+import omni_torch.data.path_loader as mode
 
 
 class CifarNet(nn.Module):

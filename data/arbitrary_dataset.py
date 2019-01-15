@@ -1,8 +1,8 @@
 import os, glob, random
-import data
-import data.misc as misc
-import data.path_loader as mode
-import data.data_loader as loader
+import omni_torch.data as data
+import omni_torch.data.misc as misc
+import omni_torch.data.path_loader as mode
+import omni_torch.data.data_loader as loader
 from torch.utils import data as tud
 
 ALLOW_WARNING = data.ALLOW_WARNING

@@ -1,5 +1,5 @@
 import argparse
-from options.imgaug_options import ImgAug
+from omni_torch.options.imgaug_options import ImgAug
 
 
 class BaseOptions(ImgAug):

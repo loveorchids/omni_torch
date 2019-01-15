@@ -1,7 +1,7 @@
 import os
-import data.misc as misc
-from data.arbitrary_dataset import Arbitrary_Dataset
-import data
+import omni_torch.data.misc as misc
+from omni_torch.data.arbitrary_dataset import Arbitrary_Dataset
+import omni_torch.data as data
 
 ALLOW_WARNING = data.ALLOW_WARNING
 

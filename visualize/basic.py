@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import matplotlib
-import utils as util
+import omni_torch.utils as util
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 try:

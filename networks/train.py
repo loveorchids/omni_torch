@@ -1,6 +1,6 @@
 import time
 import torch
-import visualize.basic as vb
+import omni_torch.visualize.basic as vb
 import numpy as np
 
 def fit(net, args, dataset, device, optimizer, criterion, measure=None, is_train=True,

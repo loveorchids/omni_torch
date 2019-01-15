@@ -1,12 +1,12 @@
 import os, time
 import multiprocessing as mpi
 import torch
-from data.arbitrary_dataset import Arbitrary_Dataset
-from data.img2img_dataset import Img2Img_Dataset
-import data.path_loader as mode
-import data.data_loader as loader
-import data.data_loader_ops as dop
-from options.base_options import BaseOptions
+from omni_torch.data.arbitrary_dataset import Arbitrary_Dataset
+from omni_torch.data.img2img_dataset import Img2Img_Dataset
+import omni_torch.data.path_loader as mode
+import omni_torch.data.data_loader as loader
+import omni_torch.data.data_loader_ops as dop
+from omni_torch.options.base_options import BaseOptions
 
     
 def test_img2img(args):

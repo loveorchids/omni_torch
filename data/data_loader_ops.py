@@ -3,7 +3,7 @@ import torch
 import torchvision.transforms as T
 import cv2
 import numpy as np
-import data
+import omni_torch.data as data
 
 ALLOW_WARNING = data.ALLOW_WARNING
 

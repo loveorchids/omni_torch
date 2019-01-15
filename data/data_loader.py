@@ -3,8 +3,8 @@ import cv2
 import torch
 import torchvision.transforms as T
 import numpy as np
-import data
-import utils as util
+import omni_torch.data as data
+import omni_torch.utils as util
 from PIL import Image
 try:
     import imgaug
