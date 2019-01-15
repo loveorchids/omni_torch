@@ -89,13 +89,13 @@ def conv_block(input, filters, repeat, kernel_sizes, stride, padding, groups,
                            nn.ConvTranspose2d(in_channels=filters[i], out_channels=filters[i + 1],
                                               kernel_size=kernel_sizes[i], stride=round(1 / stride[i]),
                                               padding=padding[i], groups=groups[i]))
-        if activation:
-            ops.add_module(name + "_active_" + str(i), activation())
         if batch_norm:
             if type(batch_norm) is str and batch_norm.lower() == "instance":
                 ops.add_module(name + "_InsNorm_" + str(i), nn.InstanceNorm2d(filters[i + 1]))
             else:
                 ops.add_module(name + "_BthNorm_" + str(i), nn.BatchNorm2d(filters[i + 1]))
+        if activation:
+            ops.add_module(name + "_active_" + str(i), activation())
     return ops
 
 def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
@@ -123,11 +123,11 @@ def fc_layer(input, layer_size, name=None, activation=nn.ReLU, batch_norm=True):
     for i in range(len(layer_size) - 1):
         ops.add_module(name + "_fc_" + str(i),
                        nn.Linear(layer_size[i], layer_size[i + 1]))
-        if activation:
-            ops.add_module(name + "_active_" + str(i), activation())
         if batch_norm:
             if type(batch_norm) is str and batch_norm.lower() == "instance":
                 ops.add_module(name + "_BN_" + str(i), nn.InstanceNorm1d(layer_size[i + 1]))
             else:
                 ops.add_module(name + "_BN_" + str(i), nn.BatchNorm1d(layer_size[i + 1]))
+        if activation:
+            ops.add_module(name + "_active_" + str(i), activation())
     return ops

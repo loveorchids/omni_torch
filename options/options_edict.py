@@ -15,6 +15,9 @@ default_options=edict({
     "weight_decay":1e-4,
     "batch_norm":True,
     "finetune":False,
+    
+    "epoches_per_phase": 1,
+    "steps_per_epoch": None,
 
     "model1": None,
     "model2": None,

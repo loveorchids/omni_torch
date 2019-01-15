@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import matplotlib
+import utils as util
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 try:
@@ -36,23 +37,23 @@ def visualize_gradient(args, net, img_ratio=16/9, minimun_rank=2):
         if not os.path.exists(os.path.join(args.grad_log, name)):
             os.mkdir(os.path.join(args.grad_log, name))
         img_path = os.path.join(args.grad_log, name, name + "_" + str(args.curr_epoch).zfill(4) + ".jpg")
-        plot_tensor(norm_grad, title=title, path=img_path, ratio=img_ratio, sub_margin=1)
+        plot_tensor(args, norm_grad, title=title, path=img_path, ratio=img_ratio, sub_margin=1)
 
 
-def to_image(tensor, margin, deNormalize, sub_title=None, font_size=0.5):
+def to_image(args, tensor, margin, deNormalize, sub_title=None, font_size=0.5):
     assert len(tensor.shape) == 3
     array = tensor.data.to("cpu").numpy()
+    array = array.transpose((1, 2, 0))
     if deNormalize:
-        array = array * 255 + 128
-    #array = array.astype("uint8")
-    num = array.shape[0]
+        array = util.denormalize_image(args, array)
+        #array = array.astype("uint8")
+    num = array.shape[2]
     if num in [1, 3]:
-        # Plot the image directly
-        # delete one dimension of this is a gray-scale image
-        canvas = array.transpose((1, 2, 0))
+        # if array depth is 1 or 3 than this is an grayscale or RGB image
+        canvas = array
     else:
-        v = array.shape[1]
-        h = array.shape[2]
+        v = array.shape[0]
+        h = array.shape[1]
         v_num = int(max(math.sqrt(num), 1))
         h_num = int(math.ceil(num / v_num))
         # Create a white canvas contains margin for each patches
@@ -62,7 +63,7 @@ def to_image(tensor, margin, deNormalize, sub_title=None, font_size=0.5):
                 if (i * h_num + j) >= num:
                     break
                 canvas[i * v + i * margin: (i + 1) * v + i * margin,
-                j * h + j * margin: (j + 1) * h + j * margin] = array[i * h_num + j, :, :]
+                j * h + j * margin: (j + 1) * h + j * margin] = array[:, :, i * h_num + j]
     if len(canvas.shape) == 2:
         canvas = np.expand_dims(canvas, axis=-1)
     if canvas.shape[2] == 1:
@@ -89,8 +90,8 @@ def to_image(tensor, margin, deNormalize, sub_title=None, font_size=0.5):
     return canvas
 
 
-def plot_tensor(tensor, path=None, title=None, sub_title=None, op=to_image, ratio=1, margin=5, sub_margin=True,
-         deNormalize=False, font_size=1, bg_color=255):
+def plot_tensor(args, tensor, path=None, title=None, sub_title=None, op=to_image, ratio=1,
+                margin=5, sub_margin=True, deNormalize=False, font_size=1, bg_color=255):
     """
     This is a function to plot one tensor at a time.
     :param tensor: can be gradient, parameter, data_batch, etc.
@@ -121,8 +122,8 @@ def plot_tensor(tensor, path=None, title=None, sub_title=None, op=to_image, rati
         patch_margin = 0
 
     # Find out the size of each small image patches
-    img = op(tensor[0], patch_margin, deNormalize, sub_title[0])
-    #img = plot_tensor(tensor[0], title=sub_title[0], ratio=ratio, margin=sub_margin, deNormalize=deNormalize,
+    img = op(args, tensor[0], patch_margin, deNormalize, sub_title[0])
+    #img = plot_tensor(args,tensor[0], title=sub_title[0], ratio=ratio, margin=sub_margin, deNormalize=deNormalize,
                       #font_size=font_size/2, bg_color=bg_color)
     v_p, h_p, c_p = img.shape
     # Create a large white canvas to plot the small patches
@@ -166,9 +167,9 @@ def plot_tensor(tensor, path=None, title=None, sub_title=None, op=to_image, rati
                 w_s = j * h_p + (j + 1) * margin + w_complement
                 w_e = (j + 1) * (margin + h_p) + w_complement
                 try:
-                    canvas[h_s: h_e, w_s: w_e, :] = op(tensor[i * h + j], patch_margin, deNormalize, sub_title[i * h + j])
+                    canvas[h_s: h_e, w_s: w_e, :] = op(args, tensor[i * h + j], patch_margin, deNormalize, sub_title[i * h + j])
                 except ValueError:
-                    canvas[h_s: h_e, w_s: w_e, :] = cv2.resize(op(tensor[i * h + j], patch_margin, deNormalize, sub_title[i * h + j]),
+                    canvas[h_s: h_e, w_s: w_e, :] = cv2.resize(op(args, tensor[i * h + j], patch_margin, deNormalize, sub_title[i * h + j]),
                                                                (w_e-w_s, h_e-h_s))
     if path:
         cv2.imwrite(path, canvas)
@@ -176,8 +177,8 @@ def plot_tensor(tensor, path=None, title=None, sub_title=None, op=to_image, rati
         return canvas
 
 
-def plot_loss_distribution(losses, keyname, save_path, name, epoch=0, weight=None, window=7,
-                           fig_size=(18, 6)):
+def plot_loss_distribution(losses, keyname, save_path, name, epoch=0, weight=None,
+                           window=7, fig_size=(18, 6), low_bound=None, high_bound=None):
     names = []
     if keyname:
         for key in keyname:
@@ -199,44 +200,11 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch=0, weight=Non
             break
         plt.plot(data, data=df, markersize=1, linewidth=1)
     plt.legend(loc='upper right')
+    if low_bound and high_bound:
+        plt.ylim(low_bound, high_bound)
     img_name = name + str(epoch).zfill(4) + ".jpg"
     plt.savefig(os.path.join(save_path, img_name))
     plt.close()
 
 if __name__ == "__main__":
-    import torch.nn.functional as tf
-    TMPJPG = os.path.expanduser("~/Pictures/tmp.jpg")
-    kernelG1 = np.array([[5, 5, 5],
-                         [-3, 0, -3],
-                         [-3, -3, -3]], dtype=np.float32)
-    kernelG2 = np.array([[5, 5, -3],
-                         [5, 0, -3],
-                         [-3, -3, -3]], dtype=np.float32)
-    kernelG3 = np.array([[5, -3, -3],
-                         [5, 0, -3],
-                         [5, -3, -3]], dtype=np.float32)
-    kernelG4 = np.array([[-3, -3, -3],
-                         [5, 0, -3],
-                         [5, 5, -3]], dtype=np.float32)
-    kernelG5 = np.array([[-3, -3, -3],
-                         [-3, 0, -3],
-                         [5, 5, 5]], dtype=np.float32)
-    kernelG6 = np.array([[-3, -3, -3],
-                         [-3, 0, 5],
-                         [-3, 5, 5]], dtype=np.float32)
-    kernelG7 = np.array([[-3, -3, 5],
-                         [-3, 0, 5],
-                         [-3, -3, 5]], dtype=np.float32)
-    kernelG8 = np.array([[-3, 5, 5],
-                         [-3, 0, 5],
-                         [-3, -3, -3]], dtype=np.float32)
-    weight = np.stack([kernelG1, kernelG2, kernelG3, kernelG4, kernelG5, kernelG6, kernelG7, kernelG8], axis=0) / 15
-    weight = np.expand_dims(weight, axis=1)
-    weight = torch.tensor(weight)
-    img = cv2.imread("/home/wang/Pictures/test_img.jpg", 0).astype(np.float32)
-    img = (img - 128) / 255
-    img = torch.tensor(np.expand_dims(np.expand_dims(img, axis=0), axis=0))
-    #img_test = plot_tensor(img, deNormalize=True)
-    kirsch = tf.conv2d(img, weight, padding=1)
-    kirsch_img = plot_tensor(kirsch, deNormalize=True)
-    cv2.imwrite(TMPJPG, kirsch_img)
+    pass

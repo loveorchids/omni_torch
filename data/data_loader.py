@@ -3,8 +3,8 @@ import cv2
 import torch
 import torchvision.transforms as T
 import numpy as np
-import data.misc as misc
 import data
+import utils as util
 from PIL import Image
 try:
     import imgaug
@@ -87,8 +87,9 @@ def read_image(args, path, seed, size, ops=None, _to_tensor=True):
 
 
 def to_tensor(args, image, seed, size, ops=None):
-    trans = T.Compose([T.ToTensor(), T.Normalize(args.img_mean, args.img_std)])
-    return trans(image)
+    image = util.normalize_image(args, image)
+    trans = T.Compose([T.ToTensor()])
+    return trans(image.astype("float32"))
 
 
 def to_tensor_with_aug(args, image, seed, size, ops=None):
@@ -121,7 +122,7 @@ def prepare_augmentation(args):
         ]})
     if args.do_random_zoom:
         aug_dict.update({"random_zoom": [
-            augmenters.Crop(px=args.pixel_eliminate, sample_independently=args.sample_independent),
+            augmenters.Crop(px=tuple(args.pixel_eliminate), sample_independently=args.sample_independent),
         ]})
     if args.do_random_flip:
         aug_dict.update({"random_flip": [
@@ -144,7 +145,8 @@ def prepare_augmentation(args):
         assert len(set(args.imgaug_order)) == len(args.imgaug_order), \
             "repeated element in args.imgaug_order"
         assert len(args.imgaug_order) == len(aug_dict), \
-            "args.imgaug_order should have 6 elements."
+            "args.imgaug_order has %s elements while aug_dict has %s elements"\
+            %(len(args.imgaug_order, len(aug_dict)))
         try:
             aug_list = [aug_dict[item] for item in args.imgaug_order]
         except KeyError:
