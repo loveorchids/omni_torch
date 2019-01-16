@@ -131,3 +131,8 @@ def fc_layer(input, layer_size, name=None, activation=nn.ReLU, batch_norm=True):
         if activation:
             ops.add_module(name + "_active_" + str(i), activation())
     return ops
+
+def init_weights(m, weight_init=nn.init.xavier_normal, bias_init=nn.init.uniform):
+    if type(m) == nn.Linear:
+        weight_init(m.weight)
+        m.bias.data.fill_(0.01)
