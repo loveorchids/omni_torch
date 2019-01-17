@@ -7,8 +7,9 @@ class BaseOptions(ImgAug):
         self.parser = argparse.ArgumentParser()
 
     def initialize(self):
-        self.parser.add_argument("--which", default=["general", "unique", "runtime"],
-                                 nargs='+', help="which options you want to load")
+        self.parser.add_argument("--which",  nargs='+', help="which options you want to load")
+        self.parser.add_argument("--which2",  nargs='+', help="which options you want to load")
+        self.parser.add_argument("--which3",  nargs='+', help="which options you want to load")
         args = self.parser.parse_args()
         return args
 
