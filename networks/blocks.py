@@ -115,7 +115,7 @@ def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
             ops.add_module(name + "_shortcut_BthNorm", nn.BatchNorm2d(output))
     return ops
 
-def fc_layer(input, layer_size, name=None, activation=nn.ReLU, batch_norm=True):
+def fc_layer(input, layer_size, name=None, activation=nn.Sigmoid, batch_norm=True):
     if name is None:
         name = ""
     ops = nn.Sequential()
