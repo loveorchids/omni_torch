@@ -78,6 +78,7 @@ def initialize():
 
         "img_mean": (0.5, 0.5, 0.5),
         "img_std": (1.0, 1.0, 1.0),
+        "img_bias": (0.0, 0.0, 0.0),
     })
 
 if __name__ == "__main__":
