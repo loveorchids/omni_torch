@@ -40,10 +40,10 @@ def fit(net, args, dataset, device, optimizer, criterion, measure=None, is_train
     for epoch in range(iter):
         epoch_loss, epoch_measure = [], []
         start_time = time.time()
-        for batch_idx, (img_batch, label_batch) in enumerate(dataset):
+        for batch_idx, data in enumerate(dataset):
             if args.steps_per_epoch is not None and batch_idx >= args.steps_per_epoch:
                 break
-            img_batch, label_batch = img_batch.to(device), label_batch.to(device)
+            img_batch, label_batch = data[0].to(device), data[1].to(device)
             prediction, label = net(img_batch, label_batch)
             prediction = [prediction] if type(prediction) is not list else prediction
             label = [label] if type(label) is not list else label
