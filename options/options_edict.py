@@ -1,3 +1,20 @@
+"""
+# Copyright (c) 2018 Works Applications Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+
 from easydict import EasyDict as edict
 
 def initialize():
@@ -17,6 +34,7 @@ def initialize():
         "batch_size": 8,
         "learning_rate":1e-4,
         "weight_decay":1e-4,
+        "adam_epsilon": 1e-8,
         "batch_norm":True,
         "finetune":False,
 
@@ -43,18 +61,20 @@ def initialize():
         # each element represent a process below
 
         "do_affine": False,
-        "translation": (0.0, 0.0),
-        "scale": (1.0, 1.0),
+        "translation_x": (0.0, 0.0),
+        "translation_y": (0.0, 0.0),
+        "scale_x": (1.0, 1.0),
+        "scale_y": (1.0, 1.0),
         "shear": (-0.0, 0.0),
         "rotation": (-0.0, 0.0),
-        "aug_bg_color": (-0.0, 0.0),
+        "aug_bg_color": 255,
 
         "do_random_crop": False,
         "crop_size": (360, 360),
         "keep_size": True,
 
-        "do_random_zoom": False,
-        "pixel_eliminate": (0, 50),
+        "do_random_zoom": True,
+        "pixel_eliminate": (0, 4),
         "sample_independent": False,
 
         "do_random_flip": False,

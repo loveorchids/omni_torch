@@ -108,12 +108,12 @@ def just_return_it(args, data, seed, size, ops=None):
 
 
 def prepare_augmentation(args):
-    # --------------------------------------------Create imgaug process from args--------------------------------------------
+    # -----------------------Create imgaug process from args------------------------
     aug_dict = {}
     if args.do_affine:
         aug_dict.update({"affine": [
-            augmenters.Affine(scale={"x": args.scale, "y": args.scale},
-                              translate_percent={"x": args.translation, "y": args.translation},
+            augmenters.Affine(scale={"x": args.scale_x, "y": args.scale_y},
+                              translate_percent={"x": args.translation_x, "y": args.translation_y},
                               rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color),
         ]})
     if args.do_random_crop:
@@ -170,7 +170,7 @@ def prepare_augmentation(args):
 def pil_prepare_augmentation(args):
     aug_list = []
     if args.do_affine:
-        aug_list.append(T.RandomAffine(scale=args.scale, translate=args.translation,
+        aug_list.append(T.RandomAffine(scale=args.scale, translate=args.translation_x,
                                        degrees=args.rotation, shear=args.shear, fillcolor=args.aug_bg_color))
     if args.do_random_crop:
         ratio = 1 if args.keep_size else (0.75, 1.33333333)
