@@ -71,7 +71,10 @@ def segment_image(image, args, path, seed, size, to_tensor=False):
                     j * args.segment_patch_size[1]:(j + 1) * args.segment_patch_size[1], :])
         return imgs
     
-    
+
+def contrast_normalization(image, args, path, seed, size):
+    return
+
 def inverse_image(image, args, path, seed, size):
     image = cv2.bitwise_not(image)
     if len(image.shape) == 2:
