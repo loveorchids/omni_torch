@@ -54,9 +54,9 @@ def initialize():
 
         "img_channel": 3,
         "imgaug_engine": "cv2",
-        "contrast_equalization": False,
-        "histogram_min": 0,
-        "histogram_max": 255,
+        "normalize_img": False,
+        "normalize_min": 0,
+        "normalize_max": 255,
 
         "do_imgaug": True,
         "imgaug_order": "default", # or "random"

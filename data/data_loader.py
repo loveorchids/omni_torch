@@ -64,8 +64,8 @@ def read_image(args, path, seed, size, ops=None, _to_tensor=True):
         else:
             image = Image.open(path)
             image = np.array(image)
-    if args.contrast_equalization:
-        image = cv2.normalize(image, None, args.histogram_min, args.histogram_max, cv2.NORM_MINMAX)
+    if args.normalize_img:
+        image = cv2.normalize(image, None, args.normalize_min, args.normalize_max, cv2.NORM_MINMAX)
     # image = misc.random_crop(image, args.crop_size, seed)
     if ops:
         image = ops(image, args, path, seed, size)
