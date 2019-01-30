@@ -108,8 +108,12 @@ def load_latest_model(args, net):
     model_list.sort()
     epoch = int(model_list[-1][model_list[-1].rfind("_") + 1:model_list[-1].rfind(".")])
     print("Load model form: " + model_list[-1])
+    if not torch.cuda.is_available():
+        model_data = torch.load(model_list[-1], map_location='cpu')
+    else:
+        model_data = torch.load(model_list[-1])
     try:
-        net.load_state_dict(torch.load(model_list[-1]))
+        net.load_state_dict(model_data)
     except RuntimeError:
         warnings.warn("Model shape does not matches!")
         return net
