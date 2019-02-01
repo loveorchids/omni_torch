@@ -40,7 +40,8 @@ class Resnet_Block(nn.Module):
 
 class InceptionBlock(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, inner_groups,
-                 name=None, activation=nn.ReLU, batch_norm=True):
+                 name=None, activation=nn.ReLU, batch_norm=True, inner_maxout=None,
+                 maxout=None):
         """
         :param input: int
         :param filters: in the form of [[...], [...], ... , [...]]
@@ -59,12 +60,20 @@ class InceptionBlock(nn.Module):
         for i in range(inner_groups):
             assert max([len(filters[i]), len(kernel_sizes[i]), len(stride[i]), len(padding[i])]) is \
                    min([len(filters[i]), len(kernel_sizes[i]), len(stride[i]), len(padding[i])])
-            # repeat always equals to 1 here, because we only create one Inception Block
-            inner_blocks.append(conv_block(input, filters[i], 1, kernel_sizes[i], stride[i],
-                                           padding[i], groups=[1] * len(filters[i]),
-                                           name=name + "_inner_" + str(i),
-                                           activation=activation, batch_norm=batch_norm))
-            self.inner_blocks = nn.ModuleList(inner_blocks)
+            if inner_maxout:
+                assert len(inner_maxout) == inner_groups
+                ops = inner_maxout[i]
+                ops.add_module(conv_block(input, filters[i], 1, kernel_sizes[i], stride[i], padding[i],
+                             groups=[1] * len(filters[i]), name=name + "_inner_" + str(i),
+                             activation=activation, batch_norm=batch_norm))
+            else:
+                ops = conv_block(input, filters[i], 1, kernel_sizes[i], stride[i], padding[i],
+                                          groups=[1] * len(filters[i]), name=name + "_inner_" + str(i),
+                                          activation=activation, batch_norm=batch_norm)
+            inner_blocks.append(ops)
+        if maxout:
+            inner_blocks.append(maxout)
+        self.inner_blocks = nn.ModuleList(inner_blocks)
 
     def forward(self, x):
         out = [block(x) for block in self.inner_blocks]
