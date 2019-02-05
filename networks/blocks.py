@@ -21,18 +21,27 @@ import torch.nn.functional as tf
 
 class Resnet_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, groups,
-                 name=None, activation=nn.ReLU, batch_norm=True, shortcut_stride=1):
+                 name=None, activation=nn.ReLU, batch_norm=True, bn_eps=1e-5,
+                 shortcut_stride=1):
+        """
+        :param input: int
+        :param filters: in the form of [[...], [...], ... , [...]]
+        :param kernel_sizes: in the form of [[...], [...], ... , [...]]
+        :param stride: in the form of [[...], [...], ... , [...]]
+        :param padding: in the form of [[...], [...], ... , [...]]
+        :param inner_groups: int, number of inner streams
+        """
         super().__init__()
         # repeat always equals to 1 here, because we only create one Resnet Block
         self.conv_block = conv_block(input, filters, 1, kernel_sizes, stride, padding, groups,
-                                     name, activation, batch_norm)
+                                     name, activation, batch_norm, bn_eps)
         if shortcut_stride < 1:
             kernel_size, padding = 2, 0
         else:
             kernel_size, padding = 1, 0
         self.shortcut = conv_block(input, [filters[-1]], 1, kernel_sizes=[kernel_size], stride=[shortcut_stride],
                                    padding=[padding], groups=[groups[-1]], name=name+"_shortcut",
-                                   activation=activation, batch_norm=batch_norm)
+                                   activation=activation, batch_norm=batch_norm, bn_eps=bn_eps)
 
     def forward(self, x):
         return tf.relu(self.conv_block(x) + self.shortcut(x))
@@ -40,18 +49,15 @@ class Resnet_Block(nn.Module):
 
 class InceptionBlock(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, inner_groups,
-                 name=None, activation=nn.ReLU, batch_norm=True, inner_maxout=None,
-                 maxout=None):
+                 name=None, activation=nn.ReLU, batch_norm=True, bn_eps=1e-5,
+                 inner_maxout=None, maxout=None):
         """
         :param input: int
         :param filters: in the form of [[...], [...], ... , [...]]
         :param kernel_sizes: in the form of [[...], [...], ... , [...]]
         :param stride: in the form of [[...], [...], ... , [...]]
         :param padding: in the form of [[...], [...], ... , [...]]
-        :param inner_groups: int, number of inner blocks
-        :param name:
-        :param activation:
-        :param batch_norm:
+        :param inner_groups: int, number of inner streams
         """
         assert max([len(filters), len(kernel_sizes), len(stride), len(padding), inner_groups]) is \
                min([len(filters), len(kernel_sizes), len(stride), len(padding), inner_groups])
@@ -69,7 +75,7 @@ class InceptionBlock(nn.Module):
             else:
                 ops = conv_block(input, filters[i], 1, kernel_sizes[i], stride[i], padding[i],
                                           groups=[1] * len(filters[i]), name=name + "_inner_" + str(i),
-                                          activation=activation, batch_norm=batch_norm)
+                                          activation=activation, batch_norm=batch_norm, bn_eps=bn_eps)
             inner_blocks.append(ops)
         if maxout:
             inner_blocks.append(maxout)
@@ -82,10 +88,13 @@ class InceptionBlock(nn.Module):
 
 class Xception_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, inner_groups,
-                 name=None, activation=nn.ReLU, batch_norm=True):
+                 name=None, activation=nn.ReLU, batch_norm=True, bn_eps=1e-5,
+                 inner_maxout=None, maxout=None):
         super().__init__()
-        self.conv_block = InceptionBlock(input, filters, kernel_sizes, stride, padding,
-                                         inner_groups, name, activation, batch_norm)
+        self.conv_block = InceptionBlock(input, filters=filters, kernel_sizes=kernel_sizes,
+                                         stride=stride, padding=padding, inner_groups=inner_groups,
+                                         name=name, activation=activation, batch_norm=batch_norm,
+                                         inner_maxout=inner_maxout, maxout=maxout, bn_eps=bn_eps)
         self.shortcut = resnet_shortcut(input, filters[-1])
 
     def forward(self, x):
@@ -93,10 +102,8 @@ class Xception_Block(nn.Module):
 
 
 def conv_block(input, filters, repeat, kernel_sizes, stride, padding, groups,
-               name=None, activation=nn.ReLU, batch_norm=True):
+               name=None, activation=nn.ReLU, batch_norm=True, bn_eps=1e-5):
     ops = nn.Sequential()
-    # When an (HxWxC) image converted to torch tensor, the shape will become (CxHxW)
-    # That is why we get the shape[1]
     filters = [input] + filters * repeat
     kernel_sizes = kernel_sizes * repeat
     stride = stride * repeat
@@ -117,9 +124,9 @@ def conv_block(input, filters, repeat, kernel_sizes, stride, padding, groups,
                                               padding=padding[i], groups=groups[i]))
         if batch_norm:
             if type(batch_norm) is str and batch_norm.lower() == "instance":
-                ops.add_module(name + "_InsNorm_" + str(i), nn.InstanceNorm2d(filters[i + 1]))
+                ops.add_module(name + "_InsNorm_" + str(i), nn.InstanceNorm2d(filters[i + 1], eps=bn_eps))
             else:
-                ops.add_module(name + "_BthNorm_" + str(i), nn.BatchNorm2d(filters[i + 1]))
+                ops.add_module(name + "_BthNorm_" + str(i), nn.BatchNorm2d(filters[i + 1], eps=bn_eps))
         if activation:
             ops.add_module(name + "_active_" + str(i), activation())
     return ops
