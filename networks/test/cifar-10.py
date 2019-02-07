@@ -20,54 +20,30 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as tf
 sys.path.append(os.path.expanduser("~/Documents/omni_torch"))
-import omni_torch.networks.blocks as block
+import omni_torch.networks.blocks as omth_blocks
 from omni_torch.data.arbitrary_dataset import Arbitrary_Dataset
-import omni_torch.data.data_loader as loader
-import omni_torch.data.path_loader as mode
+import omni_torch.data.data_loader as omth_loader
+import omni_torch.data.path_loader as omth_data_mode
 
 
 class CifarNet(nn.Module):
     def __init__(self):
         super(CifarNet, self).__init__()
-
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1)
-        self.conv_block1_1 = block.Resnet_Block(input=3, filters=[64, 64], kernel_sizes=[3, 3],
-                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
-        self.conv_block1_2 = block.Resnet_Block(input=64, filters=[64, 64], kernel_sizes=[3, 3],
-                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
-        
+        self.conv_block1 = omth_blocks.conv_block(input=3, filters=[32, 32], kernel_sizes=[3, 3],
+                                                  stride=[1, 1], padding=[1, 1], batch_norm=False)
+        self.conv_block2 = omth_blocks.conv_block(input=3, filters=[64, 64], kernel_sizes=[3, 3],
+                                                  stride=[1, 1], padding=[1, 1], batch_norm=False)
+        self.fc_layer1 = nn.Linear(512, 512)
+        self.fc_layer1 = nn.Linear(512, 10)
 
-        self.conv_block2_1 = block.Resnet_Block(input=64, filters=[128, 128], kernel_sizes=[3, 3],
-                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
-        self.conv_block2_2 = block.Resnet_Block(input=128, filters=[128, 128], kernel_sizes=[3, 3],
-                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
-
-        self.conv_block3_1 = block.Resnet_Block(input=128, filters=[256, 256], kernel_sizes=[3, 3],
-                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
-        self.conv_block3_2 = block.Resnet_Block(input=256, filters=[256, 256], kernel_sizes=[3, 3],
-                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
-
-        self.conv_block4_1 = block.Resnet_Block(input=256, filters=[512, 512], kernel_sizes=[3, 3],
-                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
-        self.conv_block4_2 = block.Resnet_Block(input=512, filters=[512, 512], kernel_sizes=[3, 3],
-                                                stride=[1, 1], padding=[1, 1], groups=[1, 1])
-
-        self.conv_block5 = block.conv_block(input=512, filters=[512], kernel_sizes=[3], stride=[1],
-                                            padding=[1], groups=[1], repeat=1)
-
-        self.fc_layer = block.fc_layer(input=2048, layer_size=[128, 256, 512, 1024, 10], activation=nn.ReLU(),
-                                       batch_norm=True)
 
     def forward(self, x):
-        x = self.pool(self.conv_block1_2(self.conv_block1_1(x)))
-        x = self.pool(self.conv_block2_2(self.conv_block2_1(x)))
-        x = self.pool(self.conv_block3_2(self.conv_block3_1(x)))
-        x = self.pool(self.conv_block4_2(self.conv_block4_1(x)))
-        x = self.conv_block5(x)
-        #x = tf.relu(x)
+        x = self.pool(self.conv_block1(x))
+        x = self.pool(self.conv_block2(x))
 
         x = x.view(x.size(0), -1)
-        x = self.fc_layer(x)
+        x = self.fc_layer1(x)
         return x
 
 
@@ -119,8 +95,8 @@ def fetch_data(args, source):
         """
         return torch.tensor(data)
     print("loading Dataset...")
-    data = Arbitrary_Dataset(args=args, load_funcs=[loader.to_tensor, loader.just_return_it],
-                             sources=source, modes=[mode.load_cifar_from_pickle], dig_level=[0])
+    data = Arbitrary_Dataset(args=args, load_funcs=[omth_loader.to_tensor, omth_loader.just_return_it],
+                             sources=source, modes=[omth_data_mode.load_cifar_from_pickle], dig_level=[0])
     data.prepare()
     print("loading Completed!")
     kwargs = {'num_workers': mpi.cpu_count(), 'pin_memory': True} \
@@ -149,13 +125,6 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(cifar.parameters(), lr=args.learning_rate)
 
     trace = fit(cifar, args, train_set, train_set, device, optimizer, criterion, finetune=False)
-    
-    fig = plt.figure()
-    ax = plt.axes()
-    
-    ax.plot(trace)
-    
-    plt.show()
     
     
 
