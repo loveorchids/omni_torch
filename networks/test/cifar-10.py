@@ -55,7 +55,7 @@ class CifarNet(nn.Module):
         self.conv_block5 = block.conv_block(input=512, filters=[512], kernel_sizes=[3], stride=[1],
                                             padding=[1], groups=[1], repeat=1)
 
-        self.fc_layer = block.fc_layer(input=2048, layer_size=[128, 256, 512, 1024, 10], activation=nn.ReLU,
+        self.fc_layer = block.fc_layer(input=2048, layer_size=[128, 256, 512, 1024, 10], activation=nn.ReLU(),
                                        batch_norm=True)
 
     def forward(self, x):
