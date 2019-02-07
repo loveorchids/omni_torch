@@ -1,10 +1,13 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as tf
+import scipy.stats as stats
+import omni_torch.networks.initialization as init
 from omni_torch.networks import blocks as omth_blocks
 
 # Compare with the vanilla implementation here:
 # https://github.com/pytorch/vision/blob/master/torchvision/models/inception.py
+from torchvision.models.inception import Inception3 as vanilla_inception_v3
 
 class InceptionNet_V3(nn.Module):
     def __init__(self, BN, num_classes=1000, aux_logits=True):
@@ -42,7 +45,6 @@ class InceptionNet_V3(nn.Module):
                                                   maxout=self.pool_3_2_0, batch_norm=BN, bn_eps=1e-3)
         self.Mixed7b = InceptionE(1280, BN, bn_eps=1e-3)
         self.Mixed7c = InceptionE(2048, BN, bn_eps=1e-3)
-        #self.fc_layer = omth_blocks.fc_layer(2048, layer_size=[num_classes], batch_norm=BN, bn_eps=1e-3)
         self.fc = nn.Linear(2048, num_classes)
 
         if aux_logits:
@@ -134,8 +136,9 @@ class InceptionE(nn.Module):
 if __name__ == "__main__":
     x = torch.randn(1, 3, 299, 299)
     inception_net1 = InceptionNet_V3(BN=True, num_classes=10, aux_logits=False)
+    #inception_net1.apply(init.weight_init)
 
-    y = inception_net1(x)
-    print(y)
+    y1 = inception_net1(x)
+    print(y1)
 
 
