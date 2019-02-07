@@ -134,6 +134,7 @@ class InceptionE(nn.Module):
 if __name__ == "__main__":
     x = torch.randn(1, 3, 299, 299)
     inception_net1 = InceptionNet_V3(BN=True, num_classes=10, aux_logits=False)
+
     y = inception_net1(x)
     print(y)
 
