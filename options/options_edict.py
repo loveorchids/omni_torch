@@ -38,6 +38,7 @@ def initialize():
         "batch_norm":True,
         "finetune":False,
 
+        "curr_epoch": 0,
         "epoches_per_phase": 1,
         "steps_per_epoch": None,
 
