@@ -1,13 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as tf
-import scipy.stats as stats
 import omni_torch.networks.initialization as init
 from omni_torch.networks import blocks as omth_blocks
 
 # Compare with the vanilla implementation here:
 # https://github.com/pytorch/vision/blob/master/torchvision/models/inception.py
-from torchvision.models.inception import Inception3 as vanilla_inception_v3
 
 class InceptionNet_V3(nn.Module):
     def __init__(self, BN, num_classes=1000, aux_logits=True):
@@ -140,5 +138,3 @@ if __name__ == "__main__":
 
     y1 = inception_net1(x)
     print(y1)
-
-
