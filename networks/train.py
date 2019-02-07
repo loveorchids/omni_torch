@@ -53,7 +53,10 @@ def fit(net, args, dataset, device, optimizer, criterion, measure=None, is_train
     #    ...
     #   [loss_1_step_m, loss_2_step_m, ..., loss_N_step_m]]
     Basic_Losses, Basic_Measures = [], []
-    loss_name = args.loss_name
+    if "loss_name" in args.items():
+        loss_name = args.loss_name
+    else:
+        loss_name = None
     for epoch in range(iter):
         epoch_loss, epoch_measure = [], []
         start_time = time.time()
@@ -61,9 +64,9 @@ def fit(net, args, dataset, device, optimizer, criterion, measure=None, is_train
             if args.steps_per_epoch is not None and batch_idx >= args.steps_per_epoch:
                 break
             img_batch, label_batch = data[0].to(device), data[1].to(device)
-            prediction, label = net(img_batch, label_batch)
+            prediction = net(img_batch)
             prediction = [prediction] if type(prediction) is not list else prediction
-            label = [label] if type(label) is not list else label
+            label = [label_batch] if type(label_batch) is not list else label_batch
             basic_loss = criterion(prediction, label)
             basic_loss = [basic_loss] if type(basic_loss) is not list else basic_loss
             Basic_Losses.append([float(loss.data) for loss in basic_loss])
@@ -75,7 +78,10 @@ def fit(net, args, dataset, device, optimizer, criterion, measure=None, is_train
                 epoch_measure.append(Basic_Measures[-1])
             if is_train:
                 optimizer.zero_grad()
-                total_loss = sum([loss * args.loss_weight[loss_name[i]] for i, loss in enumerate(basic_loss)])
+                if loss_name:
+                    total_loss = sum([loss * args.loss_weight[loss_name[i]] for i, loss in enumerate(basic_loss)])
+                else:
+                    total_loss = sum([loss for loss in basic_loss])
                 total_loss.backward()
                 optimizer.step()
             # Visualize Output and Loss
