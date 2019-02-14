@@ -20,9 +20,9 @@ import torch.nn as nn
 import torch.nn.functional as tf
 
 class Resnet_Block(nn.Module):
-    def __init__(self, input, filters, kernel_sizes, stride, padding, groups,
+    def __init__(self, input, filters, kernel_sizes, stride, padding, groups=None,
                  name=None, activation=nn.ReLU(), batch_norm=True, bn_eps=1e-5,
-                 shortcut_stride=1):
+                 dropout=0, shortcut_stride=1):
         """
         :param input: int
         :param filters: in the form of [[...], [...], ... , [...]]
@@ -31,15 +31,16 @@ class Resnet_Block(nn.Module):
         :param padding: in the form of [[...], [...], ... , [...]]
         """
         super().__init__()
-        self.conv_block = conv_block(input, filters, kernel_sizes, stride, padding, groups,
-                                     name, activation, batch_norm, bn_eps)
+        self.conv_block = conv_block(input, filters, kernel_sizes, stride, padding, groups=groups,
+                                     name=name, activation=activation, batch_norm=batch_norm,
+                                     bn_eps=bn_eps, dropout=dropout)
         if shortcut_stride < 1:
             kernel_size, padding = 2, 0
         else:
             kernel_size, padding = 1, 0
         self.shortcut = conv_block(input, [filters[-1]], kernel_sizes=[kernel_size], stride=[shortcut_stride],
                                    padding=[padding], groups=[groups[-1]], name=name+"_shortcut",
-                                   activation=activation, batch_norm=batch_norm, bn_eps=bn_eps)
+                                   activation=activation, batch_norm=batch_norm, bn_eps=bn_eps, dropout=dropout)
 
     def forward(self, x):
         return tf.relu(self.conv_block(x) + self.shortcut(x))
@@ -48,7 +49,7 @@ class Resnet_Block(nn.Module):
 class InceptionBlock(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding,
                  name=None, activation=nn.ReLU(), batch_norm=True, bn_eps=1e-5,
-                 inner_maxout= None, maxout=None):
+                 dropout=0, inner_maxout= None, maxout=None):
         """
         :param input: int
         :param filters: in the form of [[...], [...], ... , [...]]
@@ -70,11 +71,11 @@ class InceptionBlock(nn.Module):
                 ops = nn.Sequential(inner_maxout[i])
                 ops = concatenate_blocks(ops, conv_block(input, filters[i], kernel_sizes[i], stride[i], padding[i],
                                                          name=name + "_inner_" + str(i), activation=activation,
-                                                         batch_norm=batch_norm, bn_eps=bn_eps))
+                                                         batch_norm=batch_norm, bn_eps=bn_eps, dropout=dropout))
             else:
                 ops = conv_block(input, filters[i], kernel_sizes[i], stride[i], padding[i],
                                  name=name + "_inner_" + str(i), activation=activation,
-                                 batch_norm=batch_norm, bn_eps=bn_eps)
+                                 batch_norm=batch_norm, bn_eps=bn_eps, dropout=dropout)
             inner_blocks.append(ops)
         if maxout:
             inner_blocks.append(maxout)
@@ -88,20 +89,20 @@ class InceptionBlock(nn.Module):
 class Xception_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding,
                  name=None, activation=  nn.ReLU(), batch_norm=True, bn_eps=1e-5,
-                 inner_maxout=None, maxout=None):
+                 dropout=0, inner_maxout=None, maxout=None):
         super().__init__()
         self.conv_block = InceptionBlock(input, filters=filters, kernel_sizes=kernel_sizes,
                                          stride=stride, padding=padding, name=name,
                                          activation=activation, batch_norm=batch_norm,
                                          inner_maxout=inner_maxout, maxout=maxout, bn_eps=bn_eps)
-        self.shortcut = resnet_shortcut(input, filters[-1])
+        self.shortcut = resnet_shortcut(input, filters[-1], dropout=dropout)
 
     def forward(self, x):
         return tf.relu(self.dropout(self.conv_block(x)) + self.shortcut(x))
 
 
 def conv_block(input, filters, kernel_sizes, stride, padding, groups=None, repeat=1,
-               name=None, activation=nn.ReLU(), batch_norm=True, bn_eps=1e-5):
+               name=None, activation=nn.ReLU(), batch_norm=True, bn_eps=1e-5, dropout=0):
     """
     Create a convolutional block with several layers
     :param input: input data channels
@@ -127,12 +128,17 @@ def conv_block(input, filters, kernel_sizes, stride, padding, groups=None, repea
         groups = [1] * len(filters)
     else:
         groups = [groups] if type(groups) is not list else groups
+    if type(dropout) is list or type(dropout) is tuple:
+        assert len(dropout)==len(filters)
+        dropout = dropout * repeat
     ops = nn.Sequential()
+
     filters = [input] + filters * repeat
     kernel_sizes = kernel_sizes * repeat
     stride = stride * repeat
     padding = padding * repeat
     groups = groups * repeat
+
     if name is None:
         name = ""
     for i in range(len(filters) - 1):
@@ -146,6 +152,12 @@ def conv_block(input, filters, kernel_sizes, stride, padding, groups=None, repea
                            nn.ConvTranspose2d(in_channels=filters[i], out_channels=filters[i + 1],
                                               kernel_size=kernel_sizes[i], stride=round(1 / stride[i]),
                                               padding=padding[i], groups=groups[i]))
+        if type(dropout) is int:
+            if dropout > 0:
+                ops.add_module(name + "_dropout_"+ str(i), nn.Dropout2d(dropout))
+        if type(dropout) is list or type(dropout) is tuple:
+            if dropout[i] > 0:
+                ops.add_module(name + "_dropout_"+ str(i), nn.Dropout2d(dropout[i]))
         if batch_norm:
             if type(batch_norm) is str and batch_norm.lower() == "instance":
                 ops.add_module(name + "_InsNorm_" + str(i), nn.InstanceNorm2d(filters[i + 1], eps=bn_eps))
@@ -156,15 +168,16 @@ def conv_block(input, filters, kernel_sizes, stride, padding, groups=None, repea
     return ops
 
 def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
-                    batch_norm=True, bn_eps=1e-5, name=None):
+                    batch_norm=True, bn_eps=1e-5, dropout=0, name=None):
     if name is None:
         name = ""
     ops = nn.Sequential()
     # S, P, K = misc.get_stride_padding_kernel(input.shape[2], conv.shape[2])
     ops.add_module(name + "_shortcut_conv",
-                   nn.Conv2d(in_channels=input, out_channels=output,
-                             kernel_size=kernel_size,
+                   nn.Conv2d(in_channels=input, out_channels=output, kernel_size=kernel_size,
                              stride=stride, padding=padding))
+    if dropout > 0:
+        ops.add_module(name + "_dropout", nn.Dropout2d(dropout))
     if batch_norm:
         if type(batch_norm) is str and batch_norm.lower() == "instance":
             ops.add_module(name + "_shortcut_InsNorm", nn.InstanceNorm2d(output, eps=bn_eps))
@@ -172,21 +185,23 @@ def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
             ops.add_module(name + "_shortcut_BthNorm", nn.BatchNorm2d(output, eps=bn_eps))
     return ops
 
-def fc_layer(input, layer_size, name=None, activation=nn.Sigmoid, batch_norm=True, bn_eps=1e-5):
+def fc_layer(input, layer_size, name=None, activation=nn.Sigmoid(), batch_norm=True, bn_eps=1e-5,
+             dropout=0):
     if name is None:
         name = ""
     ops = nn.Sequential()
     layer_size = [input] + layer_size
     for i in range(len(layer_size) - 1):
-        ops.add_module(name + "_fc_" + str(i),
-                       nn.Linear(layer_size[i], layer_size[i + 1]))
+        ops.add_module(name + "_fc_" + str(i), nn.Linear(layer_size[i], layer_size[i + 1]))
+        if dropout > 0:
+            ops.add_module(name + "_dropout_"+ str(i), nn.Dropout(dropout))
         if batch_norm:
             if type(batch_norm) is str and batch_norm.lower() == "instance":
                 ops.add_module(name + "_BN_" + str(i), nn.InstanceNorm1d(layer_size[i + 1], eps=bn_eps))
             else:
                 ops.add_module(name + "_BN_" + str(i), nn.BatchNorm1d(layer_size[i + 1], eps=bn_eps))
         if activation:
-            ops.add_module(name + "_active_" + str(i), activation())
+            ops.add_module(name + "_active_" + str(i), activation)
     return ops
 
 def concatenate_blocks(block1, block2):
