@@ -8,6 +8,8 @@ from keras.datasets import *
 from keras.preprocessing.image import ImageDataGenerator
 import os
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 save_dir = os.path.join(os.getcwd(), 'models')
 model_name = 'cifar10_cnn.h5'
 
@@ -40,9 +42,9 @@ model.add(Dropout(0.5))
 model.add(Dense(10))
 model.add(Activation('softmax'))
 
-#model.summary()
+model.summary()
 # exit(1)
-opt = keras.optimizers.adam(lr=1e-4, decay=1e-6)
+opt = keras.optimizers.adam(lr=1e-4, decay=1e-6, epsilon=1e-7)
 
 model.compile(loss=keras.losses.categorical_crossentropy, optimizer=opt, metrics=['accuracy'])
 

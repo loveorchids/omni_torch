@@ -18,29 +18,32 @@
 def GeneralPattern_01(args):
     args.path = "~/Pictures/dataset/cifar-10"
     args.random_order_load = False
-    args.loading_threads = 0
+    args.loading_threads = 1
     args.img_channel = 3
     args.curr_epoch = 0
     args.do_imgaug = False
-    return args
 
-def UniquePattern_01(args):
-    args.learning_rate = 1e-4
-    args.weight_decay = 1e-6
-    args.gpu_id = "1"
-    args.cover_exist = True
-    args.code_name = "cifar_torch"
-    args.finetune = False
-    return args
-
-def RuntimePattern(args):
-    args.deterministic_train = True
-    args.epoch_num = 50
-    args.batch_size = 32
-    
     args.img_mean = (0.0, 0.0, 0.0)
     args.img_std = (1.0, 1.0, 1.0)
     args.img_bias = (0.0, 0.0, 0.0)
+    return args
+
+def UniquePattern_01(args):
+    args.adam_epsilon = 1e-8
+    return args
+
+def RuntimePattern(args):
+    args.cover_exist = True
+    args.code_name = "cifar_torch"
+    args.finetune = False
+
+    args.deterministic_train = True
+    args.epoch_num = 500
+    args.batch_size = 32
+
+    args.learning_rate = 1e-4
+    args.weight_decay = 1e-6
+    args.gpu_id = "0"
     return args
 
 
