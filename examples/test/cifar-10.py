@@ -14,13 +14,13 @@
 # limitations under the License.
 
 """
-
-import os, time
+import os, time, sys
 import torch
 import torch.nn as nn
+import torch.nn.functional as tf
 import numpy as np
 from torchsummary import summary
-#sys.path.append(os.path.expanduser("~/Documents/omni_research"))
+sys.path.append(os.path.expanduser("~/Documents/omni_research"))
 import omni_torch.utils as omth_util
 import omni_torch.examples.test.presets as presets
 import omni_torch.options.options_edict as edict_options
@@ -33,6 +33,35 @@ from omni_torch.networks.optimizer.adamtf import AdamTF
 from omni_torch.options.base_options import BaseOptions
 from omni_torch.data.arbitrary_dataset import Arbitrary_Dataset
 
+#torch.backends.cudnn.enabled = False
+
+class CifarNet_Vanilla(nn.Module):
+    def __init__(self):
+        super(CifarNet_Vanilla, self).__init__()
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.dropout_025 = nn.Dropout2d(0.25)
+        self.dropout_050 = nn.Dropout(0.50)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv1_1 = nn.Conv2d(3, 32, 3, stride=1, padding=1)
+        self.conv1_2 = nn.Conv2d(32, 32, 3, stride=1, padding=0)
+        self.conv2_1 = nn.Conv2d(32, 64, 3, stride=1, padding=1)
+        self.conv2_2 = nn.Conv2d(64, 64, 3, stride=1, padding=0)
+        self.fc_layer1 = nn.Linear(2304, 512)
+        self.fc_layer2 = nn.Linear(512, 10)
+
+    def forward(self, x):
+        x = self.relu(self.conv1_1(x))
+        x = self.pool(self.relu(self.conv1_2(x)))
+        x = self.dropout_025(x)
+        x = self.relu(self.conv2_1(x))
+        x = self.pool(self.relu(self.conv2_2(x)))
+        x = self.dropout_025(x)
+
+        x = x.view(x.size(0), -1)
+        x = self.dropout_050(self.fc_layer1(x))
+        #x = self.softmax(self.fc_layer2(x))
+        x = self.fc_layer2(x)
+        return x
 
 class CifarNet(nn.Module):
     def __init__(self):
@@ -126,12 +155,12 @@ def fit(net, args, dataset, device, optimizer, criterion, measure=None, is_train
             if batch_idx % visualize_step == 0 and visualize_op is not None:
                 visualize_op(args, batch_idx, prefix, loss_dict, img_batch, prediction, label_batch)
         if measure:
-            print(prefix + " --- total loss: %8f, total measure: %8f at epoch %04d/%04d, cost %3f seconds ---" %
+            print(prefix + " --- loss: %8f, accuracy: %8f at epoch %04d/%04d, cost %03f s ---" %
                   (sum([sum(i) for i in epoch_loss]) / len(epoch_loss),
                    sum([sum(i) for i in epoch_measure]) / len(epoch_measure),
                    epoch, args.epoches_per_phase, time.time() - start_time))
         else:
-            print(prefix + " --- total loss: %8f at epoch %04d/%04d, cost %3f seconds ---" %
+            print(prefix + " --- loss: %8f at epoch %04d/%04d, cost %03f s ---" %
                   (sum([sum(i) for i in epoch_loss]) / len(epoch_loss),
                    epoch, args.epoches_per_phase, time.time() - start_time))
         if is_train:
@@ -170,17 +199,17 @@ if __name__ == "__main__":
         torch.manual_seed(args.seed)
     device = torch.device("cuda:" + args.gpu_id)
 
-    net = CifarNet()
+    net = CifarNet_Vanilla()
     net.to(device)
     summary(net, input_size=(3, 32, 32))
-    net.apply(omth_init.weight_init)
+    #net.apply(omth_init.weight_init)
 
     train_set = fetch_data(args, [("data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4", "data_batch_5")])
     test_set = fetch_data(args, ["test_batch"])
     #criterion = nn.NLLLoss()
     criterion = nn.CrossEntropyLoss()
-    optimizer = AdamTF(net.parameters(), lr=1e-4, weight_decay=1e-6)
-    #optimizer = torch.optim.Adam(net.parameters(), lr=1e-4, weight_decay=0, eps=1e-7)
+    #optimizer = AdamTF(net.parameters(), lr=1e-4, weight_decay=1e-6)
+    optimizer = torch.optim.Adam(net.parameters(), lr=1e-4, weight_decay=1e-6)
     #optimizer = torch.optim.SGD(net.parameters(), lr=1e-3, momentum=0.9, weight_decay=5e-4)
 
     for epoch in range(args.epoch_num):
