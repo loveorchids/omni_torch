@@ -87,7 +87,7 @@ def initialize():
 
         "do_random_brightness": False,
         "brightness_vibrator": (1.0, 1.0),
-        "multiplier": (1.0, 1.0),
+        "brightness_multiplier": (1.0, 1.0),
         "per_channel_multiplier": 0.2,
         "linear_contrast": 1.0,
 
