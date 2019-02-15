@@ -131,6 +131,9 @@ def conv_block(input, filters, kernel_sizes, stride, padding, groups=None, repea
     if type(dropout) is list or type(dropout) is tuple:
         assert len(dropout)==len(filters)
         dropout = dropout * repeat
+    if type(activation) is list or type(activation) is tuple:
+        assert len(activation)==len(filters)
+        activation = activation * repeat
     ops = nn.Sequential()
 
     filters = [input] + filters * repeat
@@ -163,8 +166,12 @@ def conv_block(input, filters, kernel_sizes, stride, padding, groups=None, repea
                 ops.add_module(name + "_InsNorm_" + str(i), nn.InstanceNorm2d(filters[i + 1], eps=bn_eps))
             else:
                 ops.add_module(name + "_BthNorm_" + str(i), nn.BatchNorm2d(filters[i + 1], eps=bn_eps))
-        if activation:
-            ops.add_module(name + "_active_" + str(i), activation)
+        if type(activation) is list or type(activation) is tuple:
+            if activation[i]:
+                ops.add_module(name + "_active_" + str(i), activation[i])
+        else:
+            if activation:
+                ops.add_module(name + "_active_" + str(i), activation)
     return ops
 
 def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
@@ -193,15 +200,23 @@ def fc_layer(input, layer_size, name=None, activation=nn.Sigmoid(), batch_norm=T
     layer_size = [input] + layer_size
     for i in range(len(layer_size) - 1):
         ops.add_module(name + "_fc_" + str(i), nn.Linear(layer_size[i], layer_size[i + 1]))
-        if dropout > 0:
-            ops.add_module(name + "_dropout_"+ str(i), nn.Dropout(dropout))
+        if type(dropout) is int:
+            if dropout > 0:
+                ops.add_module(name + "_dropout_"+ str(i), nn.Dropout2d(dropout))
+        if type(dropout) is list or type(dropout) is tuple:
+            if dropout[i] > 0:
+                ops.add_module(name + "_dropout_"+ str(i), nn.Dropout2d(dropout[i]))
         if batch_norm:
             if type(batch_norm) is str and batch_norm.lower() == "instance":
                 ops.add_module(name + "_BN_" + str(i), nn.InstanceNorm1d(layer_size[i + 1], eps=bn_eps))
             else:
                 ops.add_module(name + "_BN_" + str(i), nn.BatchNorm1d(layer_size[i + 1], eps=bn_eps))
-        if activation:
-            ops.add_module(name + "_active_" + str(i), activation)
+        if type(activation) is list or type(activation) is tuple:
+            if activation[i]:
+                ops.add_module(name + "_active_" + str(i), activation[i])
+        else:
+            if activation:
+                ops.add_module(name + "_active_" + str(i), activation)
     return ops
 
 def concatenate_blocks(block1, block2):
