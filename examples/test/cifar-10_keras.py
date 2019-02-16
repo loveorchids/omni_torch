@@ -21,7 +21,7 @@ from keras.datasets import *
 from keras.preprocessing.image import ImageDataGenerator
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 save_dir = os.path.join(os.getcwd(), 'models')
 model_name = 'cifar10_cnn.h5'
@@ -55,17 +55,22 @@ model.add(Dropout(0.5))
 model.add(Dense(10))
 model.add(Activation('softmax'))
 
-model.summary()
-# exit(1)
-opt = keras.optimizers.adam(lr=1e-4, decay=1e-6, epsilon=1e-7)
+#model.summary()
 
-model.compile(loss=keras.losses.categorical_crossentropy, optimizer=opt, metrics=['accuracy'])
+opt = keras.optimizers.adam(lr=1e-4, decay=1e-6, epsilon=1e-7)
+model.compile(loss=keras.losses.categorical_crossentropy, optimizer=opt,
+              metrics=['accuracy'])
+
+model_path = os.path.join(os.getcwd(), 'models', "cifar10_cnn.h5")
+print("load model weight from: %s"%(model_path))
+model.load_weights(model_path)
 
 #data_augmentation = True
 data_augmentation = False
 if not data_augmentation:
     print('Not using data augmentation')
-    model.fit(x_train, y_train, batch_size=32, epochs=100, validation_data=(x_test, y_test), shuffle=True)
+    model.fit(x_train, y_train, batch_size=32, epochs=20, validation_data=(x_test, y_test),
+              shuffle=True)
 else:
     print('Using real-time data augmentation')
     datagen = ImageDataGenerator(
@@ -81,12 +86,16 @@ else:
         vertical_flip=False
     )
     datagen.fit(x_train)
-    model.fit_generator(datagen.flow(x_train, y_train, batch_size=32), epochs=100, validation_data=(x_test, y_test), workers=4)  # 之前的keras必须要steps_per_epoch，workers：最大进程数
+    model.fit_generator(datagen.flow(x_train, y_train, batch_size=32), epochs=100,
+                        validation_data=(x_test, y_test), workers=4)
 
+"""
 if not os.path.isdir(save_dir):
     os.mkdir(save_dir)
 model_path = os.path.join(save_dir, model_name)
+print("Save model to: %s"%(model_path))
 model.save(model_path)
+"""
 
 scores = model.evaluate(x_test, y_test)
 print(scores)
