@@ -101,6 +101,55 @@ class Xception_Block(nn.Module):
         return tf.relu(self.dropout(self.conv_block(x)) + self.shortcut(x))
 
 
+class Conv_Block(nn.Module):
+    def __init__(self, input, filters, kernel_sizes, stride, padding, groups=1, name='',
+               dilation=1, bias=True, activation=nn.ReLU(), batch_norm=nn.BatchNorm2d, dropout=0):
+        super().__init__()
+        filters = [input] + [filters] if type(filters) is not list else [input] + filters
+        assert_length = len(filters) - 1
+        kernel_sizes = self.standardize(kernel_sizes, assert_length)
+        stride = self.standardize(stride, assert_length)
+        padding = self.standardize(padding, assert_length)
+        groups = self.standardize(groups, assert_length)
+        dilation = self.standardize(dilation, assert_length)
+        bias = self.standardize(bias, assert_length)
+        activation = self.standardize(activation, assert_length)
+        batch_norm = self.standardize(batch_norm, assert_length)
+        dropout = self.standardize(dropout, assert_length)
+
+        modules = nn.Sequential()
+        for i in range(len(filters) - 1):
+            if stride[i] >= 1:
+                modules.add_module(name + "conv_" + str(i),
+                                   nn.Conv2d(in_channels=filters[i], out_channels=filters[i + 1],
+                                             kernel_size=kernel_sizes[i], stride=stride[i], padding=padding[i],
+                                             dilation=dilation[i], groups=groups[i], bias=bias[i]))
+            else:
+                modules.add_module(name + "conv_" + str(i),
+                                   nn.ConvTranspose2d(in_channels=filters[i], out_channels=filters[i + 1],
+                                                      kernel_size=kernel_sizes[i], stride=round(1 / stride[i]),
+                                                      padding=padding[i], dilation=dilation[i], groups=groups[i],
+                                                      bias=bias[i]))
+            if batch_norm[i]:
+                modules.add_module(name + "bn_" + str(i), batch_norm(filters[i + 1]))
+            if activation[i]:
+                modules.add_module(name + "act_" + str(i), activation[i])
+            if dropout[i] > 0:
+                modules.add_module(name + "drop_" + str(i), nn.Dropout2d(dropout[i]))
+        self.layers = modules
+
+    @staticmethod
+    def standardize(param, assert_length):
+        if type(param) is not list and type(param) is not tuple:
+            param = [param] * assert_length
+        assert len(param) == assert_length, "expect %s input params, got %s input parameter" \
+                                            % (assert_length, len(param))
+        return param
+
+    def forward(self, x):
+        x = self.layers.forward(x)
+        return x
+
 def conv_block(input, filters, kernel_sizes, stride, padding, groups=None, repeat=1,
                name=None, activation=nn.ReLU(), batch_norm=True, bn_eps=1e-5, dropout=0):
     """
