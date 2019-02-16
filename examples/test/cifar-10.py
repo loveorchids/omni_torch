@@ -36,7 +36,6 @@ from keras.models import Sequential
 from keras.layers import *
 
 
-
 def fetch_data(args, source):
     def just_return_it(args, data, seed, size, ops=None):
         return torch.tensor(data, dtype=torch.long)
