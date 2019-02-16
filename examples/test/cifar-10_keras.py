@@ -23,14 +23,26 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+class Histories(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        return
+    def on_train_end(self, logs={}):
+        return
+    def on_epoch_begin(self, epoch, logs={}):
+        return
+    def on_epoch_end(self, epoch, logs=None):
+        print(K.eval(self.model.optimizer.lr))
+        return
+    def on_batch_begin(self, batch, logs={}):
+        return
+    def on_batch_end(self, batch, logs={}):
+        return
+
+histories = Histories()
 save_dir = os.path.join(os.getcwd(), 'models')
 model_name = 'cifar10_cnn.h5'
 
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-# print(x_train)  # (50000,32,32,3)
-# print(y_train)  # (50000, 1)
-# print(x_test)  # (10000,32,32,3)
-# print(y_test)  # (10000,1)
 
 y_train = keras.utils.to_categorical(y_train, 10)
 y_test = keras.utils.to_categorical(y_test, 10)
@@ -70,7 +82,7 @@ data_augmentation = False
 if not data_augmentation:
     print('Not using data augmentation')
     model.fit(x_train, y_train, batch_size=32, epochs=20, validation_data=(x_test, y_test),
-              shuffle=True)
+              shuffle=True, callbacks=[histories])
 else:
     print('Using real-time data augmentation')
     datagen = ImageDataGenerator(
