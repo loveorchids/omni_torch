@@ -34,22 +34,16 @@ class CifarNet(nn.Module):
     def __init__(self):
         super(CifarNet, self).__init__()
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        self.dropout_025 = nn.Dropout2d(0.25)
         self.dropout_050 = nn.Dropout(0.50)
-        self.conv_block1 = omth_blocks.conv_block(input=3, filters=[32, 32], kernel_sizes=[3, 3], stride=[1, 1],
-                                                  padding=[1, 0], batch_norm=False, dropout=0)
-        self.conv_block2 = omth_blocks.conv_block(input=32, filters=[64, 64], kernel_sizes=[3, 3], stride=[1, 1],
-                                                  padding=[1, 0], batch_norm=False, dropout=0)
-        self.fc_layer1 = omth_blocks.fc_layer(2304, [512], activation=nn.ReLU(), batch_norm=False)
-        #self.fc_layer2 = omth_blocks.fc_layer(512, [10], activation=nn.Softmax(), batch_norm=False)
-        self.fc_layer2 = nn.Linear(512, 10)
-        self.softmax = nn.Softmax(dim=1)
+        self.conv_block1 = omth_blocks.Conv_Block(input=3, filters=[32, 32], kernel_sizes=[3, 3], stride=[1, 1],
+                                                  padding=[1, 0], batch_norm=None, dropout=[0, 0.25])
+        self.conv_block2 = omth_blocks.Conv_Block(input=32, filters=[64, 64], kernel_sizes=[3, 3], stride=[1, 1],
+                                                  padding=[1, 0], batch_norm=None, dropout=[0, 0.25])
+        self.fc_layer = omth_blocks.fc_layer(2304, [512, 10], activation=[nn.ReLU(), None], batch_norm=False)
 
     def forward(self, x):
         x = self.pool(self.conv_block1(x))
-        x = self.dropout_025(x)
         x = self.pool(self.conv_block2(x))
-        x = self.dropout_025(x)
 
         x = x.view(x.size(0), -1)
         x = self.dropout_050(self.fc_layer1(x))

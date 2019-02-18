@@ -38,7 +38,7 @@ def RuntimePattern(args):
     args.finetune = False
 
     args.deterministic_train = True
-    args.epoch_num = 500
+    args.epoch_num = 20
     args.batch_size = 32
 
     args.learning_rate = 1e-4

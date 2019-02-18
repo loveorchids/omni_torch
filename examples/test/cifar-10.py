@@ -180,8 +180,8 @@ if __name__ == "__main__":
     test_set = fetch_data(args, ["test_batch"])
     
     criterion = nn.CrossEntropyLoss()
-    #optimizer = torch.optim.Adam(net.parameters(), lr=1e-4, weight_decay=1e-6)
-    optimizer = AdamTF(net.parameters(), lr=1e-4, weight_decay=1e-6, eps=1e-7)
+    optimizer = torch.optim.Adam(net.parameters(), lr=1e-4, weight_decay=1e-6, eps=1e-7)
+    #optimizer = AdamTF(net.parameters(), lr=1e-4, weight_decay=1e-6, eps=1e-7)
 
     for epoch in range(args.epoch_num):
         print("\n ======================== PHASE: %s/%s ========================= " %

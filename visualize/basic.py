@@ -20,9 +20,9 @@ import torch
 import cv2
 import numpy as np
 import pandas as pd
-import matplotlib
+#import matplotlib
 import omni_torch.utils as util
-matplotlib.use("Agg")
+#matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 try:
     import scipy.signal as ss
