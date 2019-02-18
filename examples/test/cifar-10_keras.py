@@ -1,7 +1,20 @@
-try:
-    import keras
-except ImportError:
-    raise ImportError("You need to download keras>=2.2.0")
+"""
+# Copyright (c) 2018 Works Applications Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+import keras
 from keras.models import Sequential
 from keras.layers import *
 from keras.datasets import *
@@ -10,14 +23,26 @@ import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+class Histories(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        return
+    def on_train_end(self, logs={}):
+        return
+    def on_epoch_begin(self, epoch, logs={}):
+        return
+    def on_epoch_end(self, epoch, logs=None):
+        print(K.eval(self.model.optimizer.lr))
+        return
+    def on_batch_begin(self, batch, logs={}):
+        return
+    def on_batch_end(self, batch, logs={}):
+        return
+
+histories = Histories()
 save_dir = os.path.join(os.getcwd(), 'models')
 model_name = 'cifar10_cnn.h5'
 
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-# print(x_train)  # (50000,32,32,3)
-# print(y_train)  # (50000, 1)
-# print(x_test)  # (10000,32,32,3)
-# print(y_test)  # (10000,1)
 
 y_train = keras.utils.to_categorical(y_train, 10)
 y_test = keras.utils.to_categorical(y_test, 10)
@@ -42,17 +67,22 @@ model.add(Dropout(0.5))
 model.add(Dense(10))
 model.add(Activation('softmax'))
 
-model.summary()
-# exit(1)
-opt = keras.optimizers.adam(lr=1e-4, decay=1e-6, epsilon=1e-7)
+#model.summary()
 
-model.compile(loss=keras.losses.categorical_crossentropy, optimizer=opt, metrics=['accuracy'])
+opt = keras.optimizers.adam(lr=1e-4, decay=1e-6, epsilon=1e-7)
+model.compile(loss=keras.losses.categorical_crossentropy, optimizer=opt,
+              metrics=['accuracy'])
+
+model_path = os.path.join(os.getcwd(), 'models', "cifar10_cnn.h5")
+print("load model weight from: %s"%(model_path))
+model.load_weights(model_path)
 
 #data_augmentation = True
 data_augmentation = False
 if not data_augmentation:
     print('Not using data augmentation')
-    model.fit(x_train, y_train, batch_size=32, epochs=100, validation_data=(x_test, y_test), shuffle=True)
+    model.fit(x_train, y_train, batch_size=32, epochs=20, validation_data=(x_test, y_test),
+              shuffle=True, callbacks=[histories])
 else:
     print('Using real-time data augmentation')
     datagen = ImageDataGenerator(
@@ -68,12 +98,16 @@ else:
         vertical_flip=False
     )
     datagen.fit(x_train)
-    model.fit_generator(datagen.flow(x_train, y_train, batch_size=32), epochs=100, validation_data=(x_test, y_test), workers=4)  # 之前的keras必须要steps_per_epoch，workers：最大进程数
+    model.fit_generator(datagen.flow(x_train, y_train, batch_size=32), epochs=100,
+                        validation_data=(x_test, y_test), workers=4)
 
+"""
 if not os.path.isdir(save_dir):
     os.mkdir(save_dir)
 model_path = os.path.join(save_dir, model_name)
+print("Save model to: %s"%(model_path))
 model.save(model_path)
+"""
 
 scores = model.evaluate(x_test, y_test)
 print(scores)

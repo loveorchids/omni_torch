@@ -43,7 +43,7 @@ def RuntimePattern(args):
 
     args.learning_rate = 1e-4
     args.weight_decay = 1e-6
-    args.gpu_id = "0"
+    args.gpu_id = "1"
     return args
 
 

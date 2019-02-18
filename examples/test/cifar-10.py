@@ -14,59 +14,30 @@
 # limitations under the License.
 
 """
-
-import os, time
+import os, time, sys
 import torch
 import torch.nn as nn
 import numpy as np
-from torchsummary import summary
-#sys.path.append(os.path.expanduser("~/Documents/omni_research"))
+sys.path.append(os.path.expanduser("~/Documents/omni_research"))
 import omni_torch.utils as omth_util
+import omni_torch.examples.test.model as model
 import omni_torch.examples.test.presets as presets
 import omni_torch.options.options_edict as edict_options
-import omni_torch.networks.blocks as omth_blocks
-import omni_torch.networks.initialization as omth_init
 import omni_torch.data.data_loader as omth_loader
 import omni_torch.data.path_loader as omth_data_mode
 import omni_torch.visualize.basic as vb
+import omni_torch.utils as util
+import omni_torch.utils.weight_transfer as weight_transfer
 from omni_torch.networks.optimizer.adamtf import AdamTF
 from omni_torch.options.base_options import BaseOptions
 from omni_torch.data.arbitrary_dataset import Arbitrary_Dataset
+from omni_torch.utils.model_summary import  summary
+from keras.models import Sequential
+from keras.layers import *
 
-
-class CifarNet(nn.Module):
-    def __init__(self):
-        super(CifarNet, self).__init__()
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        self.dropout_025 = nn.Dropout2d(0.25)
-        self.dropout_050 = nn.Dropout(0.50)
-        self.conv_block1 = omth_blocks.conv_block(input=3, filters=[32, 32], kernel_sizes=[3, 3], stride=[1, 1],
-                                                  padding=[1, 0], batch_norm=False, dropout=0)
-        self.conv_block2 = omth_blocks.conv_block(input=32, filters=[64, 64], kernel_sizes=[3, 3], stride=[1, 1],
-                                                  padding=[1, 0], batch_norm=False, dropout=0)
-        self.fc_layer1 = omth_blocks.fc_layer(2304, [512], activation=nn.ReLU(), batch_norm=False)
-        #self.fc_layer2 = omth_blocks.fc_layer(512, [10], activation=nn.Softmax(), batch_norm=False)
-        self.fc_layer2 = nn.Linear(512, 10)
-        self.softmax = nn.Softmax(dim=1)
-
-    def forward(self, x):
-        x = self.pool(self.conv_block1(x))
-        x = self.dropout_025(x)
-        x = self.pool(self.conv_block2(x))
-        x = self.dropout_025(x)
-
-        x = x.view(x.size(0), -1)
-        x = self.dropout_050(self.fc_layer1(x))
-        #x = self.softmax(self.fc_layer2(x))
-        x = self.fc_layer2(x)
-        return x
 
 def fetch_data(args, source):
     def just_return_it(args, data, seed, size, ops=None):
-        """
-        Because the label in cifar dataset is int
-        So here it will be transfered to a torch tensor
-        """
         return torch.tensor(data, dtype=torch.long)
     import multiprocessing as mpi
     print("loading Dataset...")
@@ -126,12 +97,12 @@ def fit(net, args, dataset, device, optimizer, criterion, measure=None, is_train
             if batch_idx % visualize_step == 0 and visualize_op is not None:
                 visualize_op(args, batch_idx, prefix, loss_dict, img_batch, prediction, label_batch)
         if measure:
-            print(prefix + " --- total loss: %8f, total measure: %8f at epoch %04d/%04d, cost %3f seconds ---" %
+            print(prefix + " --- loss: %8f, accuracy: %8f at epoch %04d/%04d, cost %03f s ---" %
                   (sum([sum(i) for i in epoch_loss]) / len(epoch_loss),
                    sum([sum(i) for i in epoch_measure]) / len(epoch_measure),
                    epoch, args.epoches_per_phase, time.time() - start_time))
         else:
-            print(prefix + " --- total loss: %8f at epoch %04d/%04d, cost %3f seconds ---" %
+            print(prefix + " --- loss: %8f at epoch %04d/%04d, cost %03f s ---" %
                   (sum([sum(i) for i in epoch_loss]) / len(epoch_loss),
                    epoch, args.epoches_per_phase, time.time() - start_time))
         if is_train:
@@ -146,7 +117,6 @@ def fit(net, args, dataset, device, optimizer, criterion, measure=None, is_train
                                   low_bound=plot_low_bound, high_bound=plot_high_bound)
     return all_losses, all_measures
 
-
 def evaluation(net, args, val_set, device, optimizer, criterion, measure=None, is_train=False,
                visualize_step=100, visualize_op=None, visualize_loss=False,
                plot_low_bound=None, plot_high_bound=None):
@@ -159,29 +129,59 @@ def calculate_accuracy(prediction, label_batch):
     accuracy = sum([1 if int(pred_idx[i]) == int(label_batch[i]) else 0 for i in range(pred_idx.size(0))])
     return accuracy / label_batch.size(0)
 
+def get_keras_model():
+    model = Sequential()
+    model.add(Conv2D(32, 3, padding='same', input_shape=(32, 32, 3), activation='relu'))
+    model.add(Conv2D(32, 3, activation='relu'))
+    model.add(MaxPooling2D())
+    model.add(Dropout(0.25))
+    
+    model.add(Conv2D(64, 3, padding='same', activation='relu'))
+    model.add(Conv2D(64, 3, activation='relu'))
+    model.add(MaxPooling2D())
+    model.add(Dropout(0.25))
+    
+    model.add(Flatten())
+    model.add(Dense(512))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(10))
+    model.add(Activation('softmax'))
+    return model
+
+map_dict = {
+    'conv2d_1': ['conv1_1.weight', 'conv1_1.bias'],
+    'conv2d_2': ['conv1_2.weight', 'conv1_2.bias'],
+    'conv2d_3': ['conv2_1.weight', 'conv2_1.bias'],
+    'conv2d_4': ['conv2_2.weight', 'conv2_2.bias'],
+    'dense_1': ['fc_layer1.weight', 'fc_layer1.bias'],
+    'dense_2': ['fc_layer2.weight', 'fc_layer2.bias'],
+}
 
 if __name__ == "__main__":
-    settings = BaseOptions().initialize()
     args = edict_options.initialize()
-    if settings.which is None:
-        settings.which = ["general", "unique", "runtime"]
-    args = omth_util.prepare_args(args, presets.PRESET, options=settings.which)
+    args = omth_util.prepare_args(args, presets.PRESET, options=["general", "unique", "runtime"])
     if args.deterministic_train:
         torch.manual_seed(args.seed)
     device = torch.device("cuda:" + args.gpu_id)
 
-    net = CifarNet()
+    net = model.CifarNet_Vanilla()
+    # net.apply(omth_init.weight_init)
+    keras_model = get_keras_model()
+    model_path = os.path.join(os.getcwd(), 'models', "cifar10_cnn.h5")
+    net = weight_transfer.initialize_with_keras_hdf5(keras_model, map_dict, net, model_path)
     net.to(device)
-    summary(net, input_size=(3, 32, 32))
-    net.apply(omth_init.weight_init)
+    summary(net, input_size=(3, 32, 32), device=device)
+    
+    if args.finetune:
+        net = util.load_latest_model(args, net)
 
     train_set = fetch_data(args, [("data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4", "data_batch_5")])
     test_set = fetch_data(args, ["test_batch"])
-    #criterion = nn.NLLLoss()
+    
     criterion = nn.CrossEntropyLoss()
-    optimizer = AdamTF(net.parameters(), lr=1e-4, weight_decay=1e-6)
-    #optimizer = torch.optim.Adam(net.parameters(), lr=1e-4, weight_decay=0, eps=1e-7)
-    #optimizer = torch.optim.SGD(net.parameters(), lr=1e-3, momentum=0.9, weight_decay=5e-4)
+    #optimizer = torch.optim.Adam(net.parameters(), lr=1e-4, weight_decay=1e-6)
+    optimizer = AdamTF(net.parameters(), lr=1e-4, weight_decay=1e-6, eps=1e-7)
 
     for epoch in range(args.epoch_num):
         print("\n ======================== PHASE: %s/%s ========================= " %
