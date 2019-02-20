@@ -17,7 +17,7 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as tf
+import torch.nn.functional as F
 
 class Resnet_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, groups=1, name='',
@@ -44,7 +44,7 @@ class Resnet_Block(nn.Module):
                                    activation=activation, batch_norm=batch_norm, dropout=dropout)
 
     def forward(self, x):
-        return tf.relu(self.conv_block(x) + self.shortcut(x))
+        return F.relu(self.conv_block(x) + self.shortcut(x))
 
 
 class InceptionBlock(nn.Module):
@@ -100,7 +100,7 @@ class Xception_Block(nn.Module):
         self.shortcut = resnet_shortcut(input, filters[-1], dropout=dropout)
 
     def forward(self, x):
-        return tf.relu(self.dropout(self.conv_block(x)) + self.shortcut(x))
+        return F.relu(self.dropout(self.conv_block(x)) + self.shortcut(x))
 
 
 class Conv_Block(nn.Module):

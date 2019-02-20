@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as tf
+import torch.nn.functional as F
 import omni_torch.networks.initialization as init
 from omni_torch.networks import blocks as omth_blocks
 
@@ -124,7 +124,7 @@ class InceptionE(nn.Module):
         branch3x3 = self.branch3x3_2(self.branch3x3_1(x))
         branch3x3dbl = self.branch3x3dbl_2(self.branch3x3dbl_1(x))
 
-        branch_pool = tf.avg_pool2d(x, kernel_size=3, stride=1, padding=1)
+        branch_pool = F.avg_pool2d(x, kernel_size=3, stride=1, padding=1)
         branch_pool = self.branch_pool(branch_pool)
 
         return torch.cat([branch1x1, branch3x3, branch3x3dbl, branch_pool], 1)
