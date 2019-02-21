@@ -26,15 +26,14 @@ def initialize():
         "cover_exist":False,
         "create_path":True,
 
-        "gpu_id":"0",
-        "epoch_num":2000,
+        "gpu_id": "0",
+        "epoch_num": 100,
         "deterministic_train": True,
-        "seed": 88,
+        "seed": 1,
 
         "batch_size": 8,
         "learning_rate":1e-4,
         "weight_decay":1e-4,
-        "adam_epsilon": 1e-8,
         "batch_norm":True,
         "finetune":False,
 
@@ -48,7 +47,8 @@ def initialize():
         "model4": None,
         "model5": None,
 
-        "loading_threads": 2,
+        # 4 loading thread is sufficient for most task
+        "loading_threads": 4,
         "random_order_load": False,
         "path": None,
         "extensions": ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"],
@@ -59,7 +59,7 @@ def initialize():
         "normalize_min": 0,
         "normalize_max": 255,
 
-        "do_imgaug": True,
+        "do_imgaug": False,
         "imgaug_order": "default", # or "random"
         # imgaug_order can also be a list, ["affine", "random_crop", "random_zoom", ...]
         # each element represent a process below
@@ -77,7 +77,7 @@ def initialize():
         "crop_size": (360, 360),
         "keep_size": True,
 
-        "do_random_zoom": True,
+        "do_random_zoom": False,
         "pixel_eliminate": (0, 4),
         "sample_independent": False,
 
