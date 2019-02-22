@@ -20,8 +20,8 @@ import torch.nn as nn
 import torch.nn.functional as tf
 
 class Resnet_Block(nn.Module):
-    def __init__(self, input, filters, kernel_sizes, stride, padding, groups=None,
-                 name=None, activation=nn.ReLU(), batch_norm=True, bn_eps=1e-5,
+    def __init__(self, input, filters, kernel_sizes, stride, padding, groups=1, name='',
+                 dilation=1, bias=True, activation=nn.ReLU(), batch_norm=nn.BatchNorm2d,
                  dropout=0, shortcut_stride=1):
         """
         :param input: int
@@ -33,26 +33,31 @@ class Resnet_Block(nn.Module):
         super().__init__()
         self.conv_block = conv_block(input, filters, kernel_sizes, stride, padding, groups=groups,
                                      name=name, activation=activation, batch_norm=batch_norm,
-                                     bn_eps=bn_eps, dropout=dropout)
+                                     dropout=dropout, dilation=dilation, bias=bias)
         if shortcut_stride < 1:
             kernel_size, padding = 2, 0
         else:
             kernel_size, padding = 1, 0
-        self.shortcut = conv_block(input, [filters[-1]], kernel_sizes=[kernel_size], stride=[shortcut_stride],
-                                   padding=[padding], groups=[groups[-1]], name=name+"_shortcut",
-                                   activation=activation, batch_norm=batch_norm, bn_eps=bn_eps, dropout=dropout)
+        #TODO: dimesion of input param
+        self.shortcut = conv_block(input, [filters[-1]], kernel_sizes=kernel_size, stride=shortcut_stride,
+                                   padding=padding, groups=[groups[-1]], name="shortcut",
+                                   activation=activation, batch_norm=batch_norm, dropout=dropout)
 
     def forward(self, x):
         return tf.relu(self.conv_block(x) + self.shortcut(x))
 
 
 class InceptionBlock(nn.Module):
-    def __init__(self, input, filters, kernel_sizes, stride, padding,
-                 name=None, activation=nn.ReLU(), batch_norm=True, bn_eps=1e-5,
+    def __init__(self, input, filters, kernel_sizes, stride, padding, groups=1, name=None,
+                 dilation=1, bias=True, activation=nn.ReLU(), batch_norm=nn.BatchNorm2d,
                  dropout=0, inner_maxout= None, maxout=None):
+        def concatenate_blocks(block1, block2):
+            list_of_block1 = list(block1.children())
+            list_of_block1.extend(list(block2.children()))
+            return nn.Sequential(*list_of_block1)
         """
         :param input: int
-        :param filters: in the form of [[...], [...], ... , [...]]
+        :param filters: in the form of [[...], [...], ... , [...]], each cell represent a stream in the network
         :param kernel_sizes: in the form of [[...], [...], ... , [...]]
         :param stride: in the form of [[...], [...], ... , [...]]
         :param padding: in the form of [[...], [...], ... , [...]]
@@ -61,8 +66,6 @@ class InceptionBlock(nn.Module):
                min([len(filters), len(kernel_sizes), len(stride), len(padding)])
         inner_groups = len(filters)
         super().__init__()
-        if name is None:
-            name = ""
         if inner_maxout is None:
             inner_maxout = inner_groups * [None]
         inner_blocks = []
@@ -70,12 +73,13 @@ class InceptionBlock(nn.Module):
             if inner_maxout[i]:
                 ops = nn.Sequential(inner_maxout[i])
                 ops = concatenate_blocks(ops, conv_block(input, filters[i], kernel_sizes[i], stride[i], padding[i],
-                                                         name=name + "_inner_" + str(i), activation=activation,
-                                                         batch_norm=batch_norm, bn_eps=bn_eps, dropout=dropout))
+                                                         name="incep_" + str(i), activation=activation,
+                                                         batch_norm=batch_norm, dropout=dropout, dilation=dilation,
+                                                         bias=bias, groups=groups))
             else:
                 ops = conv_block(input, filters[i], kernel_sizes[i], stride[i], padding[i],
-                                 name=name + "_inner_" + str(i), activation=activation,
-                                 batch_norm=batch_norm, bn_eps=bn_eps, dropout=dropout)
+                                 name="incep_" + str(i), activation=activation, batch_norm=batch_norm,
+                                 dropout=dropout, dilation=dilation, bias=bias, groups=groups)
             inner_blocks.append(ops)
         if maxout:
             inner_blocks.append(maxout)
@@ -87,14 +91,12 @@ class InceptionBlock(nn.Module):
 
 
 class Xception_Block(nn.Module):
-    def __init__(self, input, filters, kernel_sizes, stride, padding,
-                 name=None, activation=  nn.ReLU(), batch_norm=True, bn_eps=1e-5,
-                 dropout=0, inner_maxout=None, maxout=None):
+    def __init__(self, input, filters, kernel_sizes, stride, padding, name=None, activation=nn.ReLU(),
+                 batch_norm=nn.BatchNorm2d, dilation=1, bias=True, dropout=0, inner_maxout=None, maxout=None):
         super().__init__()
-        self.conv_block = InceptionBlock(input, filters=filters, kernel_sizes=kernel_sizes,
-                                         stride=stride, padding=padding, name=name,
-                                         activation=activation, batch_norm=batch_norm,
-                                         inner_maxout=inner_maxout, maxout=maxout, bn_eps=bn_eps)
+        self.conv_block = InceptionBlock(input, filters=filters, kernel_sizes=kernel_sizes, stride=stride,
+                                         padding=padding, name=name, activation=activation, batch_norm=batch_norm,
+                                         dilation=dilation, bias=bias, inner_maxout=inner_maxout, maxout=maxout)
         self.shortcut = resnet_shortcut(input, filters[-1], dropout=dropout)
 
     def forward(self, x):
@@ -105,53 +107,14 @@ class Conv_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, groups=1, name='',
                dilation=1, bias=True, activation=nn.ReLU(), batch_norm=nn.BatchNorm2d, dropout=0):
         super().__init__()
-        filters = [input] + [filters] if type(filters) is not list else [input] + filters
-        assert_length = len(filters) - 1
-        kernel_sizes = self.standardize(kernel_sizes, assert_length)
-        stride = self.standardize(stride, assert_length)
-        padding = self.standardize(padding, assert_length)
-        groups = self.standardize(groups, assert_length)
-        dilation = self.standardize(dilation, assert_length)
-        bias = self.standardize(bias, assert_length)
-        activation = self.standardize(activation, assert_length)
-        batch_norm = self.standardize(batch_norm, assert_length)
-        dropout = self.standardize(dropout, assert_length)
-
-        modules = nn.Sequential()
-        for i in range(len(filters) - 1):
-            if stride[i] >= 1:
-                modules.add_module(name + "conv_" + str(i),
-                                   nn.Conv2d(in_channels=filters[i], out_channels=filters[i + 1],
-                                             kernel_size=kernel_sizes[i], stride=stride[i], padding=padding[i],
-                                             dilation=dilation[i], groups=groups[i], bias=bias[i]))
-            else:
-                modules.add_module(name + "conv_" + str(i),
-                                   nn.ConvTranspose2d(in_channels=filters[i], out_channels=filters[i + 1],
-                                                      kernel_size=kernel_sizes[i], stride=round(1 / stride[i]),
-                                                      padding=padding[i], dilation=dilation[i], groups=groups[i],
-                                                      bias=bias[i]))
-            if batch_norm[i]:
-                modules.add_module(name + "bn_" + str(i), batch_norm(filters[i + 1]))
-            if activation[i]:
-                modules.add_module(name + "act_" + str(i), activation[i])
-            if dropout[i] > 0:
-                modules.add_module(name + "drop_" + str(i), nn.Dropout2d(dropout[i]))
-        self.layers = modules
-
-    @staticmethod
-    def standardize(param, assert_length):
-        if type(param) is not list and type(param) is not tuple:
-            param = [param] * assert_length
-        assert len(param) == assert_length, "expect %s input params, got %s input parameter" \
-                                            % (assert_length, len(param))
-        return param
+        self.layers = conv_block(input, filters, kernel_sizes, stride, padding, groups, name, dilation,
+               bias, activation, batch_norm, dropout)
 
     def forward(self, x):
-        x = self.layers.forward(x)
-        return x
+        return self.layers.forward(x)
 
-def conv_block(input, filters, kernel_sizes, stride, padding, groups=None, repeat=1,
-               name=None, activation=nn.ReLU(), batch_norm=True, bn_eps=1e-5, dropout=0):
+def conv_block(input, filters, kernel_sizes, stride, padding, groups=1, name='', dilation=1,
+               bias=True, activation=nn.ReLU(), batch_norm=nn.BatchNorm2d, dropout=0):
     """
     Create a convolutional block with several layers
     :param input: input data channels
@@ -159,69 +122,44 @@ def conv_block(input, filters, kernel_sizes, stride, padding, groups=None, repea
     :param kernel_sizes: int or list
     :param stride: int or list
     :param padding: int or list
-    :param groups: int or list, default None. If None, then
-    :param repeat: int, default 1, if several block with same architecture need to be created
+    :param groups: int or list, default 1
     :param name:
     :param activation:
     :param batch_norm:
-    :param bn_eps:
-    :return:
+    :return: nn.Sequential Object
     """
-    filters = [filters] if type(filters) is not list else filters
-    kernel_sizes = [kernel_sizes] if type(kernel_sizes) is not list else kernel_sizes
-    stride = [stride] if type(stride) is not list else stride
-    padding = [padding] if type(padding) is not list else padding
-    assert max([len(filters), len(kernel_sizes), len(stride), len(padding)]) is \
-           min([len(filters), len(kernel_sizes), len(stride), len(padding)])
-    if groups is None:
-        groups = [1] * len(filters)
-    else:
-        groups = [groups] if type(groups) is not list else groups
-    if type(dropout) is list or type(dropout) is tuple:
-        assert len(dropout)==len(filters)
-        dropout = dropout * repeat
-    if type(activation) is list or type(activation) is tuple:
-        assert len(activation)==len(filters)
-        activation = activation * repeat
-    ops = nn.Sequential()
+    filters = [input] + [filters] if type(filters) is not list else [input] + filters
+    assert_length = len(filters) - 1
+    kernel_sizes = standardize(kernel_sizes, assert_length)
+    stride = standardize(stride, assert_length)
+    padding = standardize(padding, assert_length)
+    groups = standardize(groups, assert_length)
+    dilation = standardize(dilation, assert_length)
+    bias = standardize(bias, assert_length)
+    activation = standardize(activation, assert_length)
+    batch_norm = standardize(batch_norm, assert_length)
+    dropout = standardize(dropout, assert_length)
 
-    filters = [input] + filters * repeat
-    kernel_sizes = kernel_sizes * repeat
-    stride = stride * repeat
-    padding = padding * repeat
-    groups = groups * repeat
-
-    if name is None:
-        name = ""
+    modules = nn.Sequential()
     for i in range(len(filters) - 1):
         if stride[i] >= 1:
-            ops.add_module(name + "_conv_" + str(i),
-                           nn.Conv2d(in_channels=filters[i], out_channels=filters[i + 1],
-                                     kernel_size=kernel_sizes[i], stride=stride[i],
-                                     padding=padding[i], groups=groups[i]))
+            modules.add_module(name + "conv_" + str(i),
+                               nn.Conv2d(in_channels=filters[i], out_channels=filters[i + 1],
+                                         kernel_size=kernel_sizes[i], stride=stride[i], padding=padding[i],
+                                         dilation=dilation[i], groups=groups[i], bias=bias[i]))
         else:
-            ops.add_module(name + "_convT_" + str(i),
-                           nn.ConvTranspose2d(in_channels=filters[i], out_channels=filters[i + 1],
-                                              kernel_size=kernel_sizes[i], stride=round(1 / stride[i]),
-                                              padding=padding[i], groups=groups[i]))
-        if type(dropout) is int:
-            if dropout > 0:
-                ops.add_module(name + "_dropout_"+ str(i), nn.Dropout2d(dropout))
-        if type(dropout) is list or type(dropout) is tuple:
-            if dropout[i] > 0:
-                ops.add_module(name + "_dropout_"+ str(i), nn.Dropout2d(dropout[i]))
-        if batch_norm:
-            if type(batch_norm) is str and batch_norm.lower() == "instance":
-                ops.add_module(name + "_InsNorm_" + str(i), nn.InstanceNorm2d(filters[i + 1], eps=bn_eps))
-            else:
-                ops.add_module(name + "_BthNorm_" + str(i), nn.BatchNorm2d(filters[i + 1], eps=bn_eps))
-        if type(activation) is list or type(activation) is tuple:
-            if activation[i]:
-                ops.add_module(name + "_active_" + str(i), activation[i])
-        else:
-            if activation:
-                ops.add_module(name + "_active_" + str(i), activation)
-    return ops
+            modules.add_module(name + "conv_" + str(i),
+                               nn.ConvTranspose2d(in_channels=filters[i], out_channels=filters[i + 1],
+                                                  kernel_size=kernel_sizes[i], stride=round(1 / stride[i]),
+                                                  padding=padding[i], dilation=dilation[i], groups=groups[i],
+                                                  bias=bias[i]))
+        if batch_norm[i]:
+            modules.add_module(name + "bn_" + str(i), batch_norm(filters[i + 1]))
+        if activation[i]:
+            modules.add_module(name + "act_" + str(i), activation[i])
+        if dropout[i] > 0:
+            modules.add_module(name + "drop_" + str(i), nn.Dropout2d(dropout[i]))
+    return modules
 
 def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
                     batch_norm=True, bn_eps=1e-5, dropout=0, name=None):
@@ -249,26 +187,20 @@ def fc_layer(input, layer_size, name=None, activation=nn.Sigmoid(), batch_norm=T
     layer_size = [input] + layer_size
     for i in range(len(layer_size) - 1):
         ops.add_module(name + "_fc_" + str(i), nn.Linear(layer_size[i], layer_size[i + 1]))
-        if type(dropout) is int:
-            if dropout > 0:
-                ops.add_module(name + "_dropout_"+ str(i), nn.Dropout2d(dropout))
-        if type(dropout) is list or type(dropout) is tuple:
-            if dropout[i] > 0:
-                ops.add_module(name + "_dropout_"+ str(i), nn.Dropout2d(dropout[i]))
+        if dropout > 0:
+            ops.add_module(name + "_dropout_"+ str(i), nn.Dropout(dropout))
         if batch_norm:
             if type(batch_norm) is str and batch_norm.lower() == "instance":
                 ops.add_module(name + "_BN_" + str(i), nn.InstanceNorm1d(layer_size[i + 1], eps=bn_eps))
             else:
                 ops.add_module(name + "_BN_" + str(i), nn.BatchNorm1d(layer_size[i + 1], eps=bn_eps))
-        if type(activation) is list or type(activation) is tuple:
-            if activation[i]:
-                ops.add_module(name + "_active_" + str(i), activation[i])
-        else:
-            if activation:
-                ops.add_module(name + "_active_" + str(i), activation)
+        if activation:
+            ops.add_module(name + "_active_" + str(i), activation)
     return ops
 
-def concatenate_blocks(block1, block2):
-    list_of_block1 = list(block1.children())
-    list_of_block1.extend(list(block2.children()))
-    return nn.Sequential(*list_of_block1)
+def standardize(param, assert_length):
+    if type(param) is not list and type(param) is not tuple:
+        param = [param] * assert_length
+    assert len(param) == assert_length, "expect %s input params, got %s input parameter" \
+                                        % (assert_length, len(param))
+    return param

@@ -105,8 +105,6 @@ class AdamTF(Optimizer):
 
                 if group['weight_decay'] != 0:
                     grad.add_(group['weight_decay'], p.data)
-                    t = state["step"]
-                    lr = group["lr"] * (1. / (1. + group['weight_decay'] * t))
                 else:
                     lr = group["lr"]
 

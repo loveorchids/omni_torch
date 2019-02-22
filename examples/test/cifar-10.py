@@ -18,6 +18,7 @@ import os, time, sys
 import torch
 import torch.nn as nn
 import numpy as np
+import torchvision
 sys.path.append(os.path.expanduser("~/Documents/omni_research"))
 import omni_torch.utils as omth_util
 import omni_torch.examples.test.model as model
@@ -28,8 +29,6 @@ import omni_torch.data.path_loader as omth_data_mode
 import omni_torch.visualize.basic as vb
 import omni_torch.utils as util
 import omni_torch.utils.weight_transfer as weight_transfer
-from omni_torch.networks.optimizer.adamtf import AdamTF
-from omni_torch.options.base_options import BaseOptions
 from omni_torch.data.arbitrary_dataset import Arbitrary_Dataset
 from omni_torch.utils.model_summary import  summary
 from keras.models import Sequential
@@ -48,7 +47,7 @@ def fetch_data(args, source):
     kwargs = {'num_workers': mpi.cpu_count(), 'pin_memory': True} \
         if torch.cuda.is_available() else {}
     data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
-                                               shuffle=True, **kwargs)
+                                               shuffle=False, **kwargs)
     return data_loader
 
 def fit(net, args, dataset, device, optimizer, criterion, measure=None, is_train=True,
@@ -158,6 +157,14 @@ map_dict = {
     'dense_2': ['fc_layer2.weight', 'fc_layer2.bias'],
 }
 
+def init_weight(m):
+    if type(m) == nn.Linear:
+        torch.nn.init.xavier_normal_(m.weight)
+        #torch.nn.init.xavier_uniform_(m.bias)
+    if type(m) == nn.Conv2d:
+        torch.nn.init.kaiming_normal_(m.weight)
+        #torch.nn.init.kaiming_uniform_(m.bias)
+
 if __name__ == "__main__":
     args = edict_options.initialize()
     args = omth_util.prepare_args(args, presets.PRESET, options=["general", "unique", "runtime"])
@@ -166,26 +173,29 @@ if __name__ == "__main__":
     device = torch.device("cuda:" + args.gpu_id)
 
     net = model.CifarNet_Vanilla()
-    # net.apply(omth_init.weight_init)
-    keras_model = get_keras_model()
-    model_path = os.path.join(os.getcwd(), 'models', "cifar10_cnn.h5")
-    net = weight_transfer.initialize_with_keras_hdf5(keras_model, map_dict, net, model_path)
-    net.to(device)
-    summary(net, input_size=(3, 32, 32), device=device)
-    
     if args.finetune:
         net = util.load_latest_model(args, net)
+    else:
+        #net.apply(init_weight)
+        keras_model = get_keras_model()
+        model_path = os.path.join(os.getcwd(), 'models', "cifar10_cnn.h5")
+        net = weight_transfer.initialize_with_keras_hdf5(keras_model, map_dict, net, model_path)
+    net.to(device)
+    summary(net, input_size=(3, 32, 32), device=device)
 
-    train_set = fetch_data(args, [("data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4", "data_batch_5")])
-    test_set = fetch_data(args, ["test_batch"])
+    #train_set = fetch_data(args, [("data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4", "data_batch_5")])
+    #test_set = fetch_data(args, ["test_batch"])
+    train_data = torchvision.datasets.CIFAR10(args.path, train=True, download=True)
+    train_set = torch.utils.data.DataLoader(train_data, batch_size=32, shuffle=False, num_workers=2)
+    test_data = torchvision.datasets.CIFAR10(args.path, train=False, download=True)
+    test_set = torch.utils.data.DataLoader(test_data, batch_size=32, shuffle=False, num_workers=2)
     
     criterion = nn.CrossEntropyLoss()
-    #optimizer = torch.optim.Adam(net.parameters(), lr=1e-4, weight_decay=1e-6)
-    optimizer = AdamTF(net.parameters(), lr=1e-4, weight_decay=1e-6, eps=1e-7)
+    optimizer = torch.optim.Adam(net.parameters(), lr=1e-4, weight_decay=1e-6, eps=1e-7)
 
     for epoch in range(args.epoch_num):
         print("\n ======================== PHASE: %s/%s ========================= " %
-              (str(int(args.curr_epoch / args.epoches_per_phase)).zfill(4), str(args.epoch_num).zfill(4)))
+              (str(int(args.curr_epoch / args.epoches_per_phase) + 1).zfill(4), str(args.epoch_num).zfill(4)))
         fit(net, args, train_set, device, optimizer, criterion, measure=calculate_accuracy)
         evaluation(net, args, test_set, device, optimizer, criterion, measure=calculate_accuracy)
         omth_util.save_model(args, args.curr_epoch, net.state_dict())
