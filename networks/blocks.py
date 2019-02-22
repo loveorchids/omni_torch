@@ -154,7 +154,7 @@ def conv_block(input, filters, kernel_sizes, stride, padding, groups=1, name='',
                                                   padding=padding[i], dilation=dilation[i], groups=groups[i],
                                                   bias=bias[i]))
         if batch_norm[i]:
-            modules.add_module(name + "bn_" + str(i), batch_norm(filters[i + 1]))
+            modules.add_module(name + "bn_" + str(i), batch_norm[i](filters[i + 1]))
         if activation[i]:
             modules.add_module(name + "act_" + str(i), activation[i])
         if dropout[i] > 0:
