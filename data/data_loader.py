@@ -134,7 +134,7 @@ def prepare_augmentation(args):
     if args.do_random_brightness:
         aug_dict.update({"random_brightness": [
             augmenters.ContrastNormalization(args.brightness_vibrator),
-            augmenters.Multiply(args.multiplier, per_channel=args.per_channel_multiplier),
+            augmenters.Multiply(args.multiplier, per_channel=args.multiplier_per_channel),
             augmenters.LinearContrast(alpha=args.linear_contrast),
         ]})
     if args.do_random_noise:

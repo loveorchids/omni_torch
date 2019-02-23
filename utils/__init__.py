@@ -17,7 +17,11 @@
 
 import os, glob, warnings
 import torch
+import numpy as np
+import random
 import json
+from omni_torch.options.base_options import BaseOptions
+import omni_torch.options.options_edict as edict_options
 
 
 def get_stride_padding_kernel(input, out):
@@ -34,6 +38,23 @@ def get_stride_padding_kernel(input, out):
                 if float(P) == (input - 1 - S * (out - 1)) / 2:
                     return S, P, K
 
+def get_args(preset):
+    settings = BaseOptions().initialize()
+    args = edict_options.initialize()
+    args = prepare_args(args, preset, options=settings.which)
+    if args.deterministic_train:
+        torch.backends.cudnn.deterministic = True
+        torch.manual_seed(args.seed)
+        random.seed(args.seed)
+        torch.cuda.manual_seed_all(args.seed)
+        np.random.seed(args.seed)
+        os.environ['PYTHONHASHSEED'] = str(args.seed)
+    if args.gpu_id == "cpu":
+        warnings.warn("You are using CPU in training")
+        args.device = torch.device("cpu")
+    else:
+        args.device = torch.device("cuda:" + args.gpu_id)
+    return args
 
 def prepare_args(args, presets, options=None):
     def load_preset(args, preset, preset_code):
@@ -87,38 +108,68 @@ def prepare_args(args, presets, options=None):
     return args
 
 
-def save_model(args, epoch, state_dict, keep_latest=5):
-    model_list = [_ for _ in glob.glob(args.model_dir + "/*.pth") if os.path.isfile(_)]
-    model_list.sort()
-    if len(model_list) < keep_latest:
-        pass
+def save_model(args, epoch, state_dict, keep_latest=5, prefix=None):
+    def _save_model(_args, _epoch, _state_dict, _keep_latest=5, _predix=None):
+        if _predix:
+            model_list = [_ for _ in glob.glob(_args.model_dir + "/%s_*.pth"%(_predix)) if os.path.isfile(_)]
+            model_path = os.path.join(_args.model_dir, "%s_epoch_%s.pth" % (_predix, str(_epoch).zfill(4)))
+        else:
+            model_list = [_ for _ in glob.glob(_args.model_dir + "/*.pth") if os.path.isfile(_)]
+            model_path = os.path.join(_args.model_dir, "epoch_%s.pth" % (str(_epoch).zfill(4)))
+        model_list.sort()
+        if len(model_list) < _keep_latest:
+            pass
+        else:
+            remove_list = model_list[: (_keep_latest - 1) * -1]
+            for item in remove_list:
+                os.remove(item)
+        torch.save(_state_dict, model_path)
+    if type(state_dict) is list or type(state_dict) is tuple:
+        assert prefix is not None, "you must specify the prefix of each model"
+        assert type(prefix) is list or type(prefix) is tuple, "input param 'prefix' should either be a list or a tuple"
+        assert len(state_dict) == len(prefix), "input param 'state_dict' contains %s network while prefix has %s element"\
+                                        %(len(state_dict), len(prefix))
+        for i, dict in enumerate(state_dict):
+            _save_model(args, epoch, dict, keep_latest, prefix[i])
     else:
-        remove_list = model_list[: (keep_latest - 1) * -1]
-        for item in remove_list:
-            os.remove(item)
-    model_path = os.path.join(args.model_dir, "epoch_" + str(epoch).zfill(4) + ".pth")
-    torch.save(state_dict, model_path)
+        _save_model(args, epoch, state_dict, keep_latest, prefix)
 
 
-def load_latest_model(args, net):
-    model_list = [_ for _ in glob.glob(args.model_dir + "/*.pth") if os.path.isfile(_)]
-    if not model_list:
-        warnings.warn("Cannot find models")
-        return net
-    model_list.sort()
-    epoch = int(model_list[-1][model_list[-1].rfind("_") + 1:model_list[-1].rfind(".")])
-    print("Load model form: " + model_list[-1])
-    if not torch.cuda.is_available():
-        model_data = torch.load(model_list[-1], map_location='cpu')
+
+def load_latest_model(args, net, prefix=None):
+    def _load_latset_model(_args, _net, _prefix=None):
+        if _prefix:
+            model_list = [_ for _ in glob.glob(_args.model_dir + "/%s_*.pth" % (_prefix)) if os.path.isfile(_)]
+        else:
+            model_list = [_ for _ in glob.glob(_args.model_dir + "/*.pth") if os.path.isfile(_)]
+        if not model_list:
+            warnings.warn("Cannot find models")
+            return _net
+        model_list.sort()
+        epoch = int(model_list[-1][model_list[-1].rfind("_") + 1:model_list[-1].rfind(".")])
+        print("Load model form: " + model_list[-1])
+        if not torch.cuda.is_available():
+            model_data = torch.load(model_list[-1], map_location='cpu')
+        else:
+            model_data = torch.load(model_list[-1])
+        try:
+            _net.load_state_dict(model_data)
+        except RuntimeError:
+            warnings.warn("Model shape does not matches!")
+            return _net
+        _args.curr_epoch = epoch
+        return _net
+    if type(net) is list or type(net) is tuple:
+        assert prefix is not None, "you must specify the prefix of each model"
+        assert type(prefix) is list or type(prefix) is tuple, "input param 'prefix' should either be a list or a tuple"
+        assert len(net) == len(prefix), "input param 'net' contains %s network while prefix has %s element"\
+                                        %(len(net), len(prefix))
+        nets = [_load_latset_model(args, n, prefix[i]) for i, n in enumerate(net)]
+        return nets
     else:
-        model_data = torch.load(model_list[-1])
-    try:
-        net.load_state_dict(model_data)
-    except RuntimeError:
-        warnings.warn("Model shape does not matches!")
-        return net
-    args.curr_epoch = epoch
-    return net
+        return _load_latset_model(args, net, prefix)
+
+
 
 
 def normalize_image(args, img, mean=None, std=None, bias=None):
