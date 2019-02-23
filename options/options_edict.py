@@ -47,14 +47,14 @@ def initialize():
         "model4": None,
         "model5": None,
 
-        # 4 loading thread is sufficient for most task
-        "loading_threads": 4,
+        
+        "loading_threads": 4, # how many cpu core to use to load data, usually 4 is sufficient
         "random_order_load": False,
-        "path": None,
+        "path": None, # the directory contains the datasets
         "extensions": ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"],
 
         "img_channel": 3,
-        "imgaug_engine": "cv2",
+        "imgaug_engine": "cv2", # cv2 or PIL, PIL backend is still under development
         "normalize_img": False,
         "normalize_min": 0,
         "normalize_max": 255,
@@ -64,7 +64,7 @@ def initialize():
         # imgaug_order can also be a list, ["affine", "random_crop", "random_zoom", ...]
         # each element represent a process below
 
-        "do_affine": False,
+        "do_affine": False, # See Documentation of imgaug affine
         "translation_x": (0.0, 0.0),
         "translation_y": (0.0, 0.0),
         "scale_x": (1.0, 1.0),
