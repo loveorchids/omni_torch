@@ -204,7 +204,6 @@ def fc_layer(input, layer_size, bias=True, name=None, activation=nn.Sigmoid(),
     if name is None:
         name = ""
     modules = nn.Sequential()
-    layer_size = [input] + layer_size
     for i in range(len(layer_size) - 1):
         modules.add_module(name + "_fc_" + str(i), nn.Linear(layer_size[i], layer_size[i + 1], bias[i]))
         if batch_norm[i]:
