@@ -155,7 +155,7 @@ def conv_block(input, filters, kernel_sizes, stride, padding, groups=1, name='',
 
     modules = nn.Sequential()
     for i in range(len(filters) - 1):
-        if transpose:
+        if transpose[i]:
             modules.add_module(name + "conv_" + str(i),
                                nn.ConvTranspose2d(in_channels=filters[i], out_channels=filters[i + 1],
                                                   kernel_size=kernel_sizes[i], stride=stride[i], padding=padding[i],
