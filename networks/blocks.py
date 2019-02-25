@@ -104,11 +104,11 @@ class Xception_Block(nn.Module):
 
 
 class Conv_Block(nn.Module):
-    def __init__(self, input, filters, kernel_sizes, stride, padding, groups=1, name='',
-               dilation=1, bias=True, activation=nn.ReLU(), batch_norm=None, dropout=0):
+    def __init__(self, input, filters, kernel_sizes, stride, padding, groups=1, name='', dilation=1,
+                 bias=True, activation=nn.ReLU(), batch_norm=None, dropout=0, transpose=False):
         super().__init__()
         self.layers = conv_block(input, filters, kernel_sizes, stride, padding, groups, name, dilation,
-               bias, activation, batch_norm, dropout)
+               bias, activation, batch_norm, dropout, transpose)
 
     def forward(self, x):
         return self.layers.forward(x)
@@ -126,7 +126,7 @@ class FC_Layer(nn.Module):
         return self.fc_layer.forward(x)
 
 def conv_block(input, filters, kernel_sizes, stride, padding, groups=1, name='', dilation=1,
-               bias=True, activation=nn.ReLU(), batch_norm=None, dropout=0):
+               bias=True, activation=nn.ReLU(), batch_norm=None, dropout=0, transpose=False):
     """
     Create a convolutional block with several layers
     :param input: input data channels
@@ -151,20 +151,21 @@ def conv_block(input, filters, kernel_sizes, stride, padding, groups=1, name='',
     activation = standardize(activation, assert_length)
     batch_norm = standardize(batch_norm, assert_length)
     dropout = standardize(dropout, assert_length)
+    transpose = standardize(transpose, assert_length)
 
     modules = nn.Sequential()
     for i in range(len(filters) - 1):
-        if stride[i] >= 1:
+        if transpose:
+            modules.add_module(name + "conv_" + str(i),
+                               nn.ConvTranspose2d(in_channels=filters[i], out_channels=filters[i + 1],
+                                                  kernel_size=kernel_sizes[i], stride=stride[i], padding=padding[i],
+                                                  dilation=dilation[i], groups=groups[i], bias=bias[i]))
+        else:
             modules.add_module(name + "conv_" + str(i),
                                nn.Conv2d(in_channels=filters[i], out_channels=filters[i + 1],
                                          kernel_size=kernel_sizes[i], stride=stride[i], padding=padding[i],
                                          dilation=dilation[i], groups=groups[i], bias=bias[i]))
-        else:
-            modules.add_module(name + "conv_" + str(i),
-                               nn.ConvTranspose2d(in_channels=filters[i], out_channels=filters[i + 1],
-                                                  kernel_size=kernel_sizes[i], stride=round(1 / stride[i]),
-                                                  padding=padding[i], dilation=dilation[i], groups=groups[i],
-                                                  bias=bias[i]))
+
         if batch_norm[i]:
             modules.add_module(name + "bn_" + str(i), batch_norm[i](filters[i + 1]))
         if activation[i]:
