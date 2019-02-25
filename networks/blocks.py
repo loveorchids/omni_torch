@@ -92,7 +92,7 @@ class InceptionBlock(nn.Module):
 
 class Xception_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, name=None, activation=nn.ReLU(),
-                 batch_norm=nn.BatchNorm2d, dilation=1, bias=True, dropout=0, inner_maxout=None, maxout=None):
+                 batch_norm=None, dilation=1, bias=True, dropout=0, inner_maxout=None, maxout=None):
         super().__init__()
         self.conv_block = InceptionBlock(input, filters=filters, kernel_sizes=kernel_sizes, stride=stride,
                                          padding=padding, name=name, activation=activation, batch_norm=batch_norm,
@@ -105,16 +105,28 @@ class Xception_Block(nn.Module):
 
 class Conv_Block(nn.Module):
     def __init__(self, input, filters, kernel_sizes, stride, padding, groups=1, name='',
-               dilation=1, bias=True, activation=nn.ReLU(), batch_norm=nn.BatchNorm2d, dropout=0):
+               dilation=1, bias=True, activation=nn.ReLU(), batch_norm=None, dropout=0):
         super().__init__()
         self.layers = conv_block(input, filters, kernel_sizes, stride, padding, groups, name, dilation,
                bias, activation, batch_norm, dropout)
 
     def forward(self, x):
         return self.layers.forward(x)
+    
+class FC_Layer(nn.Module):
+    def __init__(self, input, layer_size, bias=True, name=None, activation=nn.Sigmoid(),
+                 batch_norm=None, dropout=0):
+        super().__init__()
+        self.fc_layer = fc_layer(input, layer_size, bias=bias, name=name, activation=activation,
+                 batch_norm=batch_norm, dropout=dropout)
+        
+    def forward(self, x, batch_dim=0):
+        if len(x.shape):
+            x = x.view(x.size(batch_dim), -1)
+        return self.fc_layer.forward(x)
 
 def conv_block(input, filters, kernel_sizes, stride, padding, groups=1, name='', dilation=1,
-               bias=True, activation=nn.ReLU(), batch_norm=nn.BatchNorm2d, dropout=0):
+               bias=True, activation=nn.ReLU(), batch_norm=None, dropout=0):
     """
     Create a convolutional block with several layers
     :param input: input data channels
@@ -179,24 +191,28 @@ def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
             ops.add_module(name + "_shortcut_BthNorm", nn.BatchNorm2d(output, eps=bn_eps))
     return ops
 
-def fc_layer(input, layer_size, name=None, activation=nn.Sigmoid(), batch_norm=True, bn_eps=1e-5,
-             dropout=0):
+def fc_layer(input, layer_size, bias=True, name=None, activation=nn.Sigmoid(),
+             batch_norm=None, dropout=0):
+    layer_size = [input] + [layer_size] if type(layer_size) is not list else [input] + layer_size
+    assert_length = len(layer_size) - 1
+    bias = standardize(bias, assert_length)
+    activation = standardize(activation, assert_length)
+    batch_norm = standardize(batch_norm, assert_length)
+    dropout = standardize(dropout, assert_length)
+    
     if name is None:
         name = ""
-    ops = nn.Sequential()
+    modules = nn.Sequential()
     layer_size = [input] + layer_size
     for i in range(len(layer_size) - 1):
-        ops.add_module(name + "_fc_" + str(i), nn.Linear(layer_size[i], layer_size[i + 1]))
-        if dropout > 0:
-            ops.add_module(name + "_dropout_"+ str(i), nn.Dropout(dropout))
-        if batch_norm:
-            if type(batch_norm) is str and batch_norm.lower() == "instance":
-                ops.add_module(name + "_BN_" + str(i), nn.InstanceNorm1d(layer_size[i + 1], eps=bn_eps))
-            else:
-                ops.add_module(name + "_BN_" + str(i), nn.BatchNorm1d(layer_size[i + 1], eps=bn_eps))
-        if activation:
-            ops.add_module(name + "_active_" + str(i), activation)
-    return ops
+        modules.add_module(name + "_fc_" + str(i), nn.Linear(layer_size[i], layer_size[i + 1], bias[i]))
+        if batch_norm[i]:
+            modules.add_module(name + "bn_" + str(i), batch_norm[i](layer_size[i + 1]))
+        if activation[i]:
+            modules.add_module(name + "act_" + str(i), activation[i])
+        if dropout[i] > 0:
+            modules.add_module(name + "drop_" + str(i), nn.Dropout2d(dropout[i]))
+    return modules
 
 def standardize(param, assert_length):
     if type(param) is not list and type(param) is not tuple:
