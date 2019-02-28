@@ -20,8 +20,15 @@ from keras.layers import *
 from keras.datasets import *
 from keras.preprocessing.image import ImageDataGenerator
 import os
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.5
+set_session(tf.Session(config=config))
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 class Histories(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
@@ -81,7 +88,7 @@ model.load_weights(model_path)
 data_augmentation = False
 if not data_augmentation:
     print('Not using data augmentation')
-    model.fit(x_train, y_train, batch_size=32, epochs=20, validation_data=(x_test, y_test),
+    model.fit(x_train, y_train, batch_size=256, epochs=200, validation_data=(x_test, y_test),
               shuffle=False, callbacks=[histories])
 else:
     print('Using real-time data augmentation')
