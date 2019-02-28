@@ -13,17 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+This optimizer is originally implemented by Xu Linjie
+Github Link:
+https://github.com/egg-west/AdamW-pytorch
+
 """
 
 import math
 import torch
 from torch.optim.optimizer import Optimizer
 
-"""
-This optimizer is implemented by Xu Linjie
-Github Link:
-https://github.com/egg-west/AdamW-pytorch
-"""
+
 
 class AdamW(Optimizer):
     """Implements Adam algorithm.

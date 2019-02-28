@@ -124,6 +124,7 @@ def save_model(args, epoch, state_dict, keep_latest=5, prefix=None):
             for item in remove_list:
                 os.remove(item)
         torch.save(_state_dict, model_path)
+        print("Model saved to: %s"%(model_path))
     if type(state_dict) is list or type(state_dict) is tuple:
         assert prefix is not None, "you must specify the prefix of each model"
         assert type(prefix) is list or type(prefix) is tuple, "input param 'prefix' should either be a list or a tuple"
