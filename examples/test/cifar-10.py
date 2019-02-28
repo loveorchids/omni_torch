@@ -214,7 +214,7 @@ if __name__ == "__main__":
     #train_set, test_set = build_dataset(args)
     
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(net.parameters(), lr=args.learning_rate,
+    optimizer = AdaBound(net.parameters(), lr=args.learning_rate,
                                  weight_decay=args.weight_decay, eps=1e-7)
 
     for epoch in range(args.epoch_num):

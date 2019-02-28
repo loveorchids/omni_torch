@@ -18,7 +18,7 @@
 def GeneralPattern_01(args):
     args.path = "~/Pictures/dataset/cifar-10"
     args.random_order_load = False
-    args.loading_threads = 4
+    args.loading_threads = 6
     args.img_channel = 3
     args.curr_epoch = 0
     args.do_imgaug = False
@@ -39,7 +39,7 @@ def RuntimePattern(args):
 
     args.deterministic_train = False
     args.epoch_num = 200
-    args.batch_size = 256
+    args.batch_size = 64
 
     args.learning_rate = 1e-4
     args.weight_decay = 1e-6
