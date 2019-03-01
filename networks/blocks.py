@@ -156,22 +156,22 @@ def conv_block(input, filters, kernel_sizes, stride, padding, groups=1, name='',
     modules = nn.Sequential()
     for i in range(len(filters) - 1):
         if transpose[i]:
-            modules.add_module(name + "conv_" + str(i),
+            modules.add_module("convT_" + name + "_" + str(i),
                                nn.ConvTranspose2d(in_channels=filters[i], out_channels=filters[i + 1],
                                                   kernel_size=kernel_sizes[i], stride=stride[i], padding=padding[i],
                                                   dilation=dilation[i], groups=groups[i], bias=bias[i]))
         else:
-            modules.add_module(name + "conv_" + str(i),
+            modules.add_module("conv_" + name + "_" + str(i),
                                nn.Conv2d(in_channels=filters[i], out_channels=filters[i + 1],
                                          kernel_size=kernel_sizes[i], stride=stride[i], padding=padding[i],
                                          dilation=dilation[i], groups=groups[i], bias=bias[i]))
 
         if batch_norm[i]:
-            modules.add_module(name + "bn_" + str(i), batch_norm[i](filters[i + 1]))
+            modules.add_module("bn_" + name + "_" + str(i), batch_norm[i](filters[i + 1]))
         if activation[i]:
-            modules.add_module(name + "act_" + str(i), activation[i])
+            modules.add_module("act_" + name + "_" + str(i), activation[i])
         if dropout[i] > 0:
-            modules.add_module(name + "drop_" + str(i), nn.Dropout2d(dropout[i]))
+            modules.add_module("drop_" + name + "_" + str(i), nn.Dropout2d(dropout[i]))
     return modules
 
 def resnet_shortcut(input, output, kernel_size=1, stride=1, padding=0,
