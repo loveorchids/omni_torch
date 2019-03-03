@@ -5,44 +5,14 @@ import torchvision.transforms as T
 import numpy as np
 import omni_torch.data as data
 import omni_torch.utils as util
-from PIL import Image
-try:
-    import imgaug
-    from imgaug import augmenters
-except:
-    pass
+import imgaug
+from imgaug import augmenters
 
 ALLOW_WARNING = data.ALLOW_WARNING
 
-def prepare_image(args, image, seed, size):
-    if args.do_imgaug:
-        if args.imgaug_engine == "cv2":
-            imgaug.seed(seed)
-            image = prepare_augmentation(args).augment_image(image)
-            # image = misc.random_crop(image, args.crop_size, seed)
-        elif args.imgaug_engine == "PIL":
-            random.seed(seed)
-            image = Image.fromarray(image)
-            image = pil_prepare_augmentation(args)(image)
-            image = np.array(image)
-    if args.to_final_size:
-        # Used especially for super resolution experiment
-        size = (size[0], size[1])
-    else:
-        size = (image.shape[0], image.shape[1])
-    if args.standardize_size:
-        width = args.standardize_gcd * round(size[0] / args.standardize_gcd)
-        height = args.standardize_gcd * round(size[1] / args.standardize_gcd)
-        size = (width, height)
-    # opencv will invert the width and height, need to confirm later
-    # TODO: replace opencv with PIL
-    image = cv2.resize(image, (size[1], size[0]))
-    return image
-
-
 def read_image(args, path, seed, size, ops=None, _to_tensor=True):
     """
-
+    Default image loading function invoked by Dataset object(Arbitrary, Img2Img, ILSVRC)
     :param args:
     :param path:
     :param seed:
@@ -52,18 +22,10 @@ def read_image(args, path, seed, size, ops=None, _to_tensor=True):
             ops can invert image color, switch channel
     :return:
     """
-    if args.imgaug_engine == "cv2":
-        if args.img_channel is 1:
-            image = cv2.imread(path, 0)
-        else:
-            image = cv2.imread(path)
-    elif args.imgaug_engine == "PIL":
-        if args.img_channel is 1:
-            image = Image.open(path).convert("L")
-            image = np.array(image)
-        else:
-            image = Image.open(path)
-            image = np.array(image)
+    if args.img_channel is 1:
+        image = cv2.imread(path, 0)
+    else:
+        image = cv2.imread(path)
     if args.normalize_img:
         image = cv2.normalize(image, None, args.normalize_min, args.normalize_max, cv2.NORM_MINMAX)
     # image = misc.random_crop(image, args.crop_size, seed)
@@ -87,6 +49,22 @@ def read_image(args, path, seed, size, ops=None, _to_tensor=True):
         else:
             return image
 
+def prepare_image(args, image, seed, size):
+    if args.do_imgaug:
+        imgaug.seed(seed)
+        image = prepare_augmentation(args).augment_image(image)
+    if args.to_final_size:
+        # Used especially for super resolution experiment
+        size = (size[0], size[1])
+    else:
+        size = (image.shape[0], image.shape[1])
+    if args.standardize_size:
+        width = args.standardize_gcd * round(size[0] / args.standardize_gcd)
+        height = args.standardize_gcd * round(size[1] / args.standardize_gcd)
+        size = (width, height)
+    # opencv will invert the width and height
+    image = cv2.resize(image, (size[1], size[0]))
+    return image
 
 def to_tensor(args, image, seed, size, ops=None):
     image = util.normalize_image(args, image)
