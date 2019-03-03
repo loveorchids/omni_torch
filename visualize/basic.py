@@ -20,6 +20,7 @@ import torch
 import cv2
 import numpy as np
 import pandas as pd
+from easydict import EasyDict as edict
 #import matplotlib
 import omni_torch.utils as util
 #matplotlib.use("Agg")
@@ -58,6 +59,12 @@ def visualize_gradient(args, net, img_ratio=16/9, minimun_rank=2):
 
 
 def to_image(args, tensor, margin, deNormalize, sub_title=None, font_size=0.5):
+    if args is None:
+        args = edict({
+            "img_mean": (0.5, 0.5, 0.5),
+            "img_std": (1.0, 1.0, 1.0),
+            "img_bias": (0.0, 0.0, 0.0),
+        })
     assert len(tensor.shape) == 3
     array = tensor.data.to("cpu").numpy()
     array = array.transpose((1, 2, 0))
