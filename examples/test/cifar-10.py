@@ -41,8 +41,8 @@ def fetch_data(args, source):
     def just_return_it(args, data, seed, size, ops=None):
         return torch.tensor(data, dtype=torch.long)
     print("loading Dataset...")
-    data = Arbitrary_Dataset(args=args, load_funcs=[omth_loader.to_tensor, just_return_it],
-                             sources=source, modes=[omth_data_mode.load_cifar_from_pickle], dig_level=[0])
+    data = Arbitrary_Dataset(args=args, step_2=[omth_loader.to_tensor, just_return_it],
+                             sources=source, step_1=[omth_data_mode.load_cifar_from_pickle], sub_folder=[0])
     data.prepare()
     print("loading Completed!")
     kwargs = {'num_workers': args.loading_threads, 'pin_memory': True}

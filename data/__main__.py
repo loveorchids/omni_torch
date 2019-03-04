@@ -31,8 +31,8 @@ def test_img2img(args):
     args.batch_size = 4
     # Uncomment if you want load images in random order
     # args.random_order_load = True
-    data = Img2Img_Dataset(args=args, sources=["trainA", "trainB"], modes=["path"] * 2,
-                           load_funcs=[loader.read_image] * 2, dig_level=[0] * 2)
+    data = Img2Img_Dataset(args=args, sources=["trainA", "trainB"], step_1=["path"] * 2,
+                           step_2=[loader.read_image] * 2, sub_folder=[0] * 2)
     data.prepare()
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -54,9 +54,9 @@ def test_img2img_advanced(args):
     # args.random_order_load = True
     options = {"sizes": [(1200, 1200), (1920, 1920)]}
     args.batch_size = 1
-    data = Img2Img_Dataset(args=args, sources=["trainA", "trainB"], modes=["path"] * 2,
-                           load_funcs=[loader.read_image] * 2, dig_level=[0] * 2,
-                           loader_ops=[dop.segment_image] * 2, **options)
+    data = Img2Img_Dataset(args=args, sources=["trainA", "trainB"], step_1=["path"] * 2,
+                           step_2=[loader.read_image] * 2, sub_folder=[0] * 2,
+                           pre_process=[dop.segment_image] * 2, **options)
     data.prepare()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -77,8 +77,8 @@ def test_super_reso(args):
     # args.random_order_load = True
     options = {"sizes":[(400, 300), (1024, 768)]}
     args.batch_size = 2
-    data = Img2Img_Dataset(args=args, sources=["trainA", "trainB"], modes=["path"] * 2,
-                           load_funcs=["image"] * 2, dig_level=[0] * 2, **options)
+    data = Img2Img_Dataset(args=args, sources=["trainA", "trainB"], step_1=["path"] * 2,
+                           step_2=["image"] * 2, sub_folder=[0] * 2, **options)
     data.prepare()
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -99,9 +99,9 @@ def test_cifar(args):
     """
     args.path = "~/Downloads/cifar-10"
     args.batch_size = 128
-    data = Arbitrary_Dataset(args=args, load_funcs=[loader.to_tensor, loader.just_return_it],
+    data = Arbitrary_Dataset(args=args, step_2=[loader.to_tensor, loader.just_return_it],
                              sources=[("data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4")],
-                             modes=[mode.load_cifar_from_pickle], dig_level=[0])
+                             step_1=[mode.load_cifar_from_pickle], sub_folder=[0])
     data.prepare()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     kwargs = {'num_workers': 2, 'pin_memory': True} if torch.cuda.is_available() else {}
@@ -119,8 +119,8 @@ def test_segmented_input(args):
     args.batch_size = 12
     args.img_channels = 1
     args.do_imgaug = False
-    data = Arbitrary_Dataset(args=args, sources=["trainA", "trainB"], modes=[mode.load_img_from_path] * 2,
-                             load_funcs=[loader.to_tensor] * 2, dig_level=[0] * 2)
+    data = Arbitrary_Dataset(args=args, sources=["trainA", "trainB"], step_1=[mode.load_img_from_path] * 2,
+                             step_2=[loader.to_tensor] * 2, sub_folder=[0] * 2)
     data.prepare()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     kwargs = {'num_workers': 0, 'pin_memory': True} \
