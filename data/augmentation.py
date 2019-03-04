@@ -90,6 +90,7 @@ def prepare_augmentation(args):
         imgaug_order = list(set(args.imgaug_order))
         try:
             aug_list = [aug_dict[item] for item in imgaug_order]
+            aug_list = list(itertools.chain.from_iterable(aug_list))
         except KeyError:
             not_contained = [key for key in imgaug_order if key not in aug_dict.keys()]
             print("%s in args.imgaug_order is not contained in the defined sequential: %s"
@@ -102,14 +103,19 @@ def prepare_augmentation(args):
                           "underdetermined operations are: %s \n"
                           "omni_torch randomize the operations that does not contained in args.imgaug_order"
                           % (len(imgaug_order), len(aug_dict), not_contained))
-            not_contained = random.shuffle(not_contained)
-            not_contained = [aug_dict[key] for key in not_contained]
-            seq = list(itertools.chain.from_iterable(aug_dict.values())) + not_contained
+            not_contained = [aug_dict[key] for key in  random.shuffle(not_contained)]
+            aug_list = list(itertools.chain.from_iterable(not_contained))
+            seq = list(itertools.chain.from_iterable(aug_dict.values())) + aug_list
         else:
             seq = aug_list
     else:
         if args.imgaug_order == "default":
-            seq = [aug_dict[item] for item in default]
+            seq = []
+            for item in default:
+                try:
+                    seq += aug_dict[item]
+                except KeyError:
+                    continue
         else:
             # perform random shuffle
             seq = list(itertools.chain.from_iterable(aug_dict.values()))
@@ -135,4 +141,4 @@ def combine_augs(det_list, rand_list, size):
         size = [augmenters.Resize(size={"height": size[0], "width": size[1]})]
     if len(det_list) == len(rand_list) == len(size) == 0:
         return None
-    return augmenters.Sequential(det_list + rand_list + size)
+    return augmenters.Sequential(det_list + rand_list + size, random_order=False)
