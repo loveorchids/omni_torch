@@ -28,7 +28,7 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
     if bbox_loader:
         # image should be an np.ndarray
         # bbox should be an imgaug BoundingBoxesOnImage instance
-        image, bbox = bbox_loader(args, items, seed, size)
+        image, bbox, box_label = bbox_loader(args, items, seed, size)
     else:
         path = items
         if args.img_channel is 1:
@@ -54,38 +54,52 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
     # If pre-process returns some information about deterministic augmentation
     # Then initialize the deterministic augmentation based on that information
     det_aug_list = aug.prepare_deterministic_augmentation(args, data)
-    aug_seq = aug.combine_augs(args, det_aug_list, rand_aug, size)
+    aug_seq = aug.combine_augs(det_aug_list, rand_aug, size)
     if bbox:
         if aug_seq:
             # Do random augmentaion defined in pipline declaration
-            image = rand_aug.augment_image(image)
-            bbox = rand_aug.augment_bounding_boxes([bbox])[0]
+            image = aug_seq.augment_image(image)
+            bbox = aug_seq.augment_bounding_boxes([bbox])[0]
         # numpy-lize bbox
         coords = []
+        labels = []
         if size is None:
             h, w = image.shape[0], image.shape[1]
         else:
             h, w = size[0], size[1]
-        for bbox in bbox.bounding_boxes:
-            coords.append([bbox.x1 / h, bbox.y1 / w, bbox.x2 / h, bbox.y2 / w])
-        coords = np.asarray(coords)
+        for i, bbox in enumerate(bbox.bounding_boxes):
+            condition_1 = bbox.x1 <= 0 and bbox.x2 <= 0
+            condition_2 = bbox.y1 <= 0 and bbox.y2 <= 0
+            condition_3 = bbox.x1 >= w and bbox.x2 >= w
+            condition_4 = bbox.y1 >= h and bbox.y2 >= h
+            if condition_1 or condition_2 or condition_3 or condition_4:
+                # After aigmentation, at least one dimension of the bbox exceeded the image
+                # omni_torch will ignore this bbox
+                continue
+            horizontal_constrain = lambda x: max(min(w, x), 0)
+            vertival_constrain = lambda y: max(min(h, y), 0)
+            coords.append([horizontal_constrain(bbox.x1)/h, vertival_constrain(bbox.y1)/w,
+                           horizontal_constrain(bbox.x2)/h, vertival_constrain(bbox.y2)/w])
+            labels.append(box_label[i])
+        coords = torch.Tensor(coords)
+        labels = torch.Tensor(labels)
     else:
         # With no bounding boxes, augment the image only
         if aug_seq:
-            image = rand_aug.augment_image(image)
+            image = aug_seq.augment_image(image)
     if len(image.shape) == 2:
         image = np.expand_dims(image, axis=-1)
     if _to_tensor:
-        if bbox_loader:
-            return to_tensor(args, image, seed, size), to_tensor(args, coords, seed, size)
+        if bbox:
+            return to_tensor(args, image, seed, size), coords, labels.long()
         return to_tensor(args, image, seed, size)
     else:
-        if bbox_loader:
-            return image, coords
+        if bbox:
+            return image, coords, labels
         return image
 
 
-def to_tensor(args, image, seed, size, rand_aug):
+def to_tensor(args, image, seed, size):
     image = util.normalize_image(args, image)
     trans = T.Compose([T.ToTensor()])
     return trans(image.astype("float32"))
