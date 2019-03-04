@@ -41,41 +41,50 @@ def prepare_augmentation(args):
     :param args:
     :return:
     """
-    # -----------------------Create random process from args------------------------
     imgaug.seed(args.seed)
     aug_dict = {}
+    default = ["affine", "crop", "pad", "flip", "brightness", "noise"]
+    # --------------------------------------Geometry---------------------------------------
     if args.do_affine:
         aug_dict.update({"affine": [
-            augmenters.Affine(scale={"x": args.scale_x, "y": args.scale_y},
+            augmenters.Affine(scale={"x": args.scale_x, "y": args.scale_y},rotate=args.rotation,
                               translate_percent={"x": args.translation_x, "y": args.translation_y},
-                              rotate=args.rotation, shear=args.shear, cval=args.aug_bg_color),
+                              shear=args.shear, cval=args.aug_bg_color, name="rand_affine"),
         ]})
-    if args.do_random_crop:
-        aug_dict.update({"random_crop": [
-            augmenters.CropToFixedSize(width=args.crop_size[1], height=args.crop_size[0]),
+    if args.do_crop_to_fix_size:
+        aug_dict.update({"crop": [
+            augmenters.CropToFixedSize(width=args.crop_size[1], height=args.crop_size[0],
+                                       name="crop_to_fix_size"),
         ]})
-    if args.do_random_zoom:
-        aug_dict.update({"random_zoom": [
-            augmenters.Crop(px=tuple(args.pixel_eliminate), sample_independently=args.sample_independent),
+    if args.do_pad_to_fix_size:
+        aug_dict.update({"pad": [
+            augmenters.PadToFixedSize(width=args.padding_size[1], height=args.padding_size[0],
+                                      pad_cval=args.aug_bg_color, position=args.padding_position,
+                                      name="pad_to_fix_size"),
         ]})
     if args.do_random_flip:
-        aug_dict.update({"random_flip": [
-            augmenters.Fliplr(args.h_flip_prob),
-            augmenters.Flipud(args.v_flip_prob),
+        aug_dict.update({"flip": [
+            augmenters.Fliplr(args.h_flip_prob, name="horizontal_flip"),
+            augmenters.Flipud(args.v_flip_prob, name="vertical_flip"),
         ]})
+    # -------------------------------Color and Brightness--------------------------------
+    # TODO: consider how to add Sometimes, OneOf #01/02
     if args.do_random_brightness:
-        aug_dict.update({"random_brightness": [
+        aug_dict.update({"brightness": [
             augmenters.ContrastNormalization(args.brightness_vibrator),
             augmenters.Multiply(args.multiplier, per_channel=args.multiplier_per_channel),
             augmenters.LinearContrast(alpha=args.linear_contrast),
         ]})
     if args.do_random_noise:
-        aug_dict.update({"random_noise": [
+        aug_dict.update({"noise": [
             augmenters.GaussianBlur(sigma=args.gaussian_sigma),
             #augmenters.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05 * 255), per_channel=0.5),
         ]})
 
-    # -----------------------------Combine imgaug process--------------------------------
+    # ---------------------------------------Textures----------------------------------------
+    # TODO: consider how to add Sometimes, OneOf #02/02
+    
+    # ---------------------------Combine Imgaug Process------------------------------
     if args.imgaug_order and type(args.imgaug_order) is list:
         # Remove repeated elements
         imgaug_order = list(set(args.imgaug_order))
@@ -100,7 +109,7 @@ def prepare_augmentation(args):
             seq = aug_list
     else:
         if args.imgaug_order == "default":
-            seq = list(itertools.chain.from_iterable(aug_dict.values()))
+            seq = [aug_dict[item] for item in default]
         else:
             # perform random shuffle
             seq = list(itertools.chain.from_iterable(aug_dict.values()))
