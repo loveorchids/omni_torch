@@ -78,10 +78,11 @@ def initialize():
         # Pad
         # searh for PadToFixedSize in imgaug documentation
         "do_pad_to_fix_size": False,
-        "padding_size": (224, 224),
+        "padding_size": [(224, 224)],
         # in padding_position, 1 and 0 represent image start at the begining and end of
         # corresponding dimension, respectively
-        "padding_position": (0.5, 0.5),
+        # or choose uniform to randomly place the image
+        "padding_position": 'uniform',
 
         "do_random_flip": False,
         # v represent for vertical, h represent for horizontal

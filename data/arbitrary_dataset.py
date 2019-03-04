@@ -47,19 +47,23 @@ class Arbitrary_Dataset(tud.Dataset):
         self.sources = sources
         self.step_1 = step_1
         self.step_2 = step_2
-        self.sub_folder = sub_folder
         self.augmentation = aug.prepare_augmentation(args)
 
         # data_types represent the number of input source and output labels
         num_of_data = len(step_2)
-
+        
+        if sub_folder:
+            assert  len(sub_folder) == num_of_data
+            self.sub_folder = sub_folder
+        else:
+            self.sub_folder = [None] * num_of_data
         if pre_process:
-            assert len(pre_process) is num_of_data
+            assert len(pre_process) == num_of_data
             self.pre_process = pre_process
         else:
             self.pre_process = [None] * num_of_data
         if bbox_loader:
-            assert len(bbox_loader) is num_of_data
+            assert len(bbox_loader) == num_of_data
             self.bbox_loader = bbox_loader
         else:
             self.bbox_loader = [None] * num_of_data
