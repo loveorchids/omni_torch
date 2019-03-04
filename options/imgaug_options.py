@@ -42,7 +42,7 @@ class ImgAug:
         self.parser.add_argument("--aug_bg_color", type=int, default=255,
                                  help="background color of augmentation, 0=black, 255=white")
         
-        self.parser.add_argument("--do_random_crop", type=bool, default=True,
+        self.parser.add_argument("--do_crop_to_fix_size", type=bool, default=True,
                                  help="randomly crop an image")
         self.parser.add_argument("--crop_size", type=tuple,default=(360, 360),
                                  help="the image will be cropped to this size")
