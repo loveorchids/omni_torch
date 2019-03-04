@@ -28,8 +28,6 @@ class ImgAug:
         # Image Augmentation
         self.parser.add_argument("--do_imgaug", type=bool, default=True,
                                  help="do image augmentation on image or not")
-        self.parser.add_argument("--imgaug_engine", type=str, default="cv2",
-                                 help="engine used to load perform image augmentation")
         
         self.parser.add_argument("--do_affine", type=bool, default=True,
                                  help="do affine transformation on image or not")

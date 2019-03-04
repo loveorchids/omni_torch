@@ -54,11 +54,6 @@ def initialize():
         "extensions": ["jpeg", "JPG", "jpg", "png", "PNG", "gif", "tiff"],
 
         "img_channel": 3,
-        "imgaug_engine": "cv2", # cv2 or PIL, PIL backend is still under development
-        "normalize_img": False,
-        "normalize_min": 0,
-        "normalize_max": 255,
-
         "do_imgaug": False,
         "imgaug_order": "default", # or "random"
         # imgaug_order can also be a list, ["affine", "random_crop", "random_zoom", ...]
