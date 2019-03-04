@@ -55,28 +55,36 @@ def initialize():
 
         "img_channel": 3,
         "do_imgaug": False,
-        "imgaug_order": "default", # or "random"
-        # imgaug_order can also be a list, ["affine", "random_crop", "random_zoom", ...]
-        # each element represent a process below
+        "imgaug_order": "default",
+        # default or a list, ["affine", "crop", "pad", ...], each element represent a process
 
         "do_affine": False, # See Documentation of imgaug affine
+        # numbers in translations means pixel
         "translation_x": (0.0, 0.0),
         "translation_y": (0.0, 0.0),
+        # numbers in translations means percentage
         "scale_x": (1.0, 1.0),
         "scale_y": (1.0, 1.0),
         "shear": (-0.0, 0.0),
+        # numbers in translations means degree
         "rotation": (-0.0, 0.0),
         "aug_bg_color": 255,
-
-        "do_random_crop": False,
-        "crop_size": (360, 360),
-        "keep_size": True,
-
-        "do_random_zoom": False,
-        "pixel_eliminate": (0, 4),
-        "sample_independent": False,
+        
+        # Crop
+        # searh for CropToFixedSize in imgaug documentation
+        "do_crop_to_fix_size": False,
+        "crop_size": (224, 224),
+        
+        # Pad
+        # searh for PadToFixedSize in imgaug documentation
+        "do_pad_to_fix_size": False,
+        "padding_size": (224, 224),
+        # in padding_position, 1 and 0 represent image start at the begining and end of
+        # corresponding dimension, respectively
+        "padding_position": (0.5, 0.5),
 
         "do_random_flip": False,
+        # v represent for vertical, h represent for horizontal
         "v_flip_prob": 0.5,
         "h_flip_prob": 0.5,
 
