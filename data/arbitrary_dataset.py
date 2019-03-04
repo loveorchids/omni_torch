@@ -15,63 +15,70 @@
 
 """
 
-import os, glob, random
+import os, glob, random, warnings
 import omni_torch.data as data
 import omni_torch.data.misc as misc
 import omni_torch.data.path_loader as mode
 import omni_torch.data.data_loader as loader
+import omni_torch.data.augmentation as aug
 from torch.utils import data as tud
 
 ALLOW_WARNING = data.ALLOW_WARNING
 
 class Arbitrary_Dataset(tud.Dataset):
-    def __init__(self, args, sources, modes, load_funcs, dig_level, loader_ops=None, **options):
+    def __init__(self, args, sources, step_1, step_2, sub_folder=None, pre_process=None,
+                 bbox_loader=None, **options):
         """
         A generalized data initialization method, inherited by other data class, e.g. ilsvrc, img2img, etc.
         Arbitrary is a parent class of all other data class.
 
         :param args: options from terminal
         :param sources: a list of input and output source folder or file(e.g. csv, mat, xml, etc.)
-        :param modes: a list of how researchers wanted to load infomation from :param sources
-        :param load_funcs: infomation loaded from :param source is not guaranteed to be able to feed
-        the neural network, thus they need to be loaded as a inputable form. e.g. paths should be loaded
-        as image tensors
-        :param dig_level: when loading path from a folder, it might contains subfolders, dig_level enables
+        :param step_1: a list of functions to load path or other infomation from sources
+        :param step_2: a list of functions to load infomation from step_1 to PyTorch readable tensor
+        :param sub_folder: when loading path from a folder, it might contains subfolders, dig_level enables
         you to load as deep as you want to.
+        :param pre_process: will be invoked immediately after step_2 has loaded the data, e.g. pre process the images
         :param options: For Future upgrade.
         """
-        assert max([len(sources), len(modes), len(dig_level)]) is\
-            min([len(sources), len(modes), len(dig_level)]), \
-            "Length of 'sources', 'modes', 'dig_level' must be same."
+        assert max([len(sources), len(step_1)]) == min([len(sources), len(step_1)]), \
+            "Length of 'sources', 'step_1' must be the same."
         self.args = args
         self.sources = sources
-        self.modes = modes
-        self.load_funcs = load_funcs
-        self.dig_level = dig_level
+        self.step_1 = step_1
+        self.step_2 = step_2
+        self.sub_folder = sub_folder
+        self.augmentation = aug.prepare_augmentation(args)
 
         # data_types represent the number of input source and output labels
-        data_types = len(load_funcs)
+        num_of_data = len(step_2)
 
-        if loader_ops:
-            assert len(loader_ops) is data_types
-            self.loader_ops = loader_ops
+        if pre_process:
+            assert len(pre_process) is num_of_data
+            self.pre_process = pre_process
         else:
-            self.loader_ops = [None] * data_types
-
-        if "verbose" in options:
-            assert type(options["verbose"]) is bool
-            self.verbose = options["verbose"]
+            self.pre_process = [None] * num_of_data
+        if bbox_loader:
+            assert len(bbox_loader) is num_of_data
+            self.bbox_loader = bbox_loader
         else:
-            self.verbose = False
-        if "sizes" in options:
-            assert type(options["sizes"]) is list
-            assert len(options["sizes"]) is data_types
-            self.sizes = options["sizes"]
+            self.bbox_loader = [None] * num_of_data
+        if args.to_final_size:
+            self.sizes = args.final_size
+            assert len(self.sizes) == num_of_data
+            for size in self.sizes:
+                assert len(size) == 2, "each element inside the args.final_size have 2 dimensions, \n" \
+                                       "height and width, respectively"
         else:
-            self.sizes = [args.final_size] * data_types
+            warnings.warn("omni_torch recommand you to setup args.to_final_size and args.final_size\n"
+                          "otherwise, you might possibility to encounter errors during batch generation.")
+            self.sizes = [None] * num_of_data
         
     def prepare(self):
         self.dataset = self.load_dataset()
+
+    def summary(self):
+        print("data loading pipeline summarization function will be implemented soon")
         
     def __len__(self):
         return len(self.dataset)
@@ -93,19 +100,17 @@ class Arbitrary_Dataset(tud.Dataset):
                 items.append(self.dataset[j][i])
         else:
             items = self.dataset[index]
-        assert len(items) is len(self.load_funcs), "length of item and mode should be same."
+        assert len(items) is len(self.step_2), "length of item and mode should be same."
         if self.args.deterministic_train:
             seed = index + self.args.curr_epoch
         else:
             # seed is used to keep same image augmentation manner when load things from one item
             seed = random.randint(0, 100000)
         for i in range(len(items)):
-            if self.load_funcs[i] is "image":
-                result.append(loader.read_image(self.args, items[i], seed, self.sizes[i], self.loader_ops[i]))
-            if self.load_funcs[i] is "multiimages":
-                result += loader.read_image(self.args, items[i], seed, self.sizes[i], self.loader_ops[i])
-            elif callable(self.load_funcs[i]):
-                result.append(self.load_funcs[i](self.args, items[i], seed, self.sizes[i], self.loader_ops[i]))
+            if callable(self.step_2[i]):
+                result.append(self.step_2[i](args=self.args, items=items[i], seed=seed, size=self.sizes[i],
+                                             pre_process=self.pre_process[i], rand_aug=self.augmentation,
+                                             bbox_loader=self.bbox_loader[i]))
             else:
                 raise TypeError
         return result
@@ -121,8 +126,8 @@ class Arbitrary_Dataset(tud.Dataset):
         """
         data = []
         path = os.path.expanduser(self.args.path)
-        assert len(self.sources) is len(self.modes), "sources and modes should be same dimensions."
-        input_types = len(self.modes)
+        assert len(self.sources) is len(self.step_1), "sources and modes should be same dimensions."
+        input_types = len(self.step_1)
         for i in range(input_types):
             sub_paths = []
             for source in self.sources:
@@ -134,16 +139,16 @@ class Arbitrary_Dataset(tud.Dataset):
                     sub_paths.append([os.path.join(path, _) for _ in source])
                 else:
                     raise TypeError
-            if self.modes[i] == "path":
+            if self.step_1[i] == "path":
                 data += mode.load_path_from_folder(self.args, len(data), sub_paths[i],
-                                                       self.dig_level[i])
-            elif self.modes[i] == "sep_path":
+                                                   self.sub_folder[i])
+            elif self.step_1[i] == "sep_path":
                 data += mode.load_path_from_multi_folder(self.args, len(data), sub_paths[i],
-                                                   self.dig_level[i])
+                                                         self.sub_folder[i])
             # We can add other modes if we want
-            elif callable(self.modes[i]):
+            elif callable(self.step_1[i]):
                 # mode[i] is a function
-                data += self.modes[i](self.args, len(data), sub_paths[i], self.dig_level[i])
+                data += self.step_1[i](self.args, len(data), sub_paths[i], self.sub_folder[i])
             else:
                 raise NotImplementedError
         dataset = []
