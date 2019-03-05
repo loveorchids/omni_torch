@@ -45,7 +45,7 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
     else:
         data = None
     if args.standardize_size:
-        if not size:
+        if size is None:
             size = (image.shape[0], image.shape[1])
         # Sometimes we need the size of image to be dividable by certain number
         height = args.standardize_gcd * round(size[0] / args.standardize_gcd)
@@ -66,10 +66,7 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
         # numpy-lize bbox
         coords = []
         labels = []
-        if size is None:
-            h, w = image.shape[0], image.shape[1]
-        else:
-            h, w = size[0], size[1]
+        h, w = image.shape[0], image.shape[1]
         for i, bbox in enumerate(bbox.bounding_boxes):
             condition_1 = bbox.x1 <= 0 and bbox.x2 <= 0
             condition_2 = bbox.y1 <= 0 and bbox.y2 <= 0

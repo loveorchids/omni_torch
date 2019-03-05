@@ -137,7 +137,7 @@ def combine_augs(det_list, rand_list, size):
     if size is None:
         size = []
     else:
-        size = [augmenters.Resize(size={"height": size[0], "width": size[1]})]
+        size = [augmenters.Resize(size=size)]
     if len(det_list) == len(rand_list) == len(size) == 0:
         return None
     return augmenters.Sequential(det_list + rand_list + size, random_order=False)
