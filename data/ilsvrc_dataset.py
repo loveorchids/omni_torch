@@ -25,8 +25,8 @@ ALLOW_WARNING = data.ALLOW_WARNING
 # Todo: Not Tested Yet
 
 class ILSVRC_Dataset(Arbitrary_Dataset):
-    def __init__(self, args, sources, step_1, step_2, sub_folder, pre_process=None, **options):
-        super().__init__(args, sources, step_1, step_2, sub_folder, pre_process, options)
+    def __init__(self, args, sources, step_1, step_2, auxiliary_info, pre_process=None, **options):
+        super().__init__(args, sources, step_1, step_2, auxiliary_info, pre_process, options)
         
     def prepare(self):
         self.dataset = self.load_dataset()

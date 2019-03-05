@@ -26,8 +26,8 @@ from torch.utils import data as tud
 ALLOW_WARNING = data.ALLOW_WARNING
 
 class Arbitrary_Dataset(tud.Dataset):
-    def __init__(self, args, sources, step_1, step_2, sub_folder=None, pre_process=None,
-                 bbox_loader=None, **options):
+    def __init__(self, args, sources, step_1, step_2, pre_process=None, bbox_loader=None,
+                 auxiliary_info=None, **options):
         """
         A generalized data initialization method, inherited by other data class, e.g. ilsvrc, img2img, etc.
         Arbitrary is a parent class of all other data class.
@@ -36,9 +36,10 @@ class Arbitrary_Dataset(tud.Dataset):
         :param sources: a list of input and output source folder or file(e.g. csv, mat, xml, etc.)
         :param step_1: a list of functions to load path or other infomation from sources
         :param step_2: a list of functions to load infomation from step_1 to PyTorch readable tensor
-        :param sub_folder: when loading path from a folder, it might contains subfolders, dig_level enables
-        you to load as deep as you want to.
         :param pre_process: will be invoked immediately after step_2 has loaded the data, e.g. pre process the images
+        :param auxiliary_info: when loading path from a folder, it might contains some subfolders you don't
+         want to load or other operations you wanted to add.
+        you to load as deep as you want to.
         :param options: For Future upgrade.
         """
         assert max([len(sources), len(step_1)]) == min([len(sources), len(step_1)]), \
@@ -52,9 +53,9 @@ class Arbitrary_Dataset(tud.Dataset):
         # data_types represent the number of input source and output labels
         num_of_data = len(step_2)
         
-        if sub_folder:
-            assert  len(sub_folder) == num_of_data
-            self.sub_folder = sub_folder
+        if auxiliary_info:
+            assert len(auxiliary_info) == num_of_data
+            self.sub_folder = auxiliary_info
         else:
             self.sub_folder = [None] * num_of_data
         if pre_process:

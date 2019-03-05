@@ -23,12 +23,12 @@ import omni_torch.data as data
 ALLOW_WARNING = data.ALLOW_WARNING
 
 class Img2Img_Dataset(Arbitrary_Dataset):
-    def __init__(self, args, sources, step_1, step_2, sub_folder, pre_process=None,
+    def __init__(self, args, sources, step_1, step_2, auxiliary_info, pre_process=None,
                  one_to_one=True, **options):
         assert len(sources) is 2, "In img2img dataset only two sources are allowed."
         assert len(step_1) is 2, "In img2img dataset only two sources are allowed."
         assert len(step_2) is 2, "In img2img dataset only two sources are allowed."
-        super().__init__(args, sources, step_1, step_2, sub_folder, pre_process, **options)
+        super().__init__(args, sources, step_1, step_2, auxiliary_info, pre_process, **options)
         self.one_to_one = one_to_one
         
     def prepare(self):
