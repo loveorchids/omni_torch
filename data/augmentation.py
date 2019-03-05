@@ -41,7 +41,6 @@ def prepare_augmentation(args):
     :param args:
     :return:
     """
-    imgaug.seed(args.seed)
     aug_dict = {}
     default = ["affine", "crop", "pad", "flip", "brightness", "noise"]
     # --------------------------------------Geometry---------------------------------------

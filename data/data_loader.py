@@ -55,14 +55,14 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
     # Then initialize the deterministic augmentation based on that information
     det_aug_list = aug.prepare_deterministic_augmentation(args, data)
     aug_seq = aug.combine_augs(det_aug_list, rand_aug, size)
-    #aug_seq.to_deterministic()
-    image_before = bbox.draw_on_image(image, thickness=2)
     if bbox:
         if aug_seq:
             # Do random augmentaion defined in pipline declaration
+            aug_seq = aug_seq.to_deterministic()
             image = aug_seq.augment_image(image)
             bbox = aug_seq.augment_bounding_boxes([bbox])[0]
-            image_after = bbox.draw_on_image(image, thickness=2, color=[0, 0, 255])
+            #image_after = bbox.draw_on_image(image, thickness=2, color=[0, 0, 255])
+            #cv2.imwrite("/home/wang/Pictures/tmp_after.jpg", image_after)
         # numpy-lize bbox
         coords = []
         labels = []
@@ -73,8 +73,8 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
         for i, bbox in enumerate(bbox.bounding_boxes):
             condition_1 = bbox.x1 <= 0 and bbox.x2 <= 0
             condition_2 = bbox.y1 <= 0 and bbox.y2 <= 0
-            condition_3 = bbox.x1 >= w and bbox.x2 >= w
-            condition_4 = bbox.y1 >= h and bbox.y2 >= h
+            condition_3 = bbox.x1 >= w -1 and bbox.x2 >= w -1
+            condition_4 = bbox.y1 >= h -1 and bbox.y2 >= h -1
             if condition_1 or condition_2 or condition_3 or condition_4:
                 # After aigmentation, at least one dimension of the bbox exceeded the image
                 # omni_torch will ignore this bbox
@@ -89,6 +89,7 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
     else:
         # With no bounding boxes, augment the image only
         if aug_seq:
+            aug_seq = aug_seq.to_deterministic()
             image = aug_seq.augment_image(image)
     if len(image.shape) == 2:
         image = np.expand_dims(image, axis=-1)
