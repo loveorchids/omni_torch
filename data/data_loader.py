@@ -55,11 +55,14 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
     # Then initialize the deterministic augmentation based on that information
     det_aug_list = aug.prepare_deterministic_augmentation(args, data)
     aug_seq = aug.combine_augs(det_aug_list, rand_aug, size)
+    #aug_seq.to_deterministic()
+    image_before = bbox.draw_on_image(image, thickness=2)
     if bbox:
         if aug_seq:
             # Do random augmentaion defined in pipline declaration
             image = aug_seq.augment_image(image)
             bbox = aug_seq.augment_bounding_boxes([bbox])[0]
+            image_after = bbox.draw_on_image(image, thickness=2, color=[0, 0, 255])
         # numpy-lize bbox
         coords = []
         labels = []
