@@ -92,7 +92,7 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
         image = np.expand_dims(image, axis=-1)
     if _to_tensor:
         if bbox:
-            return to_tensor(args, image, seed, size), coords, labels.long()
+            return to_tensor(args, image, seed, size), coords, labels
         return to_tensor(args, image, seed, size)
     else:
         if bbox:
