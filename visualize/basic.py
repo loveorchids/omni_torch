@@ -174,7 +174,7 @@ def plot_tensor(args, tensor, path=None, title=None, sub_title=None, op=to_image
         canvas = np.zeros((height, width, 3)) + bg_color
 
     # fig, axis = plt.subplots(ncols=h_num, nrows=v_num, figsize = (h_sub, v_sub))
-    if v ==  h == 1:
+    if v == h == 1:
         canvas[h_complement + margin:h_complement + margin + img.shape[0],
                         margin:margin + img.shape[1], :] = img
         if path:

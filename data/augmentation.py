@@ -129,7 +129,7 @@ def combine_augs(det_list, rand_list, size):
     :param size: represent for deterministic resize operation
     :return: imgaug.augmenters.Sequential Object
     """
-    # ----------------------------------------------Combine imgaug process----------------------------------------------
+    # ------------------------------Combine imgaug process------------------------------
     if det_list is None:
         det_list = []
     if rand_list is None:
