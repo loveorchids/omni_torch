@@ -15,7 +15,7 @@
 
 """
 
-import os, glob, warnings
+import os, glob, warnings, datetime
 import torch
 import numpy as np
 import random
@@ -75,7 +75,7 @@ def prepare_args(args, presets, options=None):
             return args
     
     def save_args(args):
-        path = os.path.expanduser(os.path.join(args.path, args.code_name, "preset.json"))
+        path = os.path.expanduser(os.path.join(args.path, args.code_name, "preset_%s.json"%(datetime.datetime.now())))
         with open(path, "w") as file:
             json.dump(vars(args), file)
         return
