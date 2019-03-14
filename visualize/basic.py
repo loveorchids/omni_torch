@@ -15,7 +15,7 @@
 
 """
 
-import os, math, time
+import os, math, time, warnings
 import torch
 import cv2
 import numpy as np
@@ -115,7 +115,7 @@ def to_image(args, tensor, margin, deNormalize, sub_title=None, font_size=0.5):
 
 
 def plot_tensor(args, tensor, path=None, title=None, sub_title=None, op=to_image, ratio=1,
-                margin=5, sub_margin=True, deNormalize=False, font_size=1, bg_color=255):
+                margin=5, sub_margin=True, deNormalize=True, font_size=1, bg_color=255):
     """
     This is a function to plot one tensor at a time.
     :param tensor: can be gradient, parameter, data_batch, etc.
@@ -126,13 +126,16 @@ def plot_tensor(args, tensor, path=None, title=None, sub_title=None, op=to_image
     :param margin: the distance between each image patches
     :return:
     """
-    assert 0.2 <= ratio <= 5, "this ratio is too strange"
+    if not 0.2 <= ratio <= 5:
+        warnings.warn("ratio=%s will probably make the image to be strange"%(ratio))
     num = tensor.size(0)
     if sub_title:
-        assert num == len(sub_title), "Number of sub titles should be same as the number of plot tensors"
+        assert num == len(sub_title), "Number of sub titles must be same as the number of plot tensors"
         sub_length = len(sub_title[0])
         for sub in sub_title:
-            assert  len(str(sub)) == sub_length, "Each element in sub_title should be the same length."
+            if len(str(sub)) != sub_length:
+                warnings.warn("length of string in sub_title are recommended to be same.")
+                break
     else:
         sub_title = [None] * num
     v = int(max(math.sqrt(num / ratio), 1))
