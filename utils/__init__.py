@@ -137,8 +137,8 @@ def save_model(args, epoch, state_dict, keep_latest=5, prefix=None):
 
 
 
-def load_latest_model(args, net, prefix=None):
-    def _load_latset_model(_args, _net, _prefix=None):
+def load_latest_model(args, net, prefix=None, return_state_dict=False):
+    def _load_latset_model(_args, _net, _prefix, return_state_dict):
         if _prefix:
             model_list = [_ for _ in glob.glob(_args.model_dir + "/%s_*.pth" % (_prefix)) if os.path.isfile(_)]
         else:
@@ -153,6 +153,8 @@ def load_latest_model(args, net, prefix=None):
             model_data = torch.load(model_list[-1], map_location='cpu')
         else:
             model_data = torch.load(model_list[-1])
+        if return_state_dict:
+            return model_data
         try:
             _net.load_state_dict(model_data)
         except RuntimeError:
@@ -165,10 +167,10 @@ def load_latest_model(args, net, prefix=None):
         assert type(prefix) is list or type(prefix) is tuple, "input param 'prefix' should either be a list or a tuple"
         assert len(net) == len(prefix), "input param 'net' contains %s network while prefix has %s element"\
                                         %(len(net), len(prefix))
-        nets = [_load_latset_model(args, n, prefix[i]) for i, n in enumerate(net)]
+        nets = [_load_latset_model(args, n, prefix[i], return_state_dict) for i, n in enumerate(net)]
         return nets
     else:
-        return _load_latset_model(args, net, prefix)
+        return _load_latset_model(args, net, prefix, return_state_dict)
 
 
 
