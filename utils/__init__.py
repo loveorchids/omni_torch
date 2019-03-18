@@ -15,7 +15,7 @@
 
 """
 
-import os, glob, warnings, datetime
+import os, glob, warnings, datetime, itertools
 import torch
 import numpy as np
 import random
@@ -136,9 +136,8 @@ def save_model(args, epoch, state_dict, keep_latest=5, prefix=None):
         _save_model(args, epoch, state_dict, keep_latest, prefix)
 
 
-
-def load_latest_model(args, net, prefix=None, return_state_dict=False):
-    def _load_latset_model(_args, _net, _prefix, return_state_dict):
+def load_latest_model(args, net, prefix=None, return_state_dict=False, nth=1):
+    def _load_latset_model(_args, _net, _prefix, return_state_dict, _nth):
         if _prefix:
             model_list = [_ for _ in glob.glob(_args.model_dir + "/%s_*.pth" % (_prefix)) if os.path.isfile(_)]
         else:
@@ -147,12 +146,13 @@ def load_latest_model(args, net, prefix=None, return_state_dict=False):
             warnings.warn("Cannot find models")
             return _net
         model_list.sort()
-        epoch = int(model_list[-1][model_list[-1].rfind("_") + 1:model_list[-1].rfind(".")])
-        print("Load model form: " + model_list[-1])
+        _nth = -1 * _nth
+        epoch = int(model_list[_nth][model_list[_nth].rfind("_") + 1:model_list[_nth].rfind(".")])
+        print("Load model form: " + model_list[_nth])
         if not torch.cuda.is_available():
-            model_data = torch.load(model_list[-1], map_location='cpu')
+            model_data = torch.load(model_list[_nth], map_location='cpu')
         else:
-            model_data = torch.load(model_list[-1])
+            model_data = torch.load(model_list[_nth])
         if return_state_dict:
             return model_data
         try:
@@ -167,12 +167,10 @@ def load_latest_model(args, net, prefix=None, return_state_dict=False):
         assert type(prefix) is list or type(prefix) is tuple, "input param 'prefix' should either be a list or a tuple"
         assert len(net) == len(prefix), "input param 'net' contains %s network while prefix has %s element"\
                                         %(len(net), len(prefix))
-        nets = [_load_latset_model(args, n, prefix[i], return_state_dict) for i, n in enumerate(net)]
+        nets = [_load_latset_model(args, n, prefix[i], return_state_dict, nth) for i, n in enumerate(net)]
         return nets
     else:
-        return _load_latset_model(args, net, prefix, return_state_dict)
-
-
+        return _load_latset_model(args, net, prefix, return_state_dict, nth)
 
 
 def normalize_image(args, img, mean=None, std=None, bias=None):
@@ -206,6 +204,60 @@ def denormalize_image(args, img, mean=None, std=None, bias=None):
         raise RuntimeError("image channel should either be 1 or 3")
     return 255 * ((img - bias) * std + mean)
 
+def create_chunks(xs, k_fold):
+    if k_fold > 1:
+        print("input parameter 'split_val' will be automatically set to %s as k_fold is: %s"
+              % (1 / k_fold, k_fold))
+    n = k_fold
+    xs = list(xs)
+    random.shuffle(xs)
+    ylen = len(xs)
+    size = int(ylen / n)
+    chnks = [xs[0 + size * i: size * (i + 1)] for i in range(n)]
+    leftover = ylen - size * n
+    edge = size * n
+    for i in range(leftover):
+        chnks[i % n].append(xs[edge + i])
+    return chnks
+
+def k_fold_cross_validation(args, dataset, batch_size, batch_size_val, k_fold, collate_fn=None):
+    from torch.utils.data import sampler, DataLoader, ConcatDataset
+    samples = sum([len(d) for d in dataset]) - 1
+    kwargs = {'num_workers': args.loading_threads, 'pin_memory': True} if torch.cuda.is_available() else {}
+    chunks = create_chunks(range(samples), k_fold)
+    train_sets, val_sets = [], []
+    for idx in range(k_fold):
+        # Due to cross validation will randomly shuffle the data
+        # Thus shuffle will be automatically turned of here
+        shuffle = False
+        train_index = [chnk for i, chnk in enumerate(chunks) if i != idx]
+        train_index = list(itertools.chain.from_iterable(train_index))
+        val_index = chunks[idx]
+        train_sampler = sampler.SubsetRandomSampler(train_index)
+        validation_sampler = sampler.SubsetRandomSampler(val_index)
+        train_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size,
+                                     shuffle=shuffle, sampler=train_sampler, collate_fn=collate_fn,**kwargs))
+        val_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size_val,
+                                   shuffle=shuffle, sampler=validation_sampler, collate_fn=collate_fn,
+                                   **kwargs))
+    return list(zip(train_sets, val_sets))
+
+def split_train_val_dataset(args, dataset, batch_size,  batch_size_val, split_val, collate_fn=None):
+    from torch.utils.data import sampler, DataLoader, ConcatDataset
+    samples = sum([len(d) for d in dataset]) - 1
+    kwargs = {'num_workers': args.loading_threads, 'pin_memory': True} if torch.cuda.is_available() else {}
+    train_index = random.sample(range(samples), samples - int(samples * split_val))
+    train_index_set = set(train_index)
+    val_index = [i for i in range(samples) if i not in train_index_set]
+    train_sampler = sampler.SubsetRandomSampler(train_index)
+    val_sampler = sampler.SubsetRandomSampler(val_index)
+    train_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size,
+                           shuffle=False, sampler=train_sampler, collate_fn=collate_fn,
+                           **kwargs)
+    val_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size_val,
+                         shuffle=False, sampler=val_sampler, collate_fn=collate_fn,
+                         **kwargs)
+    return [(train_set, val_set)]
 
 if __name__ == "__main__":
     pass
