@@ -42,7 +42,7 @@ def prepare_augmentation(args):
     :return:
     """
     aug_dict = {}
-    default = ["affine", "crop", "pad", "flip", "brightness", "noise"]
+    default = ["affine", "crop", "crop_to_fix", "pad", "flip", "brightness", "noise"]
     # --------------------------------------Geometry---------------------------------------
     if args.do_affine:
         aug_dict.update({"affine": [
@@ -50,8 +50,15 @@ def prepare_augmentation(args):
                               translate_percent={"x": args.translation_x, "y": args.translation_y},
                               shear=args.shear, cval=args.aug_bg_color, name="rand_affine"),
         ]})
-    if args.do_crop_to_fix_size:
+    if args.do_crop:
+        crop_px = tuple(args.crop_pixel) if args.crop_pixel else None
+        crop_pct = tuple(args.crop_percent) if args.crop_percent else None
         aug_dict.update({"crop": [
+            augmenters.Crop(px=crop_px, percent=crop_pct,
+                            sample_independently=args.crop_samp_indp, name="crop"),
+        ]})
+    if args.do_crop_to_fix_size:
+        aug_dict.update({"crop_to_fix": [
             augmenters.CropToFixedSize(width=args.crop_size[1], height=args.crop_size[0],
                                        name="crop_to_fix_size"),
         ]})
