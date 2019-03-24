@@ -37,7 +37,7 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
             image = cv2.imread(path)
         bbox = None
     if pre_process:
-        result = pre_process(image, args, path, seed, size)
+        result = pre_process(image, args, items, seed, size)
         if type(result) is list or type(result) is tuple:
             image, data = result[0], result[1:]
         else:

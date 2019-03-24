@@ -84,6 +84,12 @@ class Arbitrary_Dataset(tud.Dataset):
 
     def summary(self):
         print("data loading pipeline summarization function will be implemented soon")
+
+    def test_augmentation(self, order):
+        from imgaug import augmenters
+        aug = augmenters.Sequential(self.augmentation, random_order=False)
+        for data in self.dataset:
+            print(data)
         
     def __len__(self):
         return len(self.dataset)

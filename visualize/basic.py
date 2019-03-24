@@ -205,14 +205,14 @@ def plot_tensor(args, tensor, path=None, title=None, sub_title=None, op=to_image
 
 
 def plot_loss_distribution(losses, keyname, save_path, name, epoch=0, weight=None,
-                           window=7, fig_size=(18, 6), low_bound=None, high_bound=None):
+                           window=5, fig_size=(18, 6), low_bound=None, high_bound=None):
     names = []
     if keyname:
         for key in keyname:
             suffix = ": " + str(weight[key])[:5] if weight else ""
             names.append(key.ljust(8) + suffix)
     x_axis = range(len(losses[0]))
-    if ss:
+    if ss and window > 1:
         losses = [ss.savgol_filter(_, window, 2) for _ in losses]
     losses.append(np.asarray(list(x_axis)))
 
@@ -229,7 +229,7 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch=0, weight=Non
     plt.legend(loc='upper right')
     if low_bound and high_bound:
         plt.ylim(low_bound, high_bound)
-    img_name = name + str(epoch).zfill(4) + ".jpg"
+    img_name = name + "_" + str(epoch).zfill(4) + ".jpg"
     plt.savefig(os.path.join(save_path, img_name))
     plt.close()
 

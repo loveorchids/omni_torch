@@ -42,13 +42,17 @@ def prepare_augmentation(args):
     :return:
     """
     aug_dict = {}
-    default = ["affine", "crop", "crop_to_fix", "pad", "flip", "brightness", "noise"]
+    default = ["affine","resize", "crop", "crop_to_fix", "pad", "flip", "brightness", "noise"]
     # --------------------------------------Geometry---------------------------------------
     if args.do_affine:
         aug_dict.update({"affine": [
             augmenters.Affine(scale={"x": args.scale_x, "y": args.scale_y},rotate=args.rotation,
                               translate_percent={"x": args.translation_x, "y": args.translation_y},
                               shear=args.shear, cval=args.aug_bg_color, name="rand_affine"),
+        ]})
+    if args.do_resize:
+        aug_dict.update({"resize": [
+            augmenters.Resize(size=args.resize_size)
         ]})
     if args.do_crop:
         crop_px = tuple(args.crop_pixel) if args.crop_pixel else None
