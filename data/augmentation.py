@@ -6,29 +6,19 @@ def prepare_deterministic_augmentation(args, det_info):
     """
     Created each time when loading a specific image
     :param args:
-    :param det_info:
+    :param det_info: a dictionary
     :return:
     """
     # --------------------Create deterministic process from args---------------------
-    rotation, do_crop = None, None
+    aug_list = []
     if det_info is None:
         return None
-    if len(det_info) == 1:
-        rotation = det_info
-    elif len(det_info) == 4:
-        do_crop = det_info
-        top_crop, right_crop, bottom, left = det_info
-    elif len(det_info) == 5:
-        do_crop = det_info
-        rotation, top_crop, right_crop, bottom, left = det_info
-    else:
-        return None
-    aug_list = []
-    if rotation:
+    if "rotation" in det_info:
         aug_list.append(
-            augmenters.Affine(rotate=rotation, cval=args.aug_bg_color),
+            augmenters.Affine(rotate=det_info["rotation"], cval=args.aug_bg_color),
         )
-    if do_crop:
+    if "crop" in det_info:
+        top_crop, right_crop, bottom, left = det_info["crop"]
         aug_list.append(
             augmenters.Crop(px=(top_crop, right_crop, bottom, left)),
         )
@@ -141,8 +131,6 @@ def combine_augs(det_list, rand_list, size):
     :return: imgaug.augmenters.Sequential Object
     """
     # ------------------------------Combine imgaug process------------------------------
-    if det_list is None:
-        det_list = []
     if rand_list is None:
         rand_list = []
     if size is None:
