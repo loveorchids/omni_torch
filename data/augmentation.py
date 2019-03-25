@@ -15,12 +15,12 @@ def prepare_deterministic_augmentation(args, det_info):
         return None
     if "rotation" in det_info:
         aug_list.append(
-            augmenters.Affine(rotate=det_info["rotation"], cval=args.aug_bg_color),
+            augmenters.Affine(rotate=det_info["rotation"], cval=args.aug_bg_color, fit_output=True),
         )
     if "crop" in det_info:
         top_crop, right_crop, bottom, left = det_info["crop"]
         aug_list.append(
-            augmenters.Crop(px=(top_crop, right_crop, bottom, left)),
+            augmenters.Crop(px=(top_crop, right_crop, bottom, left), keep_size=False),
         )
     return aug_list
 
