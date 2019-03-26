@@ -131,6 +131,8 @@ def combine_augs(det_list, rand_list, size):
     :return: imgaug.augmenters.Sequential Object
     """
     # ------------------------------Combine imgaug process------------------------------
+    if det_list is None:
+        det_list = []
     if rand_list is None:
         rand_list = []
     if size is None:
