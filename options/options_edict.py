@@ -23,7 +23,7 @@ def initialize():
     """
     return edict({
         "code_name": None,
-        "cover_exist":False,
+        "cover_exist": True,
         "create_path":True,
 
         "gpu_id": "0",
