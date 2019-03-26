@@ -27,7 +27,7 @@ ALLOW_WARNING = data.ALLOW_WARNING
 
 class Arbitrary_Dataset(tud.Dataset):
     def __init__(self, args, sources, step_1, step_2, pre_process=None, bbox_loader=None,
-                 auxiliary_info=None, **options):
+                 auxiliary_info=None, augmentation=None, **options):
         """
         A generalized data initialization method, inherited by other data class, e.g. ilsvrc, img2img, etc.
         Arbitrary is a parent class of all other data class.
@@ -48,26 +48,18 @@ class Arbitrary_Dataset(tud.Dataset):
         self.sources = sources
         self.step_1 = step_1
         self.step_2 = step_2
-        self.augmentation = aug.prepare_augmentation(args)
 
-        # data_types represent the number of input source and output labels
         num_of_data = len(step_2)
-        
-        if auxiliary_info:
-            assert len(auxiliary_info) == num_of_data
-            self.sub_folder = auxiliary_info
+        self.sub_folder = self.standardize_input(auxiliary_info, num_of_data)
+        self.pre_process = self.standardize_input(pre_process, num_of_data)
+        self.bbox_loader = self.standardize_input(bbox_loader, num_of_data)
+        self.sizes = self.standardize_input(args.final_size, num_of_data)
+        if args.do_imgaug:
+            ops = aug.prepare_augmentation(args)
+            self.augmentation = [ops] * num_of_data
         else:
-            self.sub_folder = [None] * num_of_data
-        if pre_process:
-            assert len(pre_process) == num_of_data
-            self.pre_process = pre_process
-        else:
-            self.pre_process = [None] * num_of_data
-        if bbox_loader:
-            assert len(bbox_loader) == num_of_data
-            self.bbox_loader = bbox_loader
-        else:
-            self.bbox_loader = [None] * num_of_data
+            self.augmentation = self.standardize_input(augmentation, num_of_data)
+        """
         if args.to_final_size:
             self.sizes = args.final_size
             assert len(self.sizes) == num_of_data
@@ -78,18 +70,37 @@ class Arbitrary_Dataset(tud.Dataset):
             warnings.warn("omni_torch recommand you to setup args.to_final_size and args.final_size\n"
                           "otherwise, you might possibility to encounter errors during batch generation.")
             self.sizes = [None] * num_of_data
+        """
         
     def prepare(self):
         self.dataset = self.load_dataset()
 
     def summary(self):
-        print("data loading pipeline summarization function will be implemented soon")
+        #print("data loading pipeline summarization function will be implemented soon")
+        for i, source in enumerate(self.sources):
+            print("Print the piprline of loading %s"%(source))
+            print("1. Path and other infomation will be loaded by:")
+            print(self.step_1)
+            step = 1
+            if self.pre_process[i] is not None:
+                step += 1
+                print("%s. During data loading, pre-process will be executed:"%(step))
+                print(self.pre_process[i])
 
-    def test_augmentation(self, order):
+
+    def test_augmentation(self):
         from imgaug import augmenters
         aug = augmenters.Sequential(self.augmentation, random_order=False)
         for data in self.dataset:
             print(data)
+
+    @staticmethod
+    def standardize_input(input, num_of_data):
+        if input:
+            assert len(input) == num_of_data
+            return input
+        else:
+            return [None] * num_of_data
         
     def __len__(self):
         return len(self.dataset)
@@ -120,7 +131,7 @@ class Arbitrary_Dataset(tud.Dataset):
         for i in range(len(items)):
             if callable(self.step_2[i]):
                 result.append(self.step_2[i](args=self.args, items=items[i], seed=seed, size=self.sizes[i],
-                                             pre_process=self.pre_process[i], rand_aug=self.augmentation,
+                                             pre_process=self.pre_process[i], rand_aug=self.augmentation[i],
                                              bbox_loader=self.bbox_loader[i]))
             else:
                 raise TypeError

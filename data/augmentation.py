@@ -11,7 +11,7 @@ def prepare_deterministic_augmentation(args, det_info):
     """
     # --------------------Create deterministic process from args---------------------
     aug_list = []
-    if det_info is None:
+    if det_info is None or bool(det_info) is False:
         return None
     if "rotation" in det_info:
         aug_list.append(
@@ -123,7 +123,7 @@ def prepare_augmentation(args):
     return seq
 
 
-def combine_augs(det_list, rand_list, size):
+def combine_augs(det_list, rand_list, size=None):
     """
     :param det_list: represent for deterministic augmentation
     :param rand_list: represent for random augmentation

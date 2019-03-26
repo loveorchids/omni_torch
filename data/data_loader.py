@@ -44,18 +44,11 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
             image, data = result, None
     else:
         data = None
-    if args.standardize_size:
-        if size is None:
-            size = (image.shape[0], image.shape[1])
-        # Sometimes we need the size of image to be dividable by certain number
-        height = args.standardize_gcd * round(size[0] / args.standardize_gcd)
-        width = args.standardize_gcd * round(size[1] / args.standardize_gcd)
-        size = (height, width)
     # If pre-process returns some information about deterministic augmentation
     # Then initialize the deterministic augmentation based on that information
     det_aug_list = aug.prepare_deterministic_augmentation(args, data)
-    if args.do_imgaug:
-        aug_seq = aug.combine_augs(det_aug_list, rand_aug, size)
+    if args.do_imgaug or rand_aug is not None:
+        aug_seq = aug.combine_augs(det_aug_list, rand_aug)
     else:
         aug_seq = None
     if bbox:
