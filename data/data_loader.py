@@ -37,11 +37,7 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
             image = cv2.imread(path)
         bbox = None
     if pre_process:
-        result = pre_process(image, args, items, seed, size)
-        if type(result) is list or type(result) is tuple:
-            image, data = result
-        else:
-            image, data = result, None
+        image, data = pre_process(image, args, items, seed, size)
     else:
         data = None
     # If pre-process returns some information about deterministic augmentation
