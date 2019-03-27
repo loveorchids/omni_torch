@@ -43,10 +43,7 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
     # If pre-process returns some information about deterministic augmentation
     # Then initialize the deterministic augmentation based on that information
     det_aug_list = aug.prepare_deterministic_augmentation(args, data)
-    if args.do_imgaug or rand_aug is not None:
-        aug_seq = aug.combine_augs(det_aug_list, rand_aug)
-    else:
-        aug_seq = None
+    aug_seq = aug.combine_augs(det_aug_list, rand_aug)
     if bbox:
         if aug_seq:
             # Do random augmentaion defined in pipline declaration

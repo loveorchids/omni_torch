@@ -53,13 +53,11 @@ class Arbitrary_Dataset(tud.Dataset):
         self.sub_folder = self.standardize_input(auxiliary_info, num_of_data)
         self.pre_process = self.standardize_input(pre_process, num_of_data)
         self.bbox_loader = self.standardize_input(bbox_loader, num_of_data)
-        self.sizes = self.standardize_input(args.final_size, num_of_data)
         if args.do_imgaug:
             ops = aug.prepare_augmentation(args)
             self.augmentation = [ops] * num_of_data
         else:
             self.augmentation = self.standardize_input(augmentation, num_of_data)
-        """
         if args.to_final_size:
             self.sizes = args.final_size
             assert len(self.sizes) == num_of_data
@@ -70,7 +68,6 @@ class Arbitrary_Dataset(tud.Dataset):
             warnings.warn("omni_torch recommand you to setup args.to_final_size and args.final_size\n"
                           "otherwise, you might possibility to encounter errors during batch generation.")
             self.sizes = [None] * num_of_data
-        """
         
     def prepare(self):
         self.dataset = self.load_dataset()
