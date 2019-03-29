@@ -56,19 +56,19 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
         coords = []
         labels = []
         h, w = image.shape[0], image.shape[1]
-        for i, bbox in enumerate(bbox.bounding_boxes):
-            condition_1 = bbox.x1 <= 0 and bbox.x2 <= 0
-            condition_2 = bbox.y1 <= 0 and bbox.y2 <= 0
-            condition_3 = bbox.x1 >= w -1 and bbox.x2 >= w -1
-            condition_4 = bbox.y1 >= h -1 and bbox.y2 >= h -1
+        for i, box in enumerate(bbox.bounding_boxes):
+            condition_1 = box.x1 <= 0 and box.x2 <= 0
+            condition_2 = box.y1 <= 0 and box.y2 <= 0
+            condition_3 = box.x1 >= w -1 and box.x2 >= w -1
+            condition_4 = box.y1 >= h -1 and box.y2 >= h -1
             if condition_1 or condition_2 or condition_3 or condition_4:
                 # After aigmentation, at least one dimension of the bbox exceeded the image
                 # omni_torch will ignore this bbox
                 continue
             horizontal_constrain = lambda x: max(min(w, x), 0)
             vertival_constrain = lambda y: max(min(h, y), 0)
-            coords.append([horizontal_constrain(bbox.x1)/h, vertival_constrain(bbox.y1)/w,
-                           horizontal_constrain(bbox.x2)/h, vertival_constrain(bbox.y2)/w])
+            coords.append([horizontal_constrain(box.x1)/w, vertival_constrain(box.y1)/h,
+                           horizontal_constrain(box.x2)/w, vertival_constrain(box.y2)/h])
             labels.append(box_label[i])
         coords = torch.Tensor(coords)
         labels = torch.Tensor(labels)
