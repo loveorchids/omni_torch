@@ -223,7 +223,7 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch=0, weight=Non
 
     try:
         plt.subplots(figsize=fig_size)
-    except _tkinter.tclerror:
+    except _tkinter.TclError:
         matplotlib.use("Agg")
         plt.subplots(figsize=fig_size)
     for i, data in enumerate(names):
