@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 from easydict import EasyDict as edict
 import matplotlib
+matplotlib.use("Agg")
 import omni_torch.utils as util
 import matplotlib.pyplot as plt
 from tkinter import _tkinter
@@ -221,11 +222,7 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch=0, weight=Non
     plot_data = dict(zip(names, losses))
     df = pd.DataFrame(plot_data)
 
-    try:
-        plt.subplots(figsize=fig_size)
-    except _tkinter.TclError:
-        matplotlib.use("Agg")
-        plt.subplots(figsize=fig_size)
+    plt.subplots(figsize=fig_size)
     for i, data in enumerate(names):
         if i == len(names) -1:
             break
