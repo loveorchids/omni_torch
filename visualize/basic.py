@@ -21,8 +21,6 @@ import cv2
 import numpy as np
 import pandas as pd
 from easydict import EasyDict as edict
-import matplotlib
-matplotlib.use("Agg")
 import omni_torch.utils as util
 import matplotlib.pyplot as plt
 from tkinter import _tkinter
