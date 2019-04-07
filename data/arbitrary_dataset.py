@@ -68,9 +68,11 @@ class Arbitrary_Dataset(tud.Dataset):
             self.sizes = [None] * num_of_data
         
     def prepare(self):
-        print("loading data from: %s"%(self.sources))
+        print("Loading data from: %s location."%(len(self.sources)))
+        for i, source in enumerate(self.sources):
+            print("   => %s. %s"%(i+1, os.path.join(self.args.path, source)))
         self.dataset = self.load_dataset()
-        print("Length of dataset is: %s"%(len(self.dataset)))
+        print("Number of sample in dataset is: %s"%(len(self.dataset)))
 
     def summary(self):
         #print("data loading pipeline summarization function will be implemented soon")
