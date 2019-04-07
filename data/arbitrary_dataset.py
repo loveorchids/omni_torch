@@ -65,12 +65,12 @@ class Arbitrary_Dataset(tud.Dataset):
                 assert len(size) == 2, "each element inside the args.final_size have 2 dimensions, \n" \
                                        "height and width, respectively"
         else:
-            warnings.warn("omni_torch recommand you to setup args.to_final_size and args.final_size\n"
-                          "otherwise, you might possibility to encounter errors during batch generation.")
             self.sizes = [None] * num_of_data
         
     def prepare(self):
+        print("loading data from: %s"%(self.sources))
         self.dataset = self.load_dataset()
+        print("Length of dataset is: %s"%(len(self.dataset)))
 
     def summary(self):
         #print("data loading pipeline summarization function will be implemented soon")
