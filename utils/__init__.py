@@ -73,13 +73,6 @@ def prepare_args(args, presets, options=None):
             args = preset[preset_code](args)
             # pattern_dict = pattern.create_args(self.args)
             return args
-    
-    def save_args(args):
-        path = os.path.expanduser(os.path.join(args.path, args.code_name, "preset_%s.json"%(datetime.datetime.now())))
-        with open(path, "w") as file:
-            json.dump(vars(args), file)
-        return
-    
     def make_folder(args, name=""):
         path = os.path.join(args.path, args.code_name, name)
         if not os.path.exists(path):
@@ -104,8 +97,14 @@ def prepare_args(args, presets, options=None):
         args.loss_log = make_folder(args, "loss")
         args.grad_log = make_folder(args, "grad")
         args.val_log = make_folder(args, "val")
-    save_args(args)
     return args
+
+
+def save_args(args):
+    path = os.path.expanduser(os.path.join(args.path, args.code_name, "preset_%s.json"%(datetime.datetime.now())))
+    with open(path, "w") as file:
+        json.dump(vars(args), file)
+    return
 
 
 def save_model(args, epoch, state_dict, keep_latest=5, prefix=None):

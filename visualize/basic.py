@@ -15,7 +15,7 @@
 
 """
 
-import os, math, time, warnings
+import os, math, time, warnings, datetime
 import torch
 import cv2
 import numpy as np
@@ -203,8 +203,8 @@ def plot_tensor(args, tensor, path=None, title=None, sub_title=None, op=to_image
         return canvas
 
 
-def plot_loss_distribution(losses, keyname, save_path, name, epoch=0, weight=None,
-                           window=5, fig_size=(18, 6), low_bound=None, high_bound=None):
+def plot_loss_distribution(losses, keyname, save_path, name, epoch=None, weight=None,
+                           window=5, fig_size=(18, 6), bound=None, grid=True):
     names = []
     if keyname:
         for key in keyname:
@@ -226,9 +226,13 @@ def plot_loss_distribution(losses, keyname, save_path, name, epoch=0, weight=Non
             break
         plt.plot(data, data=df, markersize=1, linewidth=1)
     plt.legend(loc='upper right')
-    if low_bound and high_bound:
-        plt.ylim(low_bound, high_bound)
-    img_name = name + "_" + str(epoch).zfill(4) + ".jpg"
+    if bound is not None:
+        assert len(bound) == 2
+        plt.ylim(bound[0], bound[1])
+    if grid:
+        plt.grid()
+    ep = "_" + str(int(epoch)).zfill(4) if epoch is not None else ""
+    img_name = name + ep + ".jpg"
     plt.savefig(os.path.join(save_path, img_name))
     plt.close()
 
