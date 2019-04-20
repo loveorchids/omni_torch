@@ -234,11 +234,16 @@ def k_fold_cross_validation(args, dataset, batch_size, batch_size_val, k_fold, c
         val_index = chunks[idx]
         train_sampler = sampler.SubsetRandomSampler(train_index)
         validation_sampler = sampler.SubsetRandomSampler(val_index)
-        train_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size,
-                                     shuffle=shuffle, sampler=train_sampler, collate_fn=collate_fn,**kwargs))
-        val_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size_val,
-                                   shuffle=shuffle, sampler=validation_sampler, collate_fn=collate_fn,
-                                   **kwargs))
+        if collate_fn:
+            train_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size,
+                                         shuffle=shuffle, sampler=train_sampler, collate_fn=collate_fn, **kwargs))
+            val_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size_val,
+                                       shuffle=shuffle, sampler=validation_sampler, collate_fn=collate_fn, **kwargs))
+        else:
+            train_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size,
+                                         shuffle=shuffle, sampler=train_sampler, **kwargs))
+            val_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size_val,
+                                       shuffle=shuffle, sampler=validation_sampler, **kwargs))
     return list(zip(train_sets, val_sets))
 
 def split_train_val_dataset(args, dataset, batch_size,  batch_size_val, split_val, collate_fn=None):
@@ -250,12 +255,16 @@ def split_train_val_dataset(args, dataset, batch_size,  batch_size_val, split_va
     val_index = [i for i in range(samples) if i not in train_index_set]
     train_sampler = sampler.SubsetRandomSampler(train_index)
     val_sampler = sampler.SubsetRandomSampler(val_index)
-    train_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size,
-                           shuffle=False, sampler=train_sampler, collate_fn=collate_fn,
-                           **kwargs)
-    val_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size_val,
-                         shuffle=False, sampler=val_sampler, collate_fn=collate_fn,
-                         **kwargs)
+    if collate_fn:
+        train_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size, shuffle=False,
+                               sampler=train_sampler, collate_fn=collate_fn, **kwargs)
+        val_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size_val, shuffle=False,
+                             sampler=val_sampler, collate_fn=collate_fn, **kwargs)
+    else:
+        train_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size, shuffle=False,
+                               sampler=train_sampler, **kwargs)
+        val_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size_val, shuffle=False,
+                             sampler=val_sampler, **kwargs)
     return [(train_set, val_set)]
 
 if __name__ == "__main__":
