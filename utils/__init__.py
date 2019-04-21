@@ -24,19 +24,21 @@ from omni_torch.options.base_options import BaseOptions
 import omni_torch.options.options_edict as edict_options
 
 
-def get_stride_padding_kernel(input, out):
-    """
-    Calculation based on:
-    https://www.quora.com/How-can-I-calculate-the-size-of-output-of-convolutional-layer
-    :param input:
-    :param out:
-    :return:
-    """
-    for K in range(1, 6):
-        for S in range(1, 6):
-            for P in range(6):
-                if float(P) == (input - 1 - S * (out - 1)) / 2:
-                    return S, P, K
+def cover_edict_with_argparse(args, e_dict):
+    from easydict import EasyDict as edict
+    args = vars(args)
+    e_dict = dict(e_dict)
+    for key in args.keys():
+        if key in e_dict:
+            if e_dict[key] == args[key]:
+                continue
+            else:
+                print("Key-value pair (%s, %s) in Edict was replaces by argsparse value (%s)" %
+                      (key, e_dict[key], args[key]))
+                e_dict[key] = args[key]
+        else:
+            print("The key in argparse (%s) does not exist in Edict"%(key))
+    return edict(e_dict)
 
 def get_args(preset):
     settings = BaseOptions().initialize()
