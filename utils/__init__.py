@@ -58,7 +58,7 @@ def get_args(preset):
         args.device = torch.device("cuda:" + args.gpu_id)
     return args
 
-def prepare_args(args, presets, options=None):
+def prepare_args(args, presets, options=('general', 'unique', 'runtime')):
     def load_preset(args, preset, preset_code):
         class Bunch:
             def __init__(self, adict):
