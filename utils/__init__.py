@@ -41,9 +41,9 @@ def cover_edict_with_argparse(args, e_dict):
     return edict(e_dict)
 
 def get_args(preset):
-    settings = BaseOptions().initialize()
+    #settings = BaseOptions().initialize()
     args = edict_options.initialize()
-    args = prepare_args(args, preset, options=settings.which)
+    args = prepare_args(args, preset)
     if args.deterministic_train:
         torch.backends.cudnn.deterministic = True
         torch.manual_seed(args.seed)
