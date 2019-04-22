@@ -24,24 +24,26 @@ from omni_torch.options.base_options import BaseOptions
 import omni_torch.options.options_edict as edict_options
 
 
-def get_stride_padding_kernel(input, out):
-    """
-    Calculation based on:
-    https://www.quora.com/How-can-I-calculate-the-size-of-output-of-convolutional-layer
-    :param input:
-    :param out:
-    :return:
-    """
-    for K in range(1, 6):
-        for S in range(1, 6):
-            for P in range(6):
-                if float(P) == (input - 1 - S * (out - 1)) / 2:
-                    return S, P, K
+def cover_edict_with_argparse(args, e_dict):
+    from easydict import EasyDict as edict
+    args = vars(args)
+    e_dict = dict(e_dict)
+    for key in args.keys():
+        if key in e_dict:
+            if e_dict[key] == args[key]:
+                continue
+            else:
+                print("Key-value pair (%s, %s) in Edict was replaces by argsparse value (%s)" %
+                      (key, e_dict[key], args[key]))
+                e_dict[key] = args[key]
+        else:
+            print("The key in argparse (%s) does not exist in Edict"%(key))
+    return edict(e_dict)
 
 def get_args(preset):
-    settings = BaseOptions().initialize()
+    #settings = BaseOptions().initialize()
     args = edict_options.initialize()
-    args = prepare_args(args, preset, options=settings.which)
+    args = prepare_args(args, preset)
     if args.deterministic_train:
         torch.backends.cudnn.deterministic = True
         torch.manual_seed(args.seed)
@@ -56,7 +58,7 @@ def get_args(preset):
         args.device = torch.device("cuda:" + args.gpu_id)
     return args
 
-def prepare_args(args, presets, options=None):
+def prepare_args(args, presets, options=('general', 'unique', 'runtime')):
     def load_preset(args, preset, preset_code):
         class Bunch:
             def __init__(self, adict):
@@ -234,11 +236,16 @@ def k_fold_cross_validation(args, dataset, batch_size, batch_size_val, k_fold, c
         val_index = chunks[idx]
         train_sampler = sampler.SubsetRandomSampler(train_index)
         validation_sampler = sampler.SubsetRandomSampler(val_index)
-        train_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size,
-                                     shuffle=shuffle, sampler=train_sampler, collate_fn=collate_fn,**kwargs))
-        val_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size_val,
-                                   shuffle=shuffle, sampler=validation_sampler, collate_fn=collate_fn,
-                                   **kwargs))
+        if collate_fn:
+            train_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size,
+                                         shuffle=shuffle, sampler=train_sampler, collate_fn=collate_fn, **kwargs))
+            val_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size_val,
+                                       shuffle=shuffle, sampler=validation_sampler, collate_fn=collate_fn, **kwargs))
+        else:
+            train_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size,
+                                         shuffle=shuffle, sampler=train_sampler, **kwargs))
+            val_sets.append(DataLoader(ConcatDataset(dataset), batch_size=batch_size_val,
+                                       shuffle=shuffle, sampler=validation_sampler, **kwargs))
     return list(zip(train_sets, val_sets))
 
 def split_train_val_dataset(args, dataset, batch_size,  batch_size_val, split_val, collate_fn=None):
@@ -250,12 +257,16 @@ def split_train_val_dataset(args, dataset, batch_size,  batch_size_val, split_va
     val_index = [i for i in range(samples) if i not in train_index_set]
     train_sampler = sampler.SubsetRandomSampler(train_index)
     val_sampler = sampler.SubsetRandomSampler(val_index)
-    train_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size,
-                           shuffle=False, sampler=train_sampler, collate_fn=collate_fn,
-                           **kwargs)
-    val_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size_val,
-                         shuffle=False, sampler=val_sampler, collate_fn=collate_fn,
-                         **kwargs)
+    if collate_fn:
+        train_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size, shuffle=False,
+                               sampler=train_sampler, collate_fn=collate_fn, **kwargs)
+        val_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size_val, shuffle=False,
+                             sampler=val_sampler, collate_fn=collate_fn, **kwargs)
+    else:
+        train_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size, shuffle=False,
+                               sampler=train_sampler, **kwargs)
+        val_set = DataLoader(ConcatDataset(dataset), batch_size=batch_size_val, shuffle=False,
+                             sampler=val_sampler, **kwargs)
     return [(train_set, val_set)]
 
 if __name__ == "__main__":
