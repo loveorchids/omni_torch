@@ -9,7 +9,6 @@ import omni_torch.data.augmentation as aug
 import imgaug
 from imgaug import augmenters
 
-ALLOW_WARNING = data.ALLOW_WARNING
 
 def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
                bbox_loader=None, _to_tensor=True):

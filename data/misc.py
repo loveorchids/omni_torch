@@ -19,7 +19,6 @@ import numpy as np
 import warnings
 import omni_torch.data as data
 
-ALLOW_WARNING = data.ALLOW_WARNING
 
 def number_to_char(num):
     assert (num >= 0 and num < 26), "Max 26 kind of input are supported."
@@ -64,7 +63,7 @@ def random_crop(image, crop_size, seed=None):
     if image.shape[1] < crop_size[1]:
         crop_size[1] = image.shape[1]
         RAISE_WARNING = True
-    if RAISE_WARNING and ALLOW_WARNING:
+    if RAISE_WARNING:
         warnings.warn('One dimension of crop_size is larger than image itself.')
     if seed:
         np.random.seed(seed)
@@ -90,5 +89,3 @@ if __name__ == "__main__":
     print(crop.shape)
     crop = random_crop(img, (21, 35))
     print(crop.shape)
-    pass
-    data.allow_warning(False)

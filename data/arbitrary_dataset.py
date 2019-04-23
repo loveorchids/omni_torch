@@ -15,17 +15,11 @@
 
 """
 
-import os, glob, random, warnings
-import omni_torch.data as data
+import os, random, warnings
 import omni_torch.data.misc as misc
-import omni_torch.data.path_loader as mode
-import omni_torch.data.data_loader as loader
 import omni_torch.data.augmentation as aug
-from torch.utils import data as tud
 
-ALLOW_WARNING = data.ALLOW_WARNING
-
-class Arbitrary_Dataset(tud.Dataset):
+class Arbitrary_Dataset(object):
     def __init__(self, args, sources, step_1, step_2, pre_process=None, bbox_loader=None,
                  auxiliary_info=None, augmentation=None, **options):
         """
@@ -42,7 +36,7 @@ class Arbitrary_Dataset(tud.Dataset):
         you to load as deep as you want to.
         :param options: For Future upgrade.
         """
-        assert max([len(sources), len(step_1)]) == min([len(sources), len(step_1)]), \
+        assert len(sources) == len(step_1), \
             "Length of 'sources', 'step_1' must be the same."
         self.args = args
         self.sources = sources
@@ -50,7 +44,7 @@ class Arbitrary_Dataset(tud.Dataset):
         self.step_2 = step_2
 
         num_of_data = len(step_2)
-        self.sub_folder = self.standardize_input(auxiliary_info, num_of_data)
+        self.auxiliary = self.standardize_input(auxiliary_info, num_of_data)
         self.pre_process = self.standardize_input(pre_process, num_of_data)
         self.bbox_loader = self.standardize_input(bbox_loader, num_of_data)
         if args.do_imgaug:
@@ -62,17 +56,26 @@ class Arbitrary_Dataset(tud.Dataset):
             self.sizes = args.final_size
             assert len(self.sizes) == num_of_data
             for size in self.sizes:
-                assert len(size) == 2, "each element inside the args.final_size have 2 dimensions, \n" \
+                assert len(size) == 2, "each element inside the args.final_size have 2 dimensions, " \
                                        "height and width, respectively"
         else:
             self.sizes = [None] * num_of_data
         
     def prepare(self):
-        print("Loading data from %s location."%(len(self.sources)))
-        for i, source in enumerate(self.sources):
-            print("   location %s: %s"%(i+1, os.path.join(self.args.path, source)))
+        if len(self.sources) == 1:
+            print("Loading data from: %s."%(os.path.join(self.args.path, self.sources[0])))
+        elif len(self.sources) > 1:
+            print("Loading data from %s locations."%(len(self.sources)))
+            for i, source in enumerate(self.sources):
+                source_path = os.path.join(self.args.path, source)
+                if not os.path.exists(source_path):
+                    raise FileNotFoundError("%s does not exist on your disk, please check."
+                                            %source_path)
+                print("|==> %d. %s"%(i+1, os.path.join(self.args.path, source)))
+        else:
+            raise ValueError("Length of the source must be larger than 0")
         self.dataset = self.load_dataset()
-        print("Number of sample in dataset is: %s"%(len(self.dataset)))
+        print("Number of samples in dataset is: %s"%(len(self.dataset)))
 
     def summary(self):
         #print("data loading pipeline summarization function will be implemented soon")
@@ -95,7 +98,7 @@ class Arbitrary_Dataset(tud.Dataset):
 
     @staticmethod
     def standardize_input(input, num_of_data):
-        if input:
+        if input is not None:
             assert len(input) == num_of_data
             return input
         else:
@@ -160,16 +163,9 @@ class Arbitrary_Dataset(tud.Dataset):
                     sub_paths.append([os.path.join(path, _) for _ in source])
                 else:
                     raise TypeError
-            if self.step_1[i] == "path":
-                data += mode.load_path_from_folder(self.args, len(data), sub_paths[i],
-                                                   self.sub_folder[i])
-            elif self.step_1[i] == "sep_path":
-                data += mode.load_path_from_multi_folder(self.args, len(data), sub_paths[i],
-                                                         self.sub_folder[i])
-            # We can add other modes if we want
-            elif callable(self.step_1[i]):
+            if callable(self.step_1[i]):
                 # mode[i] is a function
-                data += self.step_1[i](self.args, len(data), sub_paths[i], self.sub_folder[i])
+                data += self.step_1[i](self.args, len(data), sub_paths[i], self.auxiliary[i])
             else:
                 raise NotImplementedError
         dataset = []

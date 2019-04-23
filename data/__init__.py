@@ -14,5 +14,3 @@
 # limitations under the License.
 
 """
-
-ALLOW_WARNING = False
