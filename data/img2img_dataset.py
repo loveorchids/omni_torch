@@ -20,7 +20,6 @@ import omni_torch.data.misc as misc
 from omni_torch.data.arbitrary_dataset import Arbitrary_Dataset
 import omni_torch.data as data
 
-ALLOW_WARNING = data.ALLOW_WARNING
 
 class Img2Img_Dataset(Arbitrary_Dataset):
     def __init__(self, args, sources, step_1, step_2, auxiliary_info, pre_process=None,

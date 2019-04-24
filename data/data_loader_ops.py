@@ -22,7 +22,6 @@ import cv2
 import numpy as np
 import omni_torch.data as data
 
-ALLOW_WARNING = data.ALLOW_WARNING
 
 def segment_image(image, args, path, seed, size, to_tensor=False):
     """
