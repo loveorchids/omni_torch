@@ -210,7 +210,7 @@ def plot_curves(line_data, line_labels, save_path=None, name=None, epoch=None,
     t = np.asarray(list(range(len(line_data[0]))))
     if ss and window > 1 and window % 2 == 1:
         line_data = [ss.savgol_filter(_, window, 2) for _ in line_data]
-    for i, loss in line_data:
+    for i, loss in enumerate(line_data):
         ax.plot(t, loss, label=line_labels[i])
     ax.legend(loc='upper right')
     ax.set_xlabel('epoch')
@@ -224,20 +224,27 @@ def plot_curves(line_data, line_labels, save_path=None, name=None, epoch=None,
         img_name = name + ep + ".jpg"
         plt.savefig(os.path.join(save_path, img_name))
         plt.close()
-    
-def plot_multi_loss_distribution(multi_line_data, multi_line_labels, save_path, name,
+
+
+def plot_multi_loss_distribution(multi_line_data, multi_line_labels, save_path=None, name=None,
                                  epoch=None, window=5, fig_size=(18, 12), bound=None,
                                  grid=True, titles=None):
-    assert len(multi_line_data) == len(multi_line_labels) == len(bound)
-    if titles is not None:
-        assert len(titles) == len(bound)
-    fig, axes = plt.subplots(len(multi_line_data), 1, fig_size=fig_size)
-    for i, losses in multi_line_data:
+    assert len(multi_line_data) == len(multi_line_labels)
+    if titles is None:
+        titles = [None] * len(multi_line_data)
+    if bound is None:
+        bound = [None] * len(multi_line_data)
+    assert len(multi_line_data) == len(titles) == len(bound)
+    fig, axes = plt.subplots(len(multi_line_data), 1, figsize=fig_size)
+    for i, losses in enumerate(multi_line_data):
         plot_curves(losses, multi_line_labels[i], window=window,
-                    bound=bound[i], grid=grid, ax=axes[i])
-    ep = "_" + str(int(epoch)).zfill(4) if epoch is not None else ""
-    img_name = name + ep + ".jpg"
-    plt.savefig(os.path.join(save_path, img_name))
+                    bound=bound[i], grid=grid, ax=axes[i], title=titles[i])
+    if save_path:
+        ep = "_" + str(int(epoch)).zfill(4) if epoch is not None else ""
+        img_name = name + ep + ".jpg"
+        plt.savefig(os.path.join(save_path, img_name))
+    else:
+        plt.show()
     plt.close()
 
 if __name__ == "__main__":
