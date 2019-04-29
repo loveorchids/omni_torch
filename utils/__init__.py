@@ -137,8 +137,8 @@ def save_model(args, epoch, state_dict, keep_latest=5, prefix=None):
         _save_model(args, epoch, state_dict, keep_latest, prefix)
 
 
-def load_latest_model(args, net, prefix=None, return_state_dict=False, nth=1):
-    def _load_latset_model(_args, _net, _prefix, return_state_dict, _nth):
+def load_latest_model(args, net, prefix=None, return_state_dict=False, nth=1, strict=True):
+    def _load_latset_model(_args, _net, _prefix, return_state_dict, _nth, strict):
         if _prefix:
             model_list = [_ for _ in glob.glob(_args.model_dir + "/%s_*.pth" % (_prefix)) if os.path.isfile(_)]
         else:
@@ -156,22 +156,36 @@ def load_latest_model(args, net, prefix=None, return_state_dict=False, nth=1):
             model_data = torch.load(model_list[_nth])
         if return_state_dict:
             return model_data
-        try:
-            _net.load_state_dict(model_data)
-        except RuntimeError:
-            warnings.warn("Model shape does not matches!")
+        if not strict:
+            _nd = _net.state_dict()
+            for key in model_data.keys():
+                if key not in _nd:
+                    print("key: %s of the model on disk does not exist in the network created"%(key))
+                else:
+                    _nd[key] = model_data[key]
+            for key in _nd.keys():
+                if key not in model_data:
+                    print("key: %s of the network being created does not exist in the model from disk"%(key))
+            _net.load_state_dict(_nd)
+            _args.curr_epoch = epoch
             return _net
-        _args.curr_epoch = epoch
-        return _net
+        else:
+            try:
+                _net.load_state_dict(model_data)
+            except RuntimeError:
+                warnings.warn("Model shape does not matches!")
+                return _net
+            _args.curr_epoch = epoch
+            return _net
     if type(net) is list or type(net) is tuple:
         assert prefix is not None, "you must specify the prefix of each model"
         assert type(prefix) is list or type(prefix) is tuple, "input param 'prefix' should either be a list or a tuple"
         assert len(net) == len(prefix), "input param 'net' contains %s network while prefix has %s element"\
                                         %(len(net), len(prefix))
-        nets = [_load_latset_model(args, n, prefix[i], return_state_dict, nth) for i, n in enumerate(net)]
+        nets = [_load_latset_model(args, n, prefix[i], return_state_dict, nth, strict) for i, n in enumerate(net)]
         return nets
     else:
-        return _load_latset_model(args, net, prefix, return_state_dict, nth)
+        return _load_latset_model(args, net, prefix, return_state_dict, nth, strict)
 
 
 def normalize_image(args, img, mean=None, std=None, bias=None):

@@ -114,7 +114,7 @@ def fit(net, args, dataset, device, optimizer, criterion, measure=None, is_train
         vb.visualize_gradient(args, net)
         #args.loss_weight = init.update_loss_weight(all_losses, loss_name, args.loss_weight,
                                                    #args.loss_weight_range, args.loss_weight_momentum)
-        vb.plot_loss_distribution([np.asarray(loss) for loss in all_losses], loss_name, args.loss_log,
+        vb.plot_curves([np.asarray(loss) for loss in all_losses], loss_name, args.loss_log,
                                   prefix + "loss_at_", args.curr_epoch, window=11, fig_size=(5, 5),
                                   low_bound=plot_low_bound, high_bound=plot_high_bound)
     return all_losses, all_measures
