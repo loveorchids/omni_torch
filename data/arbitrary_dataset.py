@@ -67,11 +67,13 @@ class Arbitrary_Dataset(object):
         elif len(self.sources) > 1:
             print("Loading data from %s locations."%(len(self.sources)))
             for i, source in enumerate(self.sources):
-                source_path = os.path.join(self.args.path, source)
-                if not os.path.exists(source_path):
-                    raise FileNotFoundError("%s does not exist on your disk, please check."
-                                            %source_path)
-                print("|==> %d. %s"%(i+1, os.path.join(self.args.path, source)))
+                if type(source) is str:
+                    self.show_sub_folder_data(source, i)
+                elif type(source) is tuple or type(source) is list:
+                    for sub_source in source:
+                        self.show_sub_folder_data(sub_source, i)
+                else:
+                    raise TypeError
         else:
             raise ValueError("Length of the source must be larger than 0")
         self.dataset = self.load_dataset()
@@ -103,6 +105,13 @@ class Arbitrary_Dataset(object):
             return input
         else:
             return [None] * num_of_data
+    
+    def show_sub_folder_data(self, source, idx):
+        source_path = os.path.join(self.args.path, source)
+        if not os.path.exists(source_path):
+            raise FileNotFoundError("%s does not exist on your disk, please check."
+                                    % source_path)
+        print("|==> %d. %s" % (idx + 1, os.path.join(self.args.path, source)))
         
     def __len__(self):
         return len(self.dataset)
