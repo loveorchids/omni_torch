@@ -31,6 +31,8 @@ def prepare_augmentation(args):
     :param args:
     :return:
     """
+    import warnings
+    warnings.warn("This function will be deprecated soon!")
     aug_dict = {}
     default = ["affine","resize", "crop", "crop_to_fix", "pad", "flip", "brightness", "noise"]
     # --------------------------------------Geometry---------------------------------------

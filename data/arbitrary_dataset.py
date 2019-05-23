@@ -48,9 +48,6 @@ class Arbitrary_Dataset(object):
         self.pre_process = self.standardize_input(pre_process, num_of_data)
         self.bbox_loader = self.standardize_input(bbox_loader, num_of_data)
         if args.do_imgaug:
-            ops = aug.prepare_augmentation(args)
-            self.augmentation = [ops] * num_of_data
-        else:
             self.augmentation = self.standardize_input(augmentation, num_of_data)
         if args.to_final_size:
             self.sizes = args.final_size

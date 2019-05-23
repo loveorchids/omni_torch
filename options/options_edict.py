@@ -58,6 +58,7 @@ def initialize():
         "img_bias": (0.0, 0.0, 0.0),
         "img_bit": 8,
         
+        # Below options will be deprecated in the Future
         "do_imgaug": False,
         "imgaug_order": "default",
         # default or a list, ["affine", "crop", "pad", ...], each element represent a process
