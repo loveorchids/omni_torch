@@ -30,10 +30,25 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
         image, bbox, box_label = bbox_loader(args, items, seed, size)
     else:
         path = items
-        if args.img_channel is 1:
-            image = cv2.imread(path, 0)
+        # -1 means it adapts to any bit-depth image
+        # e.g. 8-bit, 12-bit, 14-bit, 16-bit, and etc.
+        image = cv2.imread(path, -1)
+        if image.shape[-1] == 4:
+            # RGB-A image
+            if args.img_channel is 1:
+                image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
+            if args.img_channel is 3:
+                image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+        elif image.shape[-1] == 3:
+            if args.img_channel is 1:
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        elif image.shape[-1] == 1:
+            image = np.squeeze(image)
         else:
-            image = cv2.imread(path)
+            if len(image.shape) == 2:
+                pass
+            else:
+                raise ValueError("Image shape should not be: %s"%(str(image.shape)))
         bbox = None
     if pre_process:
         image, data = pre_process(image, args, items, seed, size)
