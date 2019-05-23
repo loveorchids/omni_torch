@@ -24,23 +24,23 @@ from omni_torch.options.base_options import BaseOptions
 import omni_torch.options.options_edict as edict_options
 
 
-def cover_edict_with_argparse(args, e_dict):
+def cover_edict_with_argparse(args, opt):
     from easydict import EasyDict as edict
-    args = vars(args)
-    e_dict = dict(e_dict)
-    for key in args.keys():
-        if key in e_dict:
-            if e_dict[key] == args[key]:
+    opt = vars(opt)
+    args = dict(args)
+    for key in opt.keys():
+        if key in args:
+            if args[key] == opt[key]:
                 continue
             else:
                 print("Key-value pair (%s, %s) in Edict was replaces by argsparse value (%s)" %
-                      (key, e_dict[key], args[key]))
-                e_dict[key] = args[key]
+                      (key, args[key], opt[key]))
+                args[key] = opt[key]
         else:
             print("The key in argparse (%s) does not exist in Edict"%(key))
-    return edict(e_dict)
+    return edict(args)
 
-def get_args(preset):
+def get_args(preset, opt=None):
     #settings = BaseOptions().initialize()
     args = edict_options.initialize()
     args = prepare_args(args, preset)
@@ -51,11 +51,25 @@ def get_args(preset):
         torch.cuda.manual_seed_all(args.seed)
         np.random.seed(args.seed)
         os.environ['PYTHONHASHSEED'] = str(args.seed)
-    if args.gpu_id == "cpu":
-        warnings.warn("You are using CPU in training")
-        args.device = torch.device("cpu")
+    if opt is not None:
+        args = cover_edict_with_argparse(args, opt)
+    if type(args.gpu_id) is str:
+        try:
+            args.gpu_id = [int(id) for id in args.gpu_id.split(",")]
+        except ValueError:
+            print("cannot convert args.gpu_id (%s) to a list of int, set to default value: %s"%
+                  (args.gpu_id, list(range(torch.cuda.device_count()))))
+            args.gpu_id = list(range(torch.cuda.device_count()))
+    elif type(args.gpu_id) in [list, tuple]:
+        args.gpu_id = list(args.gpu_id)
+        if not all([type(id) is int for id in args.gpu_id]):
+            args.gpu_id = list(range(torch.cuda.device_count()))
     else:
-        args.device = torch.device("cuda:" + args.gpu_id)
+        args.gpu_id = list(range(torch.cuda.device_count()))
+    if type(args.output_gpu_id) is not int \
+            or args.output_gpu_id > torch.cuda.device_count() \
+            or args.output_gpu_id < 0:
+        args.output_gpu_id = 0
     return args
 
 def prepare_args(args, presets, options=('general', 'unique', 'runtime')):
@@ -189,6 +203,7 @@ def load_latest_model(args, net, prefix=None, return_state_dict=False, nth=1, st
 
 
 def normalize_image(args, img, mean=None, std=None, bias=None):
+    max_intensity = 2 ** args.img_bit
     if args is None:
         img_mean, img_std, img_bias = mean, std, bias
     else:
@@ -201,10 +216,11 @@ def normalize_image(args, img, mean=None, std=None, bias=None):
         mean, std, bias = img_mean, img_std, img_bias
     else:
         raise RuntimeError("image channel should either be 1 or 3")
-    return (img / 255 - mean) / std + bias
+    return (img / max_intensity - mean) / std + bias
 
 
 def denormalize_image(args, img, mean=None, std=None, bias=None):
+    max_intensity = 2 ** args.img_bit
     if args is None:
         img_mean, img_std, img_bias = mean, std, bias
     else:
@@ -217,7 +233,7 @@ def denormalize_image(args, img, mean=None, std=None, bias=None):
         mean, std, bias = img_mean, img_std, img_bias
     else:
         raise RuntimeError("image channel should either be 1 or 3")
-    return 255 * ((img - bias) * std + mean)
+    return max_intensity * ((img - bias) * std + mean)
 
 def create_chunks(xs, k_fold):
     if k_fold > 1:
