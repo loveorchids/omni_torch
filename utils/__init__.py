@@ -41,6 +41,8 @@ def cover_edict_with_argparse(args, opt):
     return edict(args)
 
 def get_args(preset, opt=None):
+    if not torch.cuda.is_available():
+        raise RuntimeError("Need cuda devices!")
     #settings = BaseOptions().initialize()
     args = edict_options.initialize()
     args = prepare_args(args, preset)
@@ -69,6 +71,8 @@ def get_args(preset, opt=None):
     if type(args.output_gpu_id) is not int \
             or args.output_gpu_id > torch.cuda.device_count() \
             or args.output_gpu_id < 0:
+        print("Invalid args.output_gpu_id (type: %s, value: %s) set to 0 by default."
+              % (type(args.output_gpu_id), args.output_gpu_id))
         args.output_gpu_id = 0
     return args
 
