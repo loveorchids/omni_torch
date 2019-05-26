@@ -149,7 +149,7 @@ def load_img(args, path):
     return image
 
 
-def to_tensor(args, image, seed, size):
+def to_tensor(args, image, seed=None, size=None):
     image = util.normalize_image(args, image)
     trans = T.Compose([T.ToTensor()])
     return trans(image.astype("float32"))
