@@ -10,7 +10,7 @@ import imgaug
 from imgaug import augmenters
 
 
-def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
+def read_image_with_bbox(args, items, seed, size, pre_process=None, rand_aug=None,
                bbox_loader=None, _to_tensor=True):
     """
     Default image loading function invoked by Dataset object(Arbitrary, Img2Img, ILSVRC)
@@ -30,25 +30,7 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
         image, bbox, box_label = bbox_loader(args, items, seed, size)
     else:
         path = items
-        # -1 means it adapts to any bit-depth image
-        # e.g. 8-bit, 12-bit, 14-bit, 16-bit, and etc.
-        image = cv2.imread(path, -1)
-        if image.shape[-1] == 4:
-            # RGB-A image
-            if args.img_channel is 1:
-                image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
-            if args.img_channel is 3:
-                image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
-        elif image.shape[-1] == 3:
-            if args.img_channel is 1:
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        elif image.shape[-1] == 1:
-            image = np.squeeze(image)
-        else:
-            if len(image.shape) == 2:
-                pass
-            else:
-                raise ValueError("Image shape should not be: %s"%(str(image.shape)))
+        image = load_img(args, path)
         bbox = None
     if pre_process:
         image, data = pre_process(image, args, items, seed, size)
@@ -101,6 +83,70 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
         if bbox:
             return image, coords, labels
         return image
+
+
+def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
+               bbox_loader=None, _to_tensor=True):
+    """
+    Default image loading function invoked by Dataset object(Arbitrary, Img2Img, ILSVRC)
+    :param args:
+    :param path:
+    :param seed:
+    :param size: size may be different especially for super-resolution research
+    :param pre_process: callable functions, perform special options on images,
+            ops can divide img into several patches in order to save memory
+            ops can invert image color, switch channel, increase contrast
+            ops can also calculate the infomation extactable brom image, e.g. affine matrix
+    :return:
+    """
+    if type(items) is str:
+        items = [items]
+    images = []
+    for path in items:
+        images.append(load_img(args, path))
+    if pre_process:
+        images = [pre_process(image, args, items, seed, size) for image in images]
+    aug_seq = augmenters.Sequential(rand_aug, random_order=False)
+    if aug_seq:
+        aug_seq = aug_seq.to_deterministic()
+        images = aug_seq.augment_images(images)
+    for i, image in enumerate(images):
+        if len(image.shape) == 2:
+            images[i] = np.expand_dims(image, axis=-1)
+    if _to_tensor:
+        tensor = [to_tensor(args, image, seed, size) for image in images]
+        if len(tensor) == 1:
+            return tensor[0]
+        else:
+            return tensor
+    else:
+        if len(images) == 1:
+            return images[0]
+        else:
+            return images
+
+
+def load_img(args, path):
+    # -1 means it adapts to any bit-depth image
+    # e.g. 8-bit, 12-bit, 14-bit, 16-bit, and etc.
+    image = cv2.imread(path, -1)
+    if image.shape[-1] == 4:
+        # RGB-A image
+        if args.img_channel is 1:
+            image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
+        if args.img_channel is 3:
+            image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+    elif image.shape[-1] == 3:
+        if args.img_channel is 1:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    elif image.shape[-1] == 1:
+        image = np.squeeze(image)
+    else:
+        if len(image.shape) == 2:
+            pass
+        else:
+            raise ValueError("Image shape should not be: %s" % (str(image.shape)))
+    return image
 
 
 def to_tensor(args, image, seed, size):
