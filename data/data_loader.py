@@ -105,7 +105,7 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
     for path in items:
         images.append(load_img(args, path))
     if pre_process:
-        images = [pre_process(image, args, items, seed, size) for image in images]
+        images = pre_process(images, args, items, seed, size)
     aug_seq = augmenters.Sequential(rand_aug, random_order=False)
     if aug_seq:
         aug_seq = aug_seq.to_deterministic()
