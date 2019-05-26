@@ -127,6 +127,12 @@ def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
 
 
 def load_img(args, path):
+    """
+    A generalized image loading function, support n-bit, n-channel images
+    :param args:
+    :param path: string-path or list of string-paths
+    :return:
+    """
     # -1 means it adapts to any bit-depth image
     # e.g. 8-bit, 12-bit, 14-bit, 16-bit, and etc.
     image = cv2.imread(path, -1)
