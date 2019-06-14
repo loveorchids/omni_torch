@@ -130,10 +130,10 @@ def save_args(args):
 def save_model(args, epoch, state_dict, keep_latest=5, prefix=None):
     def _save_model(_args, _epoch, _state_dict, _keep_latest=5, _predix=None):
         if _predix:
-            model_list = [_ for _ in glob.glob(_args.model_dir + "/%s_*.pth"%(_predix)) if os.path.isfile(_)]
+            model_list = [_ for _ in glob.glob(_args.model_dir + "/%s_epoch_*.pth"%(_predix)) if os.path.isfile(_)]
             model_path = os.path.join(_args.model_dir, "%s_epoch_%s.pth" % (_predix, str(_epoch).zfill(4)))
         else:
-            model_list = [_ for _ in glob.glob(_args.model_dir + "/*.pth") if os.path.isfile(_)]
+            model_list = [_ for _ in glob.glob(_args.model_dir + "/epoch_*.pth") if os.path.isfile(_)]
             model_path = os.path.join(_args.model_dir, "epoch_%s.pth" % (str(_epoch).zfill(4)))
         model_list.sort()
         if len(model_list) < _keep_latest:
