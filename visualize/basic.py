@@ -63,6 +63,7 @@ def to_image(args, tensor, margin, deNormalize, sub_title=None, font_size=0.5):
             "img_mean": (0.5, 0.5, 0.5),
             "img_std": (1.0, 1.0, 1.0),
             "img_bias": (0.0, 0.0, 0.0),
+            "img_bit": 8,
         })
     assert len(tensor.shape) == 3
     array = tensor.data.to("cpu").numpy()

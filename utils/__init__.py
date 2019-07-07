@@ -207,7 +207,10 @@ def load_latest_model(args, net, prefix=None, return_state_dict=False, nth=1, st
 
 
 def normalize_image(args, img, mean=None, std=None, bias=None):
-    max_intensity = 2 ** args.img_bit
+    if args is not None:
+        max_intensity = 2 ** args.img_bit
+    else:
+        max_intensity = 255
     if args is None:
         img_mean, img_std, img_bias = mean, std, bias
     else:
@@ -224,7 +227,10 @@ def normalize_image(args, img, mean=None, std=None, bias=None):
 
 
 def denormalize_image(args, img, mean=None, std=None, bias=None):
-    max_intensity = 2 ** args.img_bit
+    if args is not None:
+        max_intensity = 2 ** args.img_bit
+    else:
+        max_intensity = 255
     if args is None:
         img_mean, img_std, img_bias = mean, std, bias
     else:
