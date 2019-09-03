@@ -23,12 +23,13 @@ import os
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.5
+config.gpu_options.per_process_gpu_memory_fraction = 0.4
 set_session(tf.Session(config=config))
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+
 
 class Histories(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
@@ -53,8 +54,8 @@ model_name = 'cifar10_cnn.h5'
 
 y_train = keras.utils.to_categorical(y_train, 10)
 y_test = keras.utils.to_categorical(y_test, 10)
-x_train = x_train.astype('float')/255
-x_test = x_test.astype('float')/255
+x_train = x_train.astype('float')/255 - 0.5
+x_test = x_test.astype('float')/255 - 0.5
 
 model = Sequential()
 model.add(Conv2D(32, 3, padding='same', input_shape=x_train.shape[1:], activation='relu'))
@@ -77,10 +78,11 @@ model.add(Activation('softmax'))
 #model.summary()
 
 opt = keras.optimizers.adam(lr=1e-4, decay=1e-6, epsilon=1e-7)
+#opt = keras.optimizers.sgd(lr=1e-3, decay=1e-6)
 model.compile(loss=keras.losses.categorical_crossentropy, optimizer=opt,
               metrics=['accuracy'])
 
-model_path = os.path.join(os.getcwd(), 'models', "cifar10_cnn.h5")
+model_path = os.path.join(os.getcwd(), 'test', 'models', "cifar10_cnn.h5")
 print("load model weight from: %s"%(model_path))
 model.load_weights(model_path)
 
@@ -88,8 +90,8 @@ model.load_weights(model_path)
 data_augmentation = False
 if not data_augmentation:
     print('Not using data augmentation')
-    model.fit(x_train, y_train, batch_size=256, epochs=200, validation_data=(x_test, y_test),
-              shuffle=False, callbacks=[histories])
+    model.fit(x_train, y_train, batch_size=256, epochs=1000, validation_data=(x_test, y_test),
+              shuffle=True, )#callbacks=[histories])
 else:
     print('Using real-time data augmentation')
     datagen = ImageDataGenerator(

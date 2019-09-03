@@ -35,15 +35,15 @@ def UniquePattern_01(args):
 def RuntimePattern(args):
     args.cover_exist = True
     args.code_name = "cifar_torch"
-    args.finetune = False
+    args.finetune = True
 
     args.deterministic_train = False
-    args.epoch_num = 200
-    args.batch_size = 64
+    args.epoch_num = 1000
+    args.batch_size = 256
 
-    args.learning_rate = 1e-4
+    args.learning_rate = 1e-3
     args.weight_decay = 1e-6
-    args.gpu_id = "0"
+    args.gpu_id = "1"
     return args
 
 

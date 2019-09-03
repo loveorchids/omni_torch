@@ -21,7 +21,7 @@ import omni_torch.data.augmentation as aug
 
 class Arbitrary_Dataset(object):
     def __init__(self, args, sources, step_1, step_2, pre_process=None, bbox_loader=None,
-                 auxiliary_info=None, augmentation=None, **options):
+                 auxiliary_info=None, augmentation=None, as_generator =False, **options):
         """
         A generalized data initialization method, inherited by other data class, e.g. ilsvrc, img2img, etc.
         Arbitrary is a parent class of all other data class.
@@ -42,6 +42,7 @@ class Arbitrary_Dataset(object):
         self.sources = sources
         self.step_1 = step_1
         self.step_2 = step_2
+        self.as_generator = as_generator
 
         num_of_data = len(step_2)
         self.auxiliary = self.standardize_input(auxiliary_info, num_of_data)
@@ -143,7 +144,10 @@ class Arbitrary_Dataset(object):
                                              bbox_loader=self.bbox_loader[i]))
             else:
                 raise TypeError
-        return result
+        if self.as_generator:
+            yield result
+        else:
+            return result
         
 
     def load_dataset(self):

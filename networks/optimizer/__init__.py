@@ -14,3 +14,6 @@
 # limitations under the License.
 
 """
+
+from .adabound import AdaBound
+from .SDProp import SuperConv

@@ -15,15 +15,15 @@
 
 """
 import os, time, sys
+sys.path.append(os.path.expanduser("~/Documents"))
 import torch
 import torch.nn as nn
 import numpy as np
 import torchvision
 import torchvision.transforms as transforms
-sys.path.append(os.path.expanduser("~/Documents/omni_research"))
 import omni_torch.utils as omth_util
-import omni_torch.examples.test.model as model
-import omni_torch.examples.test.presets as presets
+import omni_torch.examples.model as model
+import omni_torch.examples.presets as presets
 import omni_torch.options.options_edict as edict_options
 import omni_torch.data.data_loader as omth_loader
 import omni_torch.data.path_loader as omth_data_mode
@@ -32,23 +32,9 @@ import omni_torch.utils as util
 import omni_torch.utils.weight_transfer as weight_transfer
 from omni_torch.data.arbitrary_dataset import Arbitrary_Dataset
 from omni_torch.utils.model_summary import  summary
-from omni_torch.networks.optimizer.adabound import AdaBound
+from omni_torch.networks.optimizer.superConv import SuperConv
 from keras.models import Sequential
 from keras.layers import *
-
-
-def fetch_data(args, source):
-    def just_return_it(args, data, seed, size, ops=None):
-        return torch.tensor(data, dtype=torch.long)
-    print("loading Dataset...")
-    data = Arbitrary_Dataset(args=args, step_2=[omth_loader.to_tensor, just_return_it],
-                             sources=source, step_1=[omth_data_mode.load_cifar_from_pickle], auxiliary_info=[0])
-    data.prepare()
-    print("loading Completed!")
-    kwargs = {'num_workers': args.loading_threads, 'pin_memory': True}
-    data_loader = torch.utils.data.DataLoader(data, batch_size=args.batch_size,
-                                               shuffle=True, **kwargs)
-    return data_loader
 
 def fit(net, args, dataset, optimizer, criterion, measure=None, is_train=True,
         visualize_step=100, visualize_op=None, visualize_loss=False,
@@ -72,7 +58,7 @@ def fit(net, args, dataset, optimizer, criterion, measure=None, is_train=True,
         for batch_idx, data in enumerate(dataset):
             if args.steps_per_epoch is not None and batch_idx >= args.steps_per_epoch:
                 break
-            img_batch, label_batch = data[0].to(args.device), data[1].to(args.device)
+            img_batch, label_batch = data[0].cuda(), data[1].cuda()
             prediction = net(img_batch)
             # Tranform prediction and label into list in case there are multiple input and output sources
             prediction = [prediction] if type(prediction) is not list else prediction
@@ -128,34 +114,6 @@ def calculate_accuracy(prediction, label_batch):
     accuracy = sum([1 if int(pred_idx[i]) == int(label_batch[i]) else 0 for i in range(pred_idx.size(0))])
     return accuracy / label_batch.size(0)
 
-def build_dataset(args):
-    print('==> Preparing data..')
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
-
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
-
-    trainset = torchvision.datasets.CIFAR10(root=args.path, train=True, download=True,
-                                            transform=transform_train)
-    train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True,
-                                               num_workers=args.loading_threads)
-
-    testset = torchvision.datasets.CIFAR10(root=args.path, train=False, download=True,
-                                           transform=transform_test)
-    test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False,
-                                              num_workers=args.loading_threads)
-
-    # classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-
-    return train_loader, test_loader
-
 def get_keras_model():
     print("Load model from keras initialization")
     model = Sequential()
@@ -196,31 +154,51 @@ def init_weight(m):
 
 if __name__ == "__main__":
     args = util.get_args(presets.PRESET)
+    with torch.cuda.device(2):
+        net = model.CifarNet_Vanilla()
+        if args.finetune:
+            net = util.load_latest_model(args, net)
+        else:
+            #net.apply(init_weight)
+            keras_model = get_keras_model()
+            model_path = os.path.join(os.getcwd(), 'test', 'models', "cifar10_cnn.h5")
+            net = weight_transfer.initialize_with_keras_hdf5(keras_model, map_dict, net, model_path)
+            omth_util.save_model(args, args.curr_epoch, net.state_dict())
+        #net.to(args.device)
+        net.cuda()
+        #summary(net, input_size=(3, 32, 32), device=device)
 
-    net = model.CifarNet_Vanilla()
-    if args.finetune:
-        net = util.load_latest_model(args, net)
-    else:
-        net.apply(init_weight)
-        #keras_model = get_keras_model()
-        #model_path = os.path.join(os.getcwd(), 'models', "cifar10_cnn.h5")
-        #net = weight_transfer.initialize_with_keras_hdf5(keras_model, map_dict, net, model_path)
-        #omth_util.save_model(args, args.curr_epoch, net.state_dict())
-    net.to(args.device)
-    #summary(net, input_size=(3, 32, 32), device=device)
+        #train_set = fetch_data(args, [("data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4", "data_batch_5")])
+        #test_set = fetch_data(args, ["test_batch"])
 
-    train_set = fetch_data(args, [("data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4", "data_batch_5")])
-    test_set = fetch_data(args, ["test_batch"])
-    #train_set, test_set = build_dataset(args)
-    
-    criterion = nn.CrossEntropyLoss()
-    optimizer = AdaBound(net.parameters(), lr=args.learning_rate,
-                                 weight_decay=args.weight_decay, eps=1e-7)
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        ])
 
-    for epoch in range(args.epoch_num):
-        print("\n ======================== PHASE: %s/%s ========================= " %
-              (str(int(args.curr_epoch / args.epoches_per_phase) + 1).zfill(4), str(args.epoch_num).zfill(4)))
-        fit(net, args, train_set, optimizer, criterion, measure=calculate_accuracy)
-        evaluation(net, args, test_set, optimizer, criterion, measure=calculate_accuracy)
-        #omth_util.save_model(args, args.curr_epoch, net.state_dict())
-    
+        trainset = torchvision.datasets.CIFAR10(root=os.path.expanduser("~/Pictures/dataset/cifar-10/"),
+                                                train=True, download=True, transform=transform)
+        train_set = torch.utils.data.DataLoader(trainset, batch_size=256,
+                                                  shuffle=True, num_workers=2)
+
+        testset = torchvision.datasets.CIFAR10(root=os.path.expanduser("~/Pictures/dataset/cifar-10/"),
+                                               train=False, download=True, transform=transform)
+        test_set = torch.utils.data.DataLoader(testset, batch_size=256,
+                                                 shuffle=False, num_workers=2)
+
+        criterion = nn.CrossEntropyLoss()
+        optimizer = torch.optim.SGD(net.parameters(), lr=args.learning_rate*10,
+                                     weight_decay=args.weight_decay)
+        #optimizer = SuperConv(net.parameters(), lr=args.learning_rate * 0.2,
+                                     #weight_decay=args.weight_decay)
+        #optimizer = AdaBound(net.parameters(), lr=args.learning_rate,
+                                     #weight_decay=args.weight_decay, eps=1e-7)
+
+        for epoch in range(args.epoch_num):
+            print("\n ======================== PHASE: %s/%s ========================= " %
+                  (str(int(args.curr_epoch / args.epoches_per_phase) + 1).zfill(4), str(args.epoch_num).zfill(4)))
+            fit(net, args, train_set, optimizer, criterion, measure=calculate_accuracy)
+            evaluation(net, args, test_set, optimizer, criterion, measure=calculate_accuracy)
+            if epoch % 100 == 0:
+                omth_util.save_model(args, args.curr_epoch, net.state_dict())
+
