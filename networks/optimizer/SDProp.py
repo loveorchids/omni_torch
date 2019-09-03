@@ -13,10 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-This optimizer is originally implemented by Xu Linjie
-Github Link:
-https://github.com/egg-west/AdamW-pytorch
-
+Paper: Adaptive Learning Rate via Covariance Matrix Based Preconditioning for Deep Neural Networks
+Link: https://www.ijcai.org/proceedings/2017/0267.pdf
 """
 
 import math
