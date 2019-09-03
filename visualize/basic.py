@@ -14,8 +14,6 @@
 # limitations under the License.
 
 """
-import matplotlib
-matplotlib.use('Agg')
 import os, math, time, warnings, datetime
 import torch
 import cv2
