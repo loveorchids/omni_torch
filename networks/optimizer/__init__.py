@@ -16,4 +16,5 @@
 """
 
 from .adabound import AdaBound
-from .SDProp import SuperConv
+from .sdprop import SDProp
+from .adastand import Adastand
