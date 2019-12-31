@@ -31,7 +31,7 @@ def read_image_with_bbox(args, items, seed, size, pre_process=None, rand_aug=Non
     else:
         path = items
         image = load_img(args, path)
-        bbox = None
+        bbox, box_label = None, None
     if pre_process:
         image, data = pre_process(image, args, items, seed, size)
     else:
@@ -40,6 +40,7 @@ def read_image_with_bbox(args, items, seed, size, pre_process=None, rand_aug=Non
     # Then initialize the deterministic augmentation based on that information
     det_aug_list = aug.prepare_deterministic_augmentation(args, data)
     aug_seq = aug.combine_augs(det_aug_list, rand_aug)
+    coords, labels = [], []
     if bbox:
         if aug_seq:
             # Do random augmentaion defined in pipline declaration
@@ -48,9 +49,6 @@ def read_image_with_bbox(args, items, seed, size, pre_process=None, rand_aug=Non
             bbox = aug_seq.augment_bounding_boxes([bbox])[0]
             #image_after = bbox.draw_on_image(image, thickness=2, color=[0, 0, 255])
             #cv2.imwrite("/home/wang/Pictures/tmp_after.jpg", image_after)
-        # numpy-lize bbox
-        coords = []
-        labels = []
         h, w = image.shape[0], image.shape[1]
         for i, box in enumerate(bbox.bounding_boxes):
             condition_1 = box.x1 <= 0 and box.x2 <= 0
@@ -88,15 +86,14 @@ def read_image_with_bbox(args, items, seed, size, pre_process=None, rand_aug=Non
 def read_image(args, items, seed, size, pre_process=None, rand_aug=None,
                bbox_loader=None, _to_tensor=True):
     """
-    Default image loading function invoked by Dataset object(Arbitrary, Img2Img, ILSVRC)
     :param args:
-    :param path:
+    :param items:
     :param seed:
-    :param size: size may be different especially for super-resolution research
-    :param pre_process: callable functions, perform special options on images,
-            ops can divide img into several patches in order to save memory
-            ops can invert image color, switch channel, increase contrast
-            ops can also calculate the infomation extactable brom image, e.g. affine matrix
+    :param size:
+    :param pre_process:
+    :param rand_aug:
+    :param bbox_loader:
+    :param _to_tensor:
     :return:
     """
     if type(items) is str:

@@ -25,10 +25,7 @@ def number_to_char(num):
     return chr(num+65)
 
 def extension_check(file, extensions):
-    if file[file.rfind(".")+1:] in extensions:
-        return True
-    else:
-        return False
+    return file[file.rfind(".")+1:] in extensions
 
 def get_shape(placeholder):
     try:
