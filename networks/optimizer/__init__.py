@@ -1,5 +1,5 @@
 """
-# Copyright (c) 2018 Works Applications Co., Ltd.
+# Copyright (c) 2019 Wang Hanqin
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,13 @@
 
 """
 
+# The comparison of each optimizer is listed:
+# https://github.com/mgrankin/over9000
+
 from .adabound import AdaBound
-from .sdprop import SDProp
 from .adastand import Adastand
+from .lookahead import Lookahead
+from .novograd import Novograd
+from .radam import RAdam
+from .ralamb import Ralamb
+from .ranger import Ranger, RangerLars
