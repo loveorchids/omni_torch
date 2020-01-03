@@ -15,4 +15,8 @@
 
 """
 
+from .activation import *
+from .blocks import *
+from .optimizer import *
 from .initialization import weight_init
+from .loss import Triplet_Loss
