@@ -30,7 +30,7 @@ def cover_edict_with_argparse(args, opt):
     args = dict(args)
     for key in opt.keys():
         if key in args:
-            if args[key] == opt[key]:
+            if args[key] == opt[key] or opt[key] is None:
                 continue
             else:
                 print("Key-value pair (%s, %s) in Edict was replaces by argsparse value (%s)" %
